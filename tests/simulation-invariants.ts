@@ -60,8 +60,11 @@ const adoptionLevels: AdoptionLevel[] = ["low", "medium", "high"];
 const rangeKeys = [
   "predictedDiabetesRateReductionPctPoints",
   "additionalScreenings",
+  "additionalGradableExams",
   "additionalReferableCases",
   "earlierInterventions",
+  "treatmentStarts",
+  "sustainedManagement",
   "reengagedPatients",
   "baselineSevereConsequences",
   "interventionSevereConsequences",
@@ -86,8 +89,11 @@ const rangeKeys = [
 const healthInvariantKeys = [
   "predictedDiabetesRateReductionPctPoints",
   "additionalScreenings",
+  "additionalGradableExams",
   "additionalReferableCases",
   "earlierInterventions",
+  "treatmentStarts",
+  "sustainedManagement",
   "reengagedPatients",
   "baselineSevereConsequences",
   "interventionSevereConsequences",
@@ -268,6 +274,29 @@ for (const region of regions) {
                 }
 
                 if (
+                  result.additionalGradableExams.base >
+                  result.additionalScreenings.base + 1e-9
+                ) {
+                  errors.push(
+                    `${region.slug} gradable exams exceeded additional screenings`
+                  );
+                }
+
+                if (
+                  result.treatmentStarts.base >
+                  result.earlierInterventions.base + 1e-9
+                ) {
+                  errors.push(`${region.slug} treatment starts exceeded confirmed follow-up`);
+                }
+
+                if (
+                  result.sustainedManagement.base >
+                  result.treatmentStarts.base + 1e-9
+                ) {
+                  errors.push(`${region.slug} sustained management exceeded treatment starts`);
+                }
+
+                if (
                   result.severeConsequencesAvoided.base >
                   result.baselineSevereConsequences.base + 1e-9
                 ) {
@@ -345,8 +374,19 @@ for (const region of regions) {
                 errors.push(`${region.slug} additional screenings decreased as installs increased`);
               }
 
+              if (
+                current.additionalGradableExams.base <
+                previous.additionalGradableExams.base
+              ) {
+                errors.push(`${region.slug} gradable exams decreased as installs increased`);
+              }
+
               if (current.earlierInterventions.base < previous.earlierInterventions.base) {
                 errors.push(`${region.slug} earlier interventions decreased as installs increased`);
+              }
+
+              if (current.treatmentStarts.base < previous.treatmentStarts.base) {
+                errors.push(`${region.slug} treatment starts decreased as installs increased`);
               }
 
               if (

@@ -14,6 +14,20 @@
     "sourceNoteIds": ["la_county_teleretinal", "i_site_telemedicine"]
   },
   {
+    "key": "image_gradability_share",
+    "label": "Gradable image share in baseline screening workflow",
+    "category": "Image quality",
+    "evidenceTier": "literature-backed",
+    "unit": "share",
+    "low": 0.82,
+    "base": 0.88,
+    "high": 0.93,
+    "min": 0.5,
+    "max": 0.99,
+    "note": "Share of completed screening encounters that produce an interpretable exam in a routine primary-care retinal workflow.",
+    "sourceNoteIds": ["ada_retinopathy_2026", "nursing_teleophthalmology"]
+  },
+  {
     "key": "fundus_ai_throughput_multiplier",
     "label": "Fundus + AI throughput multiplier",
     "category": "Device workflow",
@@ -25,6 +39,20 @@
     "min": 0.8,
     "max": 1.5,
     "note": "Automation improves gradability triage and clinician time efficiency, but the effect is bounded.",
+    "sourceNoteIds": ["ada_retinopathy_2026"]
+  },
+  {
+    "key": "fundus_ai_gradability_multiplier",
+    "label": "Fundus + AI gradability multiplier",
+    "category": "Image quality",
+    "evidenceTier": "literature-backed",
+    "unit": "multiplier",
+    "low": 1.02,
+    "base": 1.06,
+    "high": 1.1,
+    "min": 0.85,
+    "max": 1.25,
+    "note": "Automation and standardized acquisition support can modestly increase the share of interpretable exams.",
     "sourceNoteIds": ["ada_retinopathy_2026"]
   },
   {
@@ -42,6 +70,20 @@
     "sourceNoteIds": ["topcon_oct_fundus"]
   },
   {
+    "key": "fundus_oct_adjunct_gradability_multiplier",
+    "label": "Fundus + OCT adjunct gradability multiplier",
+    "category": "Image quality",
+    "evidenceTier": "literature-backed",
+    "unit": "multiplier",
+    "low": 1.08,
+    "base": 1.14,
+    "high": 1.2,
+    "min": 0.9,
+    "max": 1.35,
+    "note": "Adjunct OCT can improve the rate of clinically useful exams and add confidence around macular disease.",
+    "sourceNoteIds": ["topcon_oct_fundus", "broader_economic_value_dme"]
+  },
+  {
     "key": "oct_only_throughput_multiplier",
     "label": "OCT-only advanced throughput multiplier",
     "category": "Device workflow",
@@ -53,6 +95,20 @@
     "min": 0.4,
     "max": 1,
     "note": "Used only for the advanced exploratory scenario because the evidence base is weaker for OCT-only diabetic retinopathy screening in primary care.",
+    "sourceNoteIds": ["topcon_oct_fundus"]
+  },
+  {
+    "key": "oct_only_gradability_multiplier",
+    "label": "OCT-only advanced gradability multiplier",
+    "category": "Image quality",
+    "evidenceTier": "synthetic",
+    "unit": "multiplier",
+    "low": 1.1,
+    "base": 1.16,
+    "high": 1.24,
+    "min": 0.9,
+    "max": 1.4,
+    "note": "Exploratory proxy reflecting OCT interpretability advantages while still treating OCT-only primary-care screening as lower-confidence overall.",
     "sourceNoteIds": ["topcon_oct_fundus"]
   },
   {
@@ -140,6 +196,34 @@
     "sourceNoteIds": ["la_county_teleretinal", "i_site_telemedicine"]
   },
   {
+    "key": "treatment_initiation_share_after_followup",
+    "label": "Treatment or monitored management after confirmed follow-up",
+    "category": "Clinical conversion",
+    "evidenceTier": "literature-backed",
+    "unit": "share",
+    "low": 0.62,
+    "base": 0.74,
+    "high": 0.84,
+    "min": 0.2,
+    "max": 0.98,
+    "note": "Share of patients completing retinal follow-up who move into timely treatment or monitored management rather than remaining untreated.",
+    "sourceNoteIds": ["laser_photocoagulation_review", "broader_economic_value_dme"]
+  },
+  {
+    "key": "sustained_management_share_after_treatment",
+    "label": "Sustained management after treatment start",
+    "category": "Clinical conversion",
+    "evidenceTier": "synthetic",
+    "unit": "share",
+    "low": 0.64,
+    "base": 0.78,
+    "high": 0.88,
+    "min": 0.2,
+    "max": 0.99,
+    "note": "Share of treatment starts or monitored-management starts that remain active long enough to plausibly change three-year harm trajectories.",
+    "sourceNoteIds": ["la_county_teleretinal", "tele_economics"]
+  },
+  {
     "key": "referable_dr_prevalence_share",
     "label": "Referable diabetic retinopathy prevalence",
     "category": "Clinical yield",
@@ -166,6 +250,20 @@
     "max": 0.25,
     "note": "Share of screened patients who re-enter broader diabetes management because retinal screening creates a new touchpoint.",
     "sourceNoteIds": ["ada_retinopathy_2026"]
+  },
+  {
+    "key": "followup_reengagement_share",
+    "label": "Additional care re-engagement from confirmed eye follow-up",
+    "category": "Synthetic bridge",
+    "evidenceTier": "synthetic",
+    "unit": "share",
+    "low": 0.1,
+    "base": 0.16,
+    "high": 0.24,
+    "min": 0.01,
+    "max": 0.45,
+    "note": "Extra share of patients who re-enter broader diabetes care because a positive screen converts into confirmed specialty follow-up and renewed clinical attention.",
+    "sourceNoteIds": ["ada_retinopathy_2026", "la_county_teleretinal"]
   },
   {
     "key": "glycemic_improvement_conversion",

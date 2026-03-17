@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  AnimatePresence,
+  LayoutGroup,
+  MotionConfig,
+  motion,
+  useReducedMotion,
+} from "framer-motion";
 import {
   Activity,
   ArrowLeftRight,
@@ -73,6 +79,19 @@ type ValueFormat = "count" | "currency" | "percent" | "decimal";
 type Tone = "teal" | "navy" | "warm" | "gold";
 const DISPLAY_HORIZON_YEARS = 3;
 const easeOutExpo = [0.22, 1, 0.36, 1] as const;
+const layoutSpring = {
+  type: "spring",
+  stiffness: 180,
+  damping: 24,
+  mass: 0.9,
+} as const;
+const hoverSpring = {
+  type: "spring",
+  stiffness: 220,
+  damping: 20,
+  mass: 0.86,
+} as const;
+const revealTransition = { duration: 0.24, ease: easeOutExpo } as const;
 
 const toneClasses: Record<
   Tone,
@@ -149,6 +168,10 @@ export function SimulatorClient({
   const interventionBlindness = result.interventionBlindnessConsequences.base;
   const blindnessReductionShare =
     baselineBlindness > 0 ? (result.blindnessAvoided.base / baselineBlindness) * 100 : 0;
+  const severeHarmReductionShare =
+    result.baselineSevereConsequences.base > 0
+      ? (result.severeConsequencesAvoided.base / result.baselineSevereConsequences.base) * 100
+      : 0;
   const missedPopulationShare =
     result.baselineSnapshot.missedPatients > 0
       ? result.additionalScreenings.base / result.baselineSnapshot.missedPatients
@@ -156,6 +179,14 @@ export function SimulatorClient({
   const followUpLiftShare =
     result.baselineSnapshot.followUpPatients > 0
       ? result.earlierInterventions.base / result.baselineSnapshot.followUpPatients
+      : 0;
+  const treatmentConversionShare =
+    result.earlierInterventions.base > 0
+      ? result.treatmentStarts.base / result.earlierInterventions.base
+      : 0;
+  const continuityShare =
+    result.treatmentStarts.base > 0
+      ? result.sustainedManagement.base / result.treatmentStarts.base
       : 0;
   const modeledCoverageCeiling = Math.round(
     region.estimatedAdultsWithDiabetes *
@@ -191,21 +222,42 @@ export function SimulatorClient({
         viewport: { once: true, margin: "-40px" },
         transition: { duration: 0.45, ease: easeOutExpo },
       };
+  const pathwayMilestones = [
+    {
+      label: "Usable exams",
+      value: formatSmartCount(result.additionalGradableExams.base),
+      note: "Additional screenings expected to yield interpretable retinal exams under the active workflow.",
+    },
+    {
+      label: "Treatment starts",
+      value: formatSmartCount(result.treatmentStarts.base),
+      note: "Confirmed follow-up cases expected to convert into timely treatment or monitored management.",
+    },
+    {
+      label: "Sustained management",
+      value: formatSmartCount(result.sustainedManagement.base),
+      note: "Patients expected to stay engaged long enough to change the three-year harm trajectory.",
+    },
+  ];
 
   return (
-    <div className="grid gap-6 md:grid-cols-[24.75rem_minmax(0,1fr)] md:items-start lg:grid-cols-[26.75rem_minmax(0,1fr)] xl:grid-cols-[27.5rem_minmax(0,1fr)]">
-      <section
-        data-testid="calculator-sidebar"
-        className="shadow-lift relative z-10 rounded-[2.1rem] border border-[color:rgba(16,34,53,0.12)] bg-[linear-gradient(180deg,rgba(248,244,236,0.98),rgba(244,240,232,0.94))] p-6 md:sticky md:top-24 md:flex md:max-h-[calc(100vh-7rem)] md:flex-col md:self-start md:isolate md:overflow-hidden"
-      >
-        <div className="shrink-0">
-          <p className="text-[0.72rem] uppercase tracking-[0.32em] text-[color:var(--muted)]">
-            Scenario inputs
-          </p>
-          <h2 className="mt-2 max-w-[22rem] font-display text-[2.05rem] leading-[0.94] text-[color:var(--foreground)] md:text-[2.25rem]">
-            Build a regional deployment
-          </h2>
-        </div>
+    <MotionConfig reducedMotion="user">
+      <LayoutGroup id="calculator-system">
+        <div className="grid gap-6 md:grid-cols-[24.75rem_minmax(0,1fr)] md:items-start lg:grid-cols-[26.75rem_minmax(0,1fr)] xl:grid-cols-[27.5rem_minmax(0,1fr)]">
+          <motion.section
+            layout
+            data-testid="calculator-sidebar"
+            className="shadow-lift relative z-10 rounded-[2.1rem] border border-[color:rgba(16,34,53,0.12)] bg-[linear-gradient(180deg,rgba(248,244,236,0.98),rgba(244,240,232,0.94))] p-6 md:sticky md:top-24 md:flex md:max-h-[calc(100vh-7rem)] md:flex-col md:self-start md:isolate md:overflow-hidden"
+            transition={layoutSpring}
+          >
+            <div className="shrink-0">
+              <p className="text-[0.72rem] uppercase tracking-[0.32em] text-[color:var(--muted)]">
+                Scenario inputs
+              </p>
+              <h2 className="mt-2 max-w-[22rem] font-display text-[2.05rem] leading-[0.94] text-[color:var(--foreground)] md:text-[2.25rem]">
+                Build a regional deployment
+              </h2>
+            </div>
 
         <div className="mt-4 grid shrink-0 grid-cols-2 gap-2.5">
           <button
@@ -281,7 +333,7 @@ export function SimulatorClient({
           </label>
 
           <SidebarSectionHeading>Operating assumptions</SidebarSectionHeading>
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-4">
             <label className="block space-y-2 text-[0.92rem]">
               <span className="font-medium text-[color:var(--foreground)]">Device mode</span>
               <select
@@ -366,7 +418,7 @@ export function SimulatorClient({
             </label>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-4">
             <label className="block space-y-2 text-[0.92rem]">
               <span className="font-medium text-[color:var(--foreground)]">Adoption level</span>
               <select
@@ -429,15 +481,17 @@ export function SimulatorClient({
             </div>
           </div>
         </div>
-      </section>
+          </motion.section>
 
-      <div className="min-w-0 space-y-6">
-        <motion.section
-          id="calculator-results"
-          data-testid="calculator-results"
-          className="surface-card relative overflow-hidden rounded-[2.25rem] p-6 md:p-8 lg:p-9"
-          {...cardEnter}
-        >
+          <div className="min-w-0 space-y-6">
+            <motion.section
+              layout
+              id="calculator-results"
+              data-testid="calculator-results"
+              className="surface-card relative overflow-hidden rounded-[2.25rem] p-6 md:p-8 lg:p-9"
+              {...cardEnter}
+              transition={layoutSpring}
+            >
           <div className="absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top_right,rgba(15,124,134,0.18),transparent_55%),radial-gradient(circle_at_left,rgba(196,97,42,0.14),transparent_45%)]" />
           <div className="relative space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-5">
@@ -470,24 +524,24 @@ export function SimulatorClient({
                   label="Indicative diabetes-rate reduction"
                   value={formatPercent(result.predictedDiabetesRateReductionPctPoints.base, 2)}
                   tone="navy"
-                  quickFact={`${formatSmartCount(result.reengagedPatients.base)} people are modeled to re-enter broader diabetes care, which is the bridge used to estimate this prevalence movement.`}
-                  detail="This is a synthetic bridge estimate, not a directly observed prevalence change. The model converts newly re-engaged patients into improved diabetes control and then into a bounded percentage-point movement in diabetes prevalence over three years."
+                  quickFact={`${formatSmartCount(result.reengagedPatients.base)} people are modeled to re-enter broader diabetes care, with ${formatSmartCount(result.sustainedManagement.base)} also staying in sustained retinal management long enough to strengthen the bridge.`}
+                  detail="This is a synthetic bridge estimate, not a directly observed prevalence change. The model now weights the bridge through two linked stages: broader diabetes-care re-engagement from screening and more durable management continuity created by treatment starts after confirmed retinal follow-up."
                 />
                 <InsightChip
                   icon={Eye}
                   label="Newly seen each year"
                   value={formatSmartCount(result.additionalScreenings.base)}
                   tone="teal"
-                  quickFact={`${formatPercent(missedPopulationShare * 100)} of the currently missed population is brought into screening each year in this scenario.`}
-                  detail="This card shows the annual lift in people entering the retinal screening pathway. It is the clearest first signal of access improvement because it moves patients from being invisible to being reachable by the care pathway."
+                  quickFact={`${formatPercent(missedPopulationShare * 100)} of the currently missed population is brought into screening each year, and about ${formatSmartCount(result.additionalGradableExams.base)} of those new encounters are expected to yield usable exams.`}
+                  detail="This card shows the annual lift in people entering the retinal screening pathway. It now separates raw screening volume from usable-image volume so the model does not assume every new encounter automatically becomes clinically interpretable."
                 />
                 <InsightChip
                   icon={Stethoscope}
                   label="More completing follow-up"
                   value={formatSmartCount(result.earlierInterventions.base)}
                   tone="gold"
-                  quickFact={`${formatPercent(followUpLiftShare * 100)} more confirmed follow-up than the current baseline follow-up volume.`}
-                  detail="Screening only matters if suspicious findings convert into confirmed eye-care follow-up. This card isolates that handoff step, which is where earlier detection starts to turn into actual clinical protection."
+                  quickFact={`${formatPercent(followUpLiftShare * 100)} more confirmed follow-up than the current baseline volume, with about ${formatSmartCount(result.treatmentStarts.base)} converting into treatment or monitored management.`}
+                  detail="Screening only matters if suspicious findings convert into confirmed eye-care follow-up. This card now sits inside a more complete chain: usable exams create follow-up, follow-up creates treatment starts, and only then does the model estimate avoided retinal harm."
                 />
                 <InsightChip
                   icon={EyeOff}
@@ -521,14 +575,16 @@ export function SimulatorClient({
             <PathwaySummaryPanel
               confidenceLabel={result.confidenceLabel}
               pathway={result.pathway}
+              milestones={pathwayMilestones}
             />
           </div>
         </motion.section>
 
         <motion.section
+          layout
           className="surface-card rounded-[2.25rem] p-6 md:p-8 lg:p-9"
           {...cardEnter}
-          transition={{ duration: 0.48, ease: easeOutExpo, delay: 0.05 }}
+          transition={{ ...layoutSpring, delay: 0.05 }}
         >
           <div className="grid gap-6 xl:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] xl:items-end">
             <div className="min-w-0">
@@ -553,9 +609,11 @@ export function SimulatorClient({
                 tone="teal"
               />
               <CompareHighlightStat
-                label="Severe harm avoided"
+                label="Severe harm now lower by"
                 value={formatSmartCount(result.severeConsequencesAvoided.base)}
-                note="Major preventable retinal harm diverted through earlier detection and routing."
+                note={result.baselineSevereConsequences.base > 0
+                  ? `${formatPercent(severeHarmReductionShare)} lower than the modeled baseline severe-harm burden over ${DISPLAY_HORIZON_YEARS} years.`
+                  : "Indicative count only because the modeled baseline severe-harm burden is very small."}
                 tone="gold"
               />
               <CompareHighlightStat
@@ -575,7 +633,12 @@ export function SimulatorClient({
           />
         </motion.section>
 
-        <motion.section className="surface-card rounded-[2rem] p-6 md:p-8" {...cardEnter}>
+            <motion.section
+              layout
+              className="surface-card rounded-[2rem] p-6 md:p-8"
+              {...cardEnter}
+              transition={layoutSpring}
+            >
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-[0.72rem] uppercase tracking-[0.32em] text-[color:var(--muted)]">
@@ -585,21 +648,23 @@ export function SimulatorClient({
                 Separate the public-health story from the government economics.
               </h2>
             </div>
-            <div className="inline-flex rounded-full border border-[color:var(--line)] bg-white/80 p-1">
-              <TabButton
-                active={activeTab === "health"}
-                onClick={() => setActiveTab("health")}
-              >
-                Health effects
-              </TabButton>
-              <TabButton
-                active={activeTab === "economic"}
-                onClick={() => setActiveTab("economic")}
-              >
-                Economic cost
-              </TabButton>
-            </div>
-          </div>
+                <LayoutGroup id="output-tabs">
+                  <div className="inline-flex rounded-full border border-[color:var(--line)] bg-white/80 p-1">
+                    <TabButton
+                      active={activeTab === "health"}
+                      onClick={() => setActiveTab("health")}
+                    >
+                      Health effects
+                    </TabButton>
+                    <TabButton
+                      active={activeTab === "economic"}
+                      onClick={() => setActiveTab("economic")}
+                    >
+                      Economic cost
+                    </TabButton>
+                  </div>
+                </LayoutGroup>
+              </div>
 
           <AnimatePresence mode="wait">
             {activeTab === "health" ? (
@@ -617,6 +682,9 @@ export function SimulatorClient({
                   result={result}
                   modeledCoverageCeiling={modeledCoverageCeiling}
                   coverageSaturated={coverageSaturated}
+                  severeHarmReductionShare={severeHarmReductionShare}
+                  treatmentConversionShare={treatmentConversionShare}
+                  continuityShare={continuityShare}
                   sourceNotes={healthEvidenceNotes}
                 />
               </motion.div>
@@ -634,9 +702,9 @@ export function SimulatorClient({
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.section>
+            </motion.section>
 
-        <ExpandableSection
+            <ExpandableSection
           eyebrow="Comparison packages"
           title="Keep the alternate packages one click away."
           summary="Open the comparison set when you want to scan lean, balanced, and accelerated rollout shapes side by side."
@@ -651,9 +719,9 @@ export function SimulatorClient({
               />
             ))}
           </div>
-        </ExpandableSection>
+            </ExpandableSection>
 
-        <ExpandableSection
+            <ExpandableSection
           eyebrow="Assumptions in force"
           title={activeAssumptionSet.name}
           summary={activeAssumptionSet.description}
@@ -700,9 +768,11 @@ export function SimulatorClient({
                 ))}
             </div>
           </div>
-        </ExpandableSection>
-      </div>
-    </div>
+            </ExpandableSection>
+          </div>
+        </div>
+      </LayoutGroup>
+    </MotionConfig>
   );
 }
 
@@ -768,9 +838,11 @@ function ImpactCompareSlider({
   ];
 
   return (
-    <article
+    <motion.article
+      layout
       data-testid="compare-view"
       className="shadow-soft relative mt-6 min-w-0 self-start overflow-hidden rounded-[2.15rem] border border-[color:var(--line)] bg-[color:rgba(255,255,255,0.94)] backdrop-blur-xl"
+      transition={layoutSpring}
     >
       <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(196,97,42,0.12),rgba(244,240,234,0.82)_45%,rgba(15,124,134,0.12))]" />
       <div className="relative min-h-[38rem] md:min-h-[42rem]">
@@ -802,9 +874,10 @@ function ImpactCompareSlider({
             mode="after"
           />
         </div>
-        <div
+        <motion.div
           className="absolute inset-y-4 z-20 w-px bg-white/95 shadow-[0_0_0_1px_rgba(16,34,53,0.08)]"
-          style={{ left: `calc(${dividerPercent}% - 1px)` }}
+          animate={{ left: `calc(${dividerPercent}% - 1px)` }}
+          transition={reducedMotion ? { duration: 0 } : layoutSpring}
         >
           <motion.div
             className="absolute left-1/2 top-1/2 flex h-15 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-[color:#102235] text-white shadow-xl"
@@ -813,7 +886,7 @@ function ImpactCompareSlider({
           >
             <ArrowLeftRight className="h-5 w-5" />
           </motion.div>
-        </div>
+        </motion.div>
       </div>
 
       <div className="relative z-20 border-t border-[color:var(--line)] bg-[color:#faf7f0]/92 px-5 py-5">
@@ -832,7 +905,7 @@ function ImpactCompareSlider({
           onChange={(event) => onRevealChange(Number(event.target.value))}
         />
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -944,12 +1017,18 @@ function HealthEffectsPanel({
   result,
   modeledCoverageCeiling,
   coverageSaturated,
+  severeHarmReductionShare,
+  treatmentConversionShare,
+  continuityShare,
   sourceNotes,
 }: {
   region: RegionBaseline;
   result: SimulationResult;
   modeledCoverageCeiling: number;
   coverageSaturated: boolean;
+  severeHarmReductionShare: number;
+  treatmentConversionShare: number;
+  continuityShare: number;
   sourceNotes: SourceNote[];
 }) {
   return (
@@ -959,10 +1038,10 @@ function HealthEffectsPanel({
           Public-health view
         </p>
         <h3 className="mt-2 font-display text-[2.35rem] text-[color:var(--foreground)]">
-          Read the care-pathway shift in four steps.
+          Read the care-pathway shift without losing the clinical layers.
         </h3>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-[color:var(--muted)]">
-          Missed today, screened after deployment, follow-up completed, severe harm avoided.
+          Missed today, screened after deployment, follow-up completed, treatment started, harm risk reduced.
         </p>
         {coverageSaturated ? (
           <div className="mt-4 rounded-[1.2rem] border border-[color:rgba(15,124,134,0.16)] bg-[color:rgba(15,124,134,0.08)] px-4 py-3 text-sm leading-6 text-[color:var(--foreground)]">
@@ -972,6 +1051,27 @@ function HealthEffectsPanel({
             reach is flat.
           </div>
         ) : null}
+
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <PathwaySignalPill
+            label="Usable exams"
+            value={formatSmartCount(result.additionalGradableExams.base)}
+            note="Additional screenings expected to yield interpretable retinal exams."
+            tone="teal"
+          />
+          <PathwaySignalPill
+            label="Treatment starts"
+            value={formatSmartCount(result.treatmentStarts.base)}
+            note={`${formatPercent(treatmentConversionShare * 100)} of confirmed follow-up is modeled to convert into treatment or monitored management.`}
+            tone="navy"
+          />
+          <PathwaySignalPill
+            label="Sustained management"
+            value={formatSmartCount(result.sustainedManagement.base)}
+            note={`${formatPercent(continuityShare * 100)} of treatment starts are modeled to stay engaged long enough to alter the three-year risk curve.`}
+            tone="gold"
+          />
+        </div>
 
         <div className="mt-5 space-y-3">
           <TransitionMetricCard
@@ -983,7 +1083,7 @@ function HealthEffectsPanel({
             direction="down"
             shareOf={region.estimatedAdultsWithDiabetes}
             shareLabel="adults with diabetes"
-            caption={`Annual adults with diabetes in ${region.name} still outside retinal screening.`}
+            caption={`${formatSmartCount(result.additionalScreenings.base)} fewer adults remain outside retinal screening each year in ${region.name}.`}
           />
           <TransitionMetricCard
             label="Screened each year"
@@ -994,7 +1094,7 @@ function HealthEffectsPanel({
             direction="up"
             shareOf={region.estimatedAdultsWithDiabetes}
             shareLabel="adults with diabetes"
-            caption="Annual adults entering the screening pathway."
+            caption={`${formatSmartCount(result.additionalGradableExams.base)} of the added exams are expected to be usable for interpretation under this workflow.`}
           />
           <TransitionMetricCard
             label="Confirmed follow-up each year"
@@ -1003,18 +1103,18 @@ function HealthEffectsPanel({
             tone="navy"
             format="count"
             direction="up"
-            caption="Patients who make it from screening into confirmed retinal follow-up."
+            caption={`${formatSmartCount(result.treatmentStarts.base)} of these additional follow-up cases are modeled to convert into timely treatment or monitored management.`}
           />
           <TransitionMetricCard
-            label="Severe harm avoided over 3 years"
-            before={0}
-            after={result.severeConsequencesAvoided.base}
+            label="Severe harm risk over 3 years"
+            before={result.baselineSevereConsequences.base}
+            after={result.interventionSevereConsequences.base}
             tone="gold"
             format="count"
-            direction="up"
+            direction="down"
             shareOf={result.baselineSevereConsequences.base}
-            shareLabel="modeled baseline severe-harm cases"
-            caption="Three-year preventable severe retinal consequences avoided through earlier management."
+            shareLabel="modeled baseline severe-harm burden"
+            caption={`${formatSmartCount(result.severeConsequencesAvoided.base)} fewer major preventable retinal harms over ${DISPLAY_HORIZON_YEARS} years, or ${formatPercent(severeHarmReductionShare)} below the modeled baseline risk.`}
           />
         </div>
       </article>
@@ -1315,9 +1415,10 @@ function ComparisonPackageCard({
 
   return (
     <motion.article
+      layout
       className={`surface-card rounded-[1.8rem] border p-5 ${toneClasses[accentTone].shell}`}
-      whileHover={{ y: -4 }}
-      transition={{ type: "spring", stiffness: 260, damping: 24 }}
+      whileHover={{ y: -4, scale: 1.01 }}
+      transition={hoverSpring}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -1386,9 +1487,10 @@ function BlindnessReductionSpotlight({
 
   return (
     <motion.article
+      layout
       className="group relative overflow-hidden rounded-[1.8rem] border border-[color:rgba(16,34,53,0.1)] bg-[linear-gradient(180deg,#102235,#17314a)] p-5 text-white"
-      whileHover={{ y: -4 }}
-      transition={{ type: "spring", stiffness: 260, damping: 24 }}
+      whileHover={{ y: -4, scale: 1.01 }}
+      transition={hoverSpring}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
@@ -1454,10 +1556,11 @@ function BlindnessReductionSpotlight({
       <AnimatePresence initial={false}>
         {expanded ? (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.18 }}
+            layout
+            initial={{ opacity: 0, height: 0, y: 8 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -8 }}
+            transition={revealTransition}
             className="mt-5 rounded-[1.25rem] border border-white/10 bg-white/6 p-4 text-sm leading-7 text-white/72"
           >
             <p>
@@ -1491,9 +1594,10 @@ function CompareHighlightStat({
 }) {
   return (
     <motion.div
+      layout
       className={`group relative rounded-[1.35rem] border p-4 ${toneClasses[tone].shell}`}
-      whileHover={{ y: -3 }}
-      transition={{ type: "spring", stiffness: 260, damping: 24 }}
+      whileHover={{ y: -3, scale: 1.01 }}
+      transition={hoverSpring}
     >
       <p className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--muted)]">{label}</p>
       <p className="mt-3 font-display text-3xl text-[color:var(--foreground)]">{value}</p>
@@ -1523,9 +1627,10 @@ function InsightChip({
 
   return (
     <motion.div
+      layout
       className={`group relative rounded-[1.4rem] border p-4 ${toneClasses[tone].shell}`}
-      whileHover={{ y: -3 }}
-      transition={{ type: "spring", stiffness: 260, damping: 24 }}
+      whileHover={{ y: -3, scale: 1.01 }}
+      transition={hoverSpring}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -1551,10 +1656,11 @@ function InsightChip({
       <AnimatePresence initial={false}>
         {expanded ? (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.18 }}
+            layout
+            initial={{ opacity: 0, height: 0, y: 8 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -8 }}
+            transition={revealTransition}
             className="mt-4 rounded-[1rem] border border-[color:var(--line)] bg-white/80 p-4 text-sm leading-6 text-[color:var(--foreground)]"
           >
             {detail}
@@ -1568,14 +1674,20 @@ function InsightChip({
 function PathwaySummaryPanel({
   confidenceLabel,
   pathway,
+  milestones,
 }: {
   confidenceLabel: string;
   pathway: string[];
+  milestones: Array<{ label: string; value: string; note: string }>;
 }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <section className="group rounded-[1.6rem] border border-[color:var(--line)] bg-[color:#102235] p-5 text-white">
+    <motion.section
+      layout
+      className="group rounded-[1.6rem] border border-[color:var(--line)] bg-[color:#102235] p-5 text-white"
+      transition={layoutSpring}
+    >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
@@ -1587,7 +1699,7 @@ function PathwaySummaryPanel({
             </span>
           </div>
           <p className="max-w-2xl text-sm leading-7 text-white/74">
-            The model chain stays available, but it no longer takes over the results page by default.
+            The deeper clinical chain is still available, but it no longer overwhelms the default reading path.
           </p>
         </div>
         <CardInfoButton
@@ -1602,13 +1714,31 @@ function PathwaySummaryPanel({
         Open the pathway when you want the causal chain behind the headline outputs.
       </div>
 
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        {milestones.map((milestone) => (
+          <div
+            key={milestone.label}
+            className="rounded-[1.1rem] border border-white/10 bg-white/6 px-4 py-3"
+          >
+            <p className="text-[11px] uppercase tracking-[0.18em] text-white/48">
+              {milestone.label}
+            </p>
+            <p className="mt-2 font-display text-[2rem] leading-none text-white">
+              {milestone.value}
+            </p>
+            <p className="mt-2 text-xs leading-5 text-white/56">{milestone.note}</p>
+          </div>
+        ))}
+      </div>
+
       <AnimatePresence initial={false}>
         {expanded ? (
           <motion.ol
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.18 }}
+            layout
+            initial={{ opacity: 0, height: 0, y: 8 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -8 }}
+            transition={revealTransition}
             className="mt-4 grid gap-3 lg:grid-cols-2 text-sm leading-7 text-white/78"
           >
             {pathway.map((item) => (
@@ -1622,7 +1752,7 @@ function PathwaySummaryPanel({
           </motion.ol>
         ) : null}
       </AnimatePresence>
-    </section>
+    </motion.section>
   );
 }
 
@@ -1643,12 +1773,14 @@ function ExpandableSection({
   const dark = tone === "navy";
 
   return (
-    <section
+    <motion.section
+      layout
       className={`rounded-[2rem] border p-6 md:p-7 ${
         dark
           ? "border-[color:rgba(16,34,53,0.08)] bg-[linear-gradient(180deg,#102235,#17314a)] text-white"
           : "surface-card"
       }`}
+      transition={layoutSpring}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-3xl">
@@ -1685,17 +1817,18 @@ function ExpandableSection({
       <AnimatePresence initial={false}>
         {expanded ? (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.18 }}
+            layout
+            initial={{ opacity: 0, height: 0, y: 8 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -8 }}
+            transition={revealTransition}
             className="mt-5"
           >
             {children}
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </section>
+    </motion.section>
   );
 }
 
@@ -1717,6 +1850,34 @@ function BaselineMiniStat({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
       <p className="mt-2 font-display text-[1.7rem] leading-none text-[color:var(--foreground)]">{value}</p>
     </div>
+  );
+}
+
+function PathwaySignalPill({
+  label,
+  value,
+  note,
+  tone,
+}: {
+  label: string;
+  value: string;
+  note: string;
+  tone: Tone;
+}) {
+  return (
+    <motion.div
+      layout
+      className={`rounded-[1.2rem] border px-4 py-3 ${toneClasses[tone].shell}`}
+      transition={layoutSpring}
+    >
+      <p className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--muted)]">
+        {label}
+      </p>
+      <p className="mt-2 font-display text-[1.95rem] leading-none text-[color:var(--foreground)]">
+        {value}
+      </p>
+      <p className="mt-2 text-xs leading-5 text-[color:var(--muted)]">{note}</p>
+    </motion.div>
   );
 }
 
@@ -1753,13 +1914,16 @@ function TransitionMetricCard({
     shareOf && shareOf > 0 ? `${formatPercent((after / shareOf) * 100)} of ${shareLabel}` : null;
 
   return (
-    <div className={`group relative overflow-hidden rounded-[1.45rem] border p-4 ${toneClasses[tone].shell}`}>
+    <motion.div
+      layout
+      className={`group relative overflow-hidden rounded-[1.45rem] border p-4 ${toneClasses[tone].shell}`}
+      transition={layoutSpring}
+    >
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-[color:var(--foreground)]">{label}</p>
         <div className="flex items-center gap-2">
-          <span className={`rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.18em] ${toneClasses[tone].pill}`}>
-            {direction === "down" ? "\u2193 " : "\u2191 "}
-            {formatDelta(delta, format)}
+          <span className={`rounded-full px-3 py-1 text-[12px] font-medium ${toneClasses[tone].pill}`}>
+            {formatDeltaLabel(delta, format, direction)}
           </span>
           <CardInfoButton
             compact
@@ -1819,17 +1983,18 @@ function TransitionMetricCard({
       <AnimatePresence initial={false}>
         {expanded ? (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.18 }}
+            layout
+            initial={{ opacity: 0, height: 0, y: 8 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -8 }}
+            transition={revealTransition}
             className="mt-4 rounded-[1rem] border border-[color:var(--line)] bg-white/80 p-4 text-sm leading-6 text-[color:var(--foreground)]"
           >
             {caption}
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
 
@@ -1851,7 +2016,11 @@ function HealthOutcomeRow({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="group rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
+    <motion.div
+      layout
+      className="group rounded-[1.35rem] border border-white/10 bg-white/5 p-4"
+      transition={layoutSpring}
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <div className={`rounded-full p-2 ${toneClasses[tone].pill}`}>
@@ -1888,17 +2057,18 @@ function HealthOutcomeRow({
       <AnimatePresence initial={false}>
         {expanded ? (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.18 }}
+            layout
+            initial={{ opacity: 0, height: 0, y: 8 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -8 }}
+            transition={revealTransition}
             className="mt-4 rounded-[1rem] border border-white/10 bg-[color:rgba(255,255,255,0.06)] p-4 text-sm leading-6 text-white/74"
           >
             {caption}
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
 
@@ -1922,12 +2092,14 @@ function OutcomeCard({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div
+    <motion.div
+      layout
       className={`group rounded-[1.4rem] border p-4 ${
         dark
           ? "border-white/10 bg-white/5"
           : toneClasses[tone].shell
       }`}
+      transition={layoutSpring}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
@@ -1966,10 +2138,11 @@ function OutcomeCard({
       <AnimatePresence initial={false}>
         {expanded ? (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.18 }}
+            layout
+            initial={{ opacity: 0, height: 0, y: 8 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -8 }}
+            transition={revealTransition}
             className={`mt-4 rounded-[1rem] border p-4 text-sm leading-6 ${
               dark
                 ? "border-white/10 bg-[color:rgba(255,255,255,0.06)] text-white/74"
@@ -1983,7 +2156,7 @@ function OutcomeCard({
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
 
@@ -2007,10 +2180,12 @@ function CompareMetricCard({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div
+    <motion.div
+      layout
       className={`group relative rounded-[1.45rem] border px-4 py-4 ${
         dark ? "border-white/10 bg-white/5" : "border-[color:var(--line)] bg-white/78"
       }`}
+      transition={layoutSpring}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
@@ -2070,10 +2245,11 @@ function CompareMetricCard({
       <AnimatePresence initial={false}>
         {expanded ? (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.18 }}
+            layout
+            initial={{ opacity: 0, height: 0, y: 8 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -8 }}
+            transition={revealTransition}
             className={`mt-4 rounded-[1rem] border p-3 text-sm leading-6 ${
               dark
                 ? "border-white/10 bg-[color:rgba(255,255,255,0.06)] text-white/76"
@@ -2084,7 +2260,7 @@ function CompareMetricCard({
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
 
@@ -2102,7 +2278,8 @@ function CardInfoButton({
   compact?: boolean;
 }) {
   return (
-    <button
+    <motion.button
+      layout="position"
       type="button"
       onClick={onClick}
       aria-expanded={open}
@@ -2116,7 +2293,7 @@ function CardInfoButton({
       <Info className="h-3.5 w-3.5" />
       {!compact ? <span>{open ? "Hide" : "Explain"}</span> : null}
       <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
-    </button>
+    </motion.button>
   );
 }
 
@@ -2130,17 +2307,23 @@ function TabButton({
   onClick: () => void;
 }) {
   return (
-    <button
+    <motion.button
+      layout
       type="button"
       onClick={onClick}
-      className={`rounded-full px-4 py-2 text-sm transition-colors ${
-        active
-          ? "bg-[color:#102235] text-white"
-          : "text-[color:var(--foreground)] hover:bg-[color:#f7f1e6]"
+      className={`relative overflow-hidden rounded-full px-4 py-2 text-sm transition-colors ${
+        active ? "text-white" : "text-[color:var(--foreground)] hover:bg-[color:#f7f1e6]"
       }`}
     >
-      {children}
-    </button>
+      {active ? (
+        <motion.span
+          layoutId="output-tab-pill"
+          className="absolute inset-0 bg-[color:#102235]"
+          transition={layoutSpring}
+        />
+      ) : null}
+      <span className="relative z-10">{children}</span>
+    </motion.button>
   );
 }
 
@@ -2153,9 +2336,24 @@ function formatSignedCurrency(value: number) {
   return `${prefix}${formatCurrency(Math.abs(value))}`;
 }
 
-function formatDelta(value: number, format: ValueFormat) {
-  const prefix = value >= 0 ? "+" : "-";
-  return `${prefix}${formatByType(Math.abs(value), format)}`;
+function formatDeltaLabel(
+  value: number,
+  format: ValueFormat,
+  direction: "up" | "down"
+) {
+  if (Math.abs(value) < 1e-6) {
+    return "No change";
+  }
+
+  const descriptor =
+    direction === "down"
+      ? value >= 0
+        ? "fewer"
+        : "more"
+      : value >= 0
+        ? "more"
+        : "fewer";
+  return `${formatByType(Math.abs(value), format)} ${descriptor}`;
 }
 
 function formatByType(value: number, format: ValueFormat) {

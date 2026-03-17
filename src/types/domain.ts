@@ -115,8 +115,11 @@ export interface ScenarioPopulationSnapshot {
 export interface SimulationResult {
   predictedDiabetesRateReductionPctPoints: RangeValue;
   additionalScreenings: RangeValue;
+  additionalGradableExams: RangeValue;
   additionalReferableCases: RangeValue;
   earlierInterventions: RangeValue;
+  treatmentStarts: RangeValue;
+  sustainedManagement: RangeValue;
   reengagedPatients: RangeValue;
   baselineSnapshot: ScenarioPopulationSnapshot;
   interventionSnapshot: ScenarioPopulationSnapshot;

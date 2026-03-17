@@ -54,6 +54,15 @@ function getValue(
   return lookup[key]?.[band] ?? 0;
 }
 
+function getValueOrDefault(
+  lookup: Record<string, AssumptionDefinition>,
+  key: string,
+  band: keyof RangeValue,
+  fallback: RangeValue
+) {
+  return lookup[key]?.[band] ?? fallback[band];
+}
+
 function safeDivide(value: number, by: number) {
   if (by <= 0) {
     return 0;
@@ -78,6 +87,13 @@ function getDeviceProfile(
         recurringCost: aiCost,
         throughput: getValue(lookup, "fundus_ai_throughput_multiplier", band),
         detectionMultiplier: 1.08,
+        gradabilityMultiplier: getValueOrDefault(
+          lookup,
+          "fundus_ai_gradability_multiplier",
+          band,
+          { low: 1.02, base: 1.06, high: 1.1 }
+        ),
+        careResolutionMultiplier: 1.03,
         confidencePenalty: 0,
       };
     case "fundus_oct_adjunct":
@@ -90,6 +106,13 @@ function getDeviceProfile(
           band
         ),
         detectionMultiplier: 1.14,
+        gradabilityMultiplier: getValueOrDefault(
+          lookup,
+          "fundus_oct_adjunct_gradability_multiplier",
+          band,
+          { low: 1.08, base: 1.14, high: 1.2 }
+        ),
+        careResolutionMultiplier: 1.08,
         confidencePenalty: 8,
       };
     case "oct_only_advanced":
@@ -98,6 +121,13 @@ function getDeviceProfile(
         recurringCost: 0,
         throughput: getValue(lookup, "oct_only_throughput_multiplier", band),
         detectionMultiplier: 0.94,
+        gradabilityMultiplier: getValueOrDefault(
+          lookup,
+          "oct_only_gradability_multiplier",
+          band,
+          { low: 1.1, base: 1.16, high: 1.24 }
+        ),
+        careResolutionMultiplier: 0.96,
         confidencePenalty: 18,
       };
     default:
@@ -106,6 +136,8 @@ function getDeviceProfile(
         recurringCost: 0,
         throughput: 1,
         detectionMultiplier: 1,
+        gradabilityMultiplier: 1,
+        careResolutionMultiplier: 1,
         confidencePenalty: 0,
       };
   }
@@ -126,6 +158,30 @@ function bandMath(
   const infrastructure = infrastructureMultipliers[scenario.infrastructurePackage];
   const adoption = adoptionMultipliers[scenario.adoptionLevel];
   const staffModifier = getValue(lookup, staffingKeys[scenario.staffingModel], band);
+  const gradabilityShare = getValueOrDefault(
+    lookup,
+    "image_gradability_share",
+    band,
+    { low: 0.82, base: 0.88, high: 0.93 }
+  );
+  const treatmentInitiationShare = getValueOrDefault(
+    lookup,
+    "treatment_initiation_share_after_followup",
+    band,
+    { low: 0.62, base: 0.74, high: 0.84 }
+  );
+  const sustainedManagementShare = getValueOrDefault(
+    lookup,
+    "sustained_management_share_after_treatment",
+    band,
+    { low: 0.64, base: 0.78, high: 0.88 }
+  );
+  const followupReengagementShare = getValueOrDefault(
+    lookup,
+    "followup_reengagement_share",
+    band,
+    { low: 0.1, base: 0.16, high: 0.24 }
+  );
   const coverageCap = diabeticAdults * getValue(lookup, "max_coverage_share", band);
   const reachableHeadroom = Math.max(coverageCap - baselineScreened, 0);
   const annualCapacity =
@@ -148,6 +204,16 @@ function bandMath(
     diabeticAdults
   );
   const totalMissed = clamp(diabeticAdults - totalScreened, 0, diabeticAdults);
+  const baselineGradableExams = clamp(
+    baselineScreened * gradabilityShare,
+    0,
+    baselineScreened
+  );
+  const additionalGradableExams = clamp(
+    additionalScreenings * gradabilityShare * device.gradabilityMultiplier,
+    0,
+    additionalScreenings
+  );
 
   const regionReferableShare = clamp(
     (region.referableDrPrevalencePct / 100 +
@@ -157,15 +223,25 @@ function bandMath(
     0.35
   );
 
+  const baselineReferableCases = baselineGradableExams * regionReferableShare;
   const additionalReferableCases =
-    additionalScreenings * regionReferableShare * device.detectionMultiplier;
+    additionalGradableExams *
+    regionReferableShare *
+    device.detectionMultiplier;
   const earlierInterventions =
     additionalReferableCases *
     getValue(lookup, referralKeys[scenario.referralModel], band);
+  const treatmentStarts =
+    earlierInterventions *
+    treatmentInitiationShare *
+    device.careResolutionMultiplier;
+  const sustainedManagement =
+    treatmentStarts *
+    sustainedManagementShare *
+    infrastructure.reengagement;
 
   const baselineFollowUps = clamp(
-    baselineScreened *
-      regionReferableShare *
+    baselineReferableCases *
       getValue(lookup, "baseline_followup_completion_share", band),
     0,
     diabeticAdults
@@ -173,16 +249,27 @@ function bandMath(
   const totalFollowUps = clamp(
     baselineFollowUps + earlierInterventions,
     0,
-    diabeticAdults * regionReferableShare
+    (baselineGradableExams + additionalGradableExams) * regionReferableShare
   );
 
-  const reengagedPatients =
+  const screeningReengagement =
     additionalScreenings *
     getValue(lookup, "reengagement_rate_from_screening", band) *
     infrastructure.reengagement;
+  const reengagedPatients = clamp(
+    screeningReengagement + treatmentStarts * followupReengagementShare,
+    0,
+    diabeticAdults
+  );
+  const careContinuityMultiplier = clamp(
+    0.82 + safeDivide(sustainedManagement, treatmentStarts) * 0.18,
+    0.82,
+    1
+  );
   const improvedControlPatients =
     reengagedPatients *
-    getValue(lookup, "glycemic_improvement_conversion", band);
+    getValue(lookup, "glycemic_improvement_conversion", band) *
+    careContinuityMultiplier;
   const modeledCasesReduced =
     improvedControlPatients *
     getValue(lookup, "prevalence_bridge_annual_share", band) *
@@ -198,9 +285,10 @@ function bandMath(
     regionReferableShare *
     getValue(lookup, "vision_threatening_progression_share_3y", band);
   const severeConsequencesAvoided = clamp(
-    earlierInterventions *
+    sustainedManagement *
       getValue(lookup, "vision_threatening_progression_share_3y", band) *
-      getValue(lookup, "severe_consequence_avoidance_share", band),
+      getValue(lookup, "severe_consequence_avoidance_share", band) *
+      device.careResolutionMultiplier,
     0,
     baselineSevereConsequences
   );
@@ -268,7 +356,7 @@ function bandMath(
     getValue(lookup, "reimbursement_per_screen", band) *
     HORIZON_YEARS;
   const directMedicalSavings =
-    earlierInterventions *
+    treatmentStarts *
       getValue(lookup, "avoided_cost_per_early_case", band) +
     improvedControlPatients *
       getValue(lookup, "reengaged_patient_savings_annual", band) *
@@ -298,11 +386,14 @@ function bandMath(
     baselineMissed,
     totalScreened,
     totalMissed,
+    additionalGradableExams,
     baselineFollowUps,
     totalFollowUps,
     additionalScreenings,
     additionalReferableCases,
     earlierInterventions,
+    treatmentStarts,
+    sustainedManagement,
     reengagedPatients,
     baselineSevereConsequences,
     interventionSevereConsequences,
@@ -381,6 +472,12 @@ export function simulateScenario(
       "predictedDiabetesRateReductionPctPoints"
     ),
     additionalScreenings: buildRange(low, base, high, "additionalScreenings"),
+    additionalGradableExams: buildRange(
+      low,
+      base,
+      high,
+      "additionalGradableExams"
+    ),
     additionalReferableCases: buildRange(
       low,
       base,
@@ -388,6 +485,8 @@ export function simulateScenario(
       "additionalReferableCases"
     ),
     earlierInterventions: buildRange(low, base, high, "earlierInterventions"),
+    treatmentStarts: buildRange(low, base, high, "treatmentStarts"),
+    sustainedManagement: buildRange(low, base, high, "sustainedManagement"),
     reengagedPatients: buildRange(low, base, high, "reengagedPatients"),
     baselineSnapshot: {
       screenedPatients: Math.round(base.baselineScreened),
@@ -483,13 +582,14 @@ export function simulateScenario(
         base.predictedDiabetesRateReductionPctPoints,
         2
       )} reduction in adult diabetes rate over ${HORIZON_YEARS} years versus the baseline trajectory, not a directly observed prevalence change.`,
-      "The calculator exposes the intermediate public-health story directly: who is still missed, who is newly seen, who completes follow-up, and how much preventable severe retinal harm is plausibly avoided.",
+      "The calculator now separates pathway stages instead of collapsing them: additional screenings, usable exams, confirmed follow-up, treatment starts, sustained management, and then the harms plausibly avoided.",
       "QALYs, DALYs, surgeries, and productivity are explicitly assumption-driven planning outputs. They are useful for comparing packages, but they should not be interpreted as precise forecasts.",
     ],
     pathway: [
       `${Math.round(base.baselineMissed)} adults with diabetes are currently missed each year in the baseline picture.`,
-      `${Math.round(base.additionalScreenings)} additional screenings bring more people into the pathway.`,
-      `${Math.round(base.earlierInterventions)} more patients complete retinal follow-up, producing an estimated ${Math.round(base.severeConsequencesAvoided)} major preventable vision consequences avoided over ${HORIZON_YEARS} years.`,
+      `${Math.round(base.additionalScreenings)} additional screenings yield about ${Math.round(base.additionalGradableExams)} usable exams under the active workflow assumptions.`,
+      `${Math.round(base.earlierInterventions)} patients complete confirmed retinal follow-up and about ${Math.round(base.treatmentStarts)} move into timely treatment or monitored management.`,
+      `${Math.round(base.sustainedManagement)} remain in sustained management long enough to plausibly avoid about ${Math.round(base.severeConsequencesAvoided)} major preventable vision consequences over ${HORIZON_YEARS} years.`,
       `${base.predictedDiabetesRateReductionPctPoints.toFixed(
         2
       )} percentage-point diabetes-rate reduction is then estimated through the broader re-engagement bridge.`,

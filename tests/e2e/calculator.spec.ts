@@ -5,6 +5,8 @@ async function assertNoInvalidNumbers(page: Page) {
   expect(bodyText).not.toContain("NaN");
   expect(bodyText).not.toContain("Infinity");
   expect(bodyText).not.toContain("undefined");
+  expect(bodyText).not.toContain("↓ +");
+  expect(bodyText).not.toContain("↑ -");
 }
 
 async function assertNoHorizontalOverflow(page: Page, tolerance = 2) {
@@ -89,6 +91,8 @@ test("calculator landing view is readable and baseline-first on desktop", async 
 
   await expect(page.getByText(/screened annually/i).first()).toBeVisible();
   await expect(page.getByText(/still missed/i).first()).toBeVisible();
+  await expect(page.getByText(/usable exams/i).first()).toBeVisible();
+  await expect(page.getByText(/treatment starts/i).first()).toBeVisible();
 
   await assertNoInvalidNumbers(page);
   await assertNoHorizontalOverflow(page);
