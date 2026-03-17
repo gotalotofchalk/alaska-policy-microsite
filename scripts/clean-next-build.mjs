@@ -17,7 +17,7 @@ async function removeIfExists(targetPath) {
 
 async function main() {
   const cwd = process.cwd();
-  const cacheDir = path.join(path.dirname(cwd), ".build-artifacts-cache");
+  const cacheDir = path.join(cwd, ".build-artifacts-cache");
   const nextDir = path.join(cwd, ".next");
 
   await fs.mkdir(cacheDir, { recursive: true });
