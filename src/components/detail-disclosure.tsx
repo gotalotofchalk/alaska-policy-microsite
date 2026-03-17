@@ -114,8 +114,11 @@ export function DetailCard({
 
   return (
     <motion.article
-      className={cn("group relative rounded-[1.8rem] border p-5 md:p-6", toneClasses[tone].shell)}
-      whileHover={{ y: -4 }}
+      className={cn(
+        "group relative self-start rounded-[1.8rem] border p-5 md:p-6",
+        toneClasses[tone].shell
+      )}
+      whileHover={{ y: -2 }}
       transition={{ type: "spring", stiffness: 260, damping: 24 }}
     >
       <div className="flex items-start justify-between gap-4">
@@ -137,14 +140,16 @@ export function DetailCard({
       ) : null}
       {children ? <div className="mt-4">{children}</div> : null}
 
-      <div
-        className={cn(
-          "pointer-events-none mt-5 hidden rounded-[1rem] border p-3 text-xs leading-5 opacity-0 transition duration-200 md:block md:translate-y-1.5 md:group-hover:translate-y-0 md:group-hover:opacity-100",
-          toneClasses[tone].hover
-        )}
-      >
-        {hoverNote}
-      </div>
+      {!expanded ? (
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-x-5 bottom-5 z-10 hidden rounded-[1rem] border p-3 text-xs leading-5 opacity-0 shadow-[0_16px_38px_rgba(11,33,50,0.12)] transition duration-200 md:block md:translate-y-2 md:group-hover:translate-y-0 md:group-hover:opacity-100",
+            toneClasses[tone].hover
+          )}
+        >
+          {hoverNote}
+        </div>
+      ) : null}
 
       <AnimatePresence initial={false}>
         {expanded ? (
@@ -184,8 +189,11 @@ export function DisclosureRow({
 
   return (
     <motion.div
-      className={cn("group rounded-[1.45rem] border p-4 md:p-5", toneClasses[tone].shell)}
-      whileHover={{ y: -3 }}
+      className={cn(
+        "group relative self-start rounded-[1.45rem] border p-4 md:p-5",
+        toneClasses[tone].shell
+      )}
+      whileHover={{ y: -2 }}
       transition={{ type: "spring", stiffness: 260, damping: 24 }}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -228,14 +236,16 @@ export function DisclosureRow({
         </div>
       </div>
 
-      <div
-        className={cn(
-          "pointer-events-none mt-4 hidden rounded-[1rem] border p-3 text-xs leading-5 opacity-0 transition duration-200 md:block md:translate-y-1.5 md:group-hover:translate-y-0 md:group-hover:opacity-100",
-          toneClasses[tone].hover
-        )}
-      >
-        {hoverNote}
-      </div>
+      {!expanded ? (
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-x-4 bottom-4 z-10 hidden rounded-[1rem] border p-3 text-xs leading-5 opacity-0 shadow-[0_16px_38px_rgba(11,33,50,0.12)] transition duration-200 md:block md:translate-y-2 md:group-hover:translate-y-0 md:group-hover:opacity-100",
+            toneClasses[tone].hover
+          )}
+        >
+          {hoverNote}
+        </div>
+      ) : null}
 
       <AnimatePresence initial={false}>
         {expanded ? (

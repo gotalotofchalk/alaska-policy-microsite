@@ -11,7 +11,8 @@ export default function PlaybooksPage() {
       <PageHero
         eyebrow="Regional Playbooks"
         title="Each region gets a policy-ready playbook, not a generic technology wish list."
-        lede="The recommendations below turn the framework into action: what to deploy first, what to defer, and what the year-one signal should be if the rollout is on track."
+        lede="These playbooks turn the framework into action: what moves first, what waits, and what should change in year one."
+        compact
       />
 
       <Reveal>
@@ -24,6 +25,20 @@ export default function PlaybooksPage() {
               hoverNote={region.headline}
               detail={
                 <div className="space-y-3">
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <PlaybookSignal
+                      label="Move first"
+                      value={moveFirstCopy(region.recommendedPathway)}
+                    />
+                    <PlaybookSignal
+                      label="Guardrail"
+                      value={guardrailCopy(region.recommendedPathway)}
+                    />
+                    <PlaybookSignal
+                      label="Year-one signal"
+                      value={yearOneSignalCopy(region.recommendedPathway)}
+                    />
+                  </div>
                   {region.interventions.map((item, index) => (
                     <DisclosureRow
                       key={item}
@@ -43,4 +58,49 @@ export default function PlaybooksPage() {
       </Reveal>
     </>
   );
+}
+
+function PlaybookSignal({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[1.2rem] border border-[color:var(--line)] bg-white/78 p-4">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
+      <p className="mt-2 text-sm leading-6 text-[color:var(--foreground)]">{value}</p>
+    </div>
+  );
+}
+
+function moveFirstCopy(pathway: string) {
+  if (pathway === "Fast-start") {
+    return "Activate high-volume primary care sites first.";
+  }
+
+  if (pathway === "Build-first") {
+    return "Start with a smaller connected footprint.";
+  }
+
+  return "Lead statewide reading and referral routing.";
+}
+
+function guardrailCopy(pathway: string) {
+  if (pathway === "Fast-start") {
+    return "Do not outrun referral capacity.";
+  }
+
+  if (pathway === "Build-first") {
+    return "Do not scale before transfer and staffing are stable.";
+  }
+
+  return "Do not spend hub capacity on device count alone.";
+}
+
+function yearOneSignalCopy(pathway: string) {
+  if (pathway === "Fast-start") {
+    return "Screening lift and confirmed follow-up should move quickly.";
+  }
+
+  if (pathway === "Build-first") {
+    return "Activation and referral reliability should move before reach.";
+  }
+
+  return "Turnaround, scheduling, and statewide support should tighten.";
 }

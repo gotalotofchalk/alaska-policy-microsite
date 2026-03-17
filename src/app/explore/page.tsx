@@ -6,22 +6,58 @@ import { regionBaselines } from "@/lib/data";
 import { formatNumber, formatPercent } from "@/lib/utils";
 
 export default function ExplorePage() {
+  const fastStartCount = regionBaselines.filter(
+    (region) => region.recommendedPathway === "Fast-start"
+  ).length;
+  const buildFirstCount = regionBaselines.filter(
+    (region) => region.recommendedPathway === "Build-first"
+  ).length;
+  const highestBurdenRegion = [...regionBaselines].sort(
+    (left, right) => right.estimatedAdultsWithDiabetes - left.estimatedAdultsWithDiabetes
+  )[0];
+
   return (
     <>
       <PageHero
         eyebrow="Explore"
-        title="Seven Alaska public health regions, plotted as a policy problem instead of a data dump."
-        lede="The explorer strips away raw layer toggles and presents each region through the signals that actually matter for rollout design: adult diabetes burden, retinal screening gap, provider pressure, and implementation readiness."
+        title="Seven Alaska regions, framed as a rollout decision instead of a data portal."
+        lede="The explorer keeps only the signals that matter for sequencing: burden, screening gap, provider pressure, and readiness."
+        compact
       />
 
       <Reveal>
+        <section className="grid gap-4 md:grid-cols-3">
+          <QuickSignal
+            label="Highest current burden"
+            value={highestBurdenRegion?.name ?? "Anchorage"}
+            note={`${formatNumber(
+              highestBurdenRegion?.estimatedAdultsWithDiabetes ?? 0
+            )} adults with diabetes in the current planning baseline.`}
+            tone="paper"
+          />
+          <QuickSignal
+            label="Fast-start regions"
+            value={String(fastStartCount)}
+            note="Regions whose current readiness suggests they can absorb deployment sooner."
+            tone="teal"
+          />
+          <QuickSignal
+            label="Build-first regions"
+            value={String(buildFirstCount)}
+            note="Regions where infrastructure and referral reliability should be sequenced before scale."
+            tone="warm"
+          />
+        </section>
+      </Reveal>
+
+      <Reveal delay={0.04}>
         <SeverityReadinessMatrix regions={regionBaselines} />
       </Reveal>
 
-      <Reveal delay={0.08}>
+      <Reveal delay={0.1}>
         <section className="grid gap-4 lg:grid-cols-2">
           {regionBaselines.map((region) => (
-            <article key={region.slug} className="surface-card rounded-[1.8rem] p-6">
+            <article key={region.slug} className="surface-card rounded-[1.95rem] p-6 md:p-7">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[0.72rem] uppercase tracking-[0.3em] text-[color:var(--muted)]">
@@ -83,6 +119,37 @@ export default function ExplorePage() {
         </section>
       </Reveal>
     </>
+  );
+}
+
+function QuickSignal({
+  label,
+  value,
+  note,
+  tone = "paper",
+}: {
+  label: string;
+  value: string;
+  note: string;
+  tone?: "paper" | "teal" | "warm";
+}) {
+  const toneClass =
+    tone === "teal"
+      ? "shadow-soft border-[color:rgba(15,124,134,0.14)] bg-[linear-gradient(180deg,rgba(15,124,134,0.05),rgba(255,255,255,0.92))]"
+      : tone === "warm"
+        ? "shadow-soft border-[color:rgba(196,97,42,0.14)] bg-[linear-gradient(180deg,rgba(196,97,42,0.05),rgba(255,255,255,0.92))]"
+        : "surface-card";
+
+  return (
+    <article className={`${toneClass} rounded-[1.7rem] border p-5`}>
+      <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">
+        {label}
+      </p>
+      <p className="mt-3 font-display text-[2.4rem] leading-none text-[color:var(--foreground)]">
+        {value}
+      </p>
+      <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">{note}</p>
+    </article>
   );
 }
 

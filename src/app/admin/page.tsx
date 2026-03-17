@@ -83,6 +83,7 @@ export default async function AdminPage({
         eyebrow="Model Assumptions"
         title="Fine-tune the calculator assumptions, preview the effect, and publish the active pack."
         lede="Adjust epidemiology, screening, follow-up, and economic coefficients here, compare a draft against the active public pack, and publish when the calculator behavior looks right."
+        compact
       />
 
       <section className="grid gap-6 xl:grid-cols-[19rem_minmax(0,1fr)]">

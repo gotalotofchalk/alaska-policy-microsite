@@ -4,12 +4,36 @@ import { Reveal } from "@/components/reveal";
 import { dataGeneratedAt, sourceNotes } from "@/lib/data";
 
 export default function MethodsPage() {
+  const groupedNotes = {
+    "Data baselines": sourceNotes.filter((note) =>
+      ["Geography", "Population baseline", "Disease baseline", "Connectivity context"].includes(
+        note.scope
+      )
+    ),
+    "Clinical and implementation evidence": sourceNotes.filter((note) =>
+      [
+        "Clinical guidance",
+        "Implementation evidence",
+        "Workflow evidence",
+        "Device evidence",
+        "Treatment evidence",
+        "Outcomes evidence",
+      ].includes(note.scope)
+    ),
+    "Economic and burden evidence": sourceNotes.filter((note) =>
+      ["Economic evidence", "Public health burden", "Quality-of-life evidence"].includes(
+        note.scope
+      )
+    ),
+  };
+
   return (
     <>
       <PageHero
         eyebrow="Methods"
         title="The methods page makes the evidence stack explicit."
-        lede="The product separates source-backed Alaska baselines, literature-backed screening defaults, and the synthetic bridge that powers the final diabetes-rate estimate. That split is the main trust mechanism."
+        lede="The evidence stack stays separated on purpose: Alaska baselines, literature-backed defaults, and the synthetic bridge behind the final rate estimate."
+        compact
       />
 
       <Reveal>
@@ -61,23 +85,42 @@ export default function MethodsPage() {
 
       <Reveal delay={0.08}>
         <section className="grid gap-4">
-          {sourceNotes.map((note) => (
-            <DisclosureRow
-              key={note.id}
-              eyebrow={note.scope}
-              title={note.name}
-              badge={note.evidenceTier}
-              href={note.url}
-              hoverNote={`${note.year} source. Last refreshed ${note.lastRefreshDate}.`}
-              detail={
-                <div className="space-y-2">
-                  <p>{note.summary}</p>
-                  <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                    Updated {note.lastRefreshDate}
+          {Object.entries(groupedNotes).map(([groupLabel, notes]) => (
+            <article key={groupLabel} className="surface-card rounded-[1.9rem] p-6 md:p-7">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">
+                    Source library
                   </p>
+                  <h2 className="mt-2 font-display text-[2.25rem] text-[color:var(--foreground)]">
+                    {groupLabel}
+                  </h2>
                 </div>
-              }
-            />
+                <div className="rounded-full border border-[color:var(--line)] bg-white/75 px-4 py-2 text-sm text-[color:var(--foreground)]">
+                  {notes.length} sources
+                </div>
+              </div>
+              <div className="mt-5 grid gap-3">
+                {notes.map((note) => (
+                  <DisclosureRow
+                    key={note.id}
+                    eyebrow={note.scope}
+                    title={note.name}
+                    badge={note.evidenceTier}
+                    href={note.url}
+                    hoverNote={`${note.year} source. Last refreshed ${note.lastRefreshDate}.`}
+                    detail={
+                      <div className="space-y-2">
+                        <p>{note.summary}</p>
+                        <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                          Updated {note.lastRefreshDate}
+                        </p>
+                      </div>
+                    }
+                  />
+                ))}
+              </div>
+            </article>
           ))}
         </section>
       </Reveal>

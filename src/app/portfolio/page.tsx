@@ -5,6 +5,7 @@ import { Reveal } from "@/components/reveal";
 const portfolioCards = [
   {
     title: "Access and coordination",
+    tone: "paper" as const,
     metrics: [
       "Additional screens completed",
       "Referral turnaround time",
@@ -13,6 +14,7 @@ const portfolioCards = [
   },
   {
     title: "Clinical yield",
+    tone: "teal" as const,
     metrics: [
       "Referable cases identified",
       "Earlier interventions started",
@@ -21,6 +23,7 @@ const portfolioCards = [
   },
   {
     title: "Implementation readiness",
+    tone: "warm" as const,
     metrics: [
       "Sites activated",
       "Staff trained",
@@ -29,6 +32,7 @@ const portfolioCards = [
   },
   {
     title: "Financial return",
+    tone: "navy" as const,
     metrics: ["Year-one program cost", "Three-year benefit estimate", "Indicative ROI band"],
   },
 ];
@@ -39,7 +43,8 @@ export default function PortfolioPage() {
       <PageHero
         eyebrow="Portfolio"
         title="The statewide portfolio view keeps regional decisions tied to measurable public value."
-        lede="This page summarizes what the public framework is trying to preserve at the portfolio level: a balanced statewide rollout, visible year-one signals, and an auditable line from investment to return."
+        lede="Read the statewide rollout as a balanced portfolio: visible year-one signals, coverage discipline, and an auditable path from spend to return."
+        compact
       />
 
       <Reveal>
@@ -49,6 +54,7 @@ export default function PortfolioPage() {
               key={card.title}
               title={card.title}
               hoverNote={`${card.metrics.length} portfolio markers sit under this outcome family.`}
+              tone={card.tone}
               detail={
                 <div className="space-y-3">
                   {card.metrics.map((metric, index) => (

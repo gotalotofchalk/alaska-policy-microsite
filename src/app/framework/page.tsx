@@ -38,7 +38,8 @@ export default function FrameworkPage() {
       <PageHero
         eyebrow="Framework"
         title="Need, readiness, and measurable results are the backbone of the product."
-        lede="The framework is designed to look and read like a professional policy system, not a raw GIS portal. The logic is explicit: use burden to prioritize, readiness to sequence, and measurable outputs to justify funding."
+        lede="The logic stays simple on purpose: use burden to prioritize, readiness to sequence, and measurable outputs to justify funding."
+        compact
       />
 
       <Reveal>
