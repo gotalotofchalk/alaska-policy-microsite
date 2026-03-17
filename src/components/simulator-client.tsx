@@ -193,21 +193,21 @@ export function SimulatorClient({
       };
 
   return (
-    <div className="grid gap-6 md:grid-cols-[26.75rem_minmax(0,1fr)] md:items-start lg:grid-cols-[29.5rem_minmax(0,1fr)] xl:grid-cols-[30rem_minmax(0,1fr)]">
+    <div className="grid gap-6 md:grid-cols-[24.75rem_minmax(0,1fr)] md:items-start lg:grid-cols-[26.75rem_minmax(0,1fr)] xl:grid-cols-[27.5rem_minmax(0,1fr)]">
       <section
         data-testid="calculator-sidebar"
-        className="shadow-lift relative z-10 rounded-[2.25rem] border border-[color:rgba(16,34,53,0.12)] bg-[linear-gradient(180deg,rgba(248,244,236,0.98),rgba(244,240,232,0.94))] p-7 md:sticky md:top-24 md:flex md:max-h-[calc(100vh-7rem)] md:flex-col md:self-start md:isolate md:overflow-hidden"
+        className="shadow-lift relative z-10 rounded-[2.1rem] border border-[color:rgba(16,34,53,0.12)] bg-[linear-gradient(180deg,rgba(248,244,236,0.98),rgba(244,240,232,0.94))] p-6 md:sticky md:top-24 md:flex md:max-h-[calc(100vh-7rem)] md:flex-col md:self-start md:isolate md:overflow-hidden"
       >
         <div className="shrink-0">
           <p className="text-[0.72rem] uppercase tracking-[0.32em] text-[color:var(--muted)]">
             Scenario inputs
           </p>
-          <h2 className="mt-2 max-w-[16rem] font-display text-[2.45rem] leading-[0.95] text-[color:var(--foreground)] md:text-[2.7rem]">
+          <h2 className="mt-2 max-w-[22rem] font-display text-[2.05rem] leading-[0.94] text-[color:var(--foreground)] md:text-[2.25rem]">
             Build a regional deployment
           </h2>
         </div>
 
-        <div className="mt-6 grid shrink-0 grid-cols-2 gap-3">
+        <div className="mt-4 grid shrink-0 grid-cols-2 gap-2.5">
           <button
             type="button"
             onClick={() =>
@@ -216,13 +216,13 @@ export function SimulatorClient({
                 block: "start",
               })
             }
-            className="rounded-full bg-[color:var(--foreground)] px-4 py-3 text-[0.9rem] font-medium text-white transition-colors hover:bg-[color:#1b3551]"
+            className="rounded-full bg-[color:var(--foreground)] px-3.5 py-2.5 text-[0.86rem] font-medium text-white transition-colors hover:bg-[color:#1b3551]"
           >
             Jump to outcomes
           </button>
           <Link
             href="/assumptions"
-            className="rounded-full border border-[color:var(--line)] bg-[color:var(--surface-strong)] px-4 py-3 text-center text-[0.9rem] font-medium text-[color:var(--foreground)] transition-colors hover:bg-white"
+            className="rounded-full border border-[color:var(--line)] bg-[color:var(--surface-strong)] px-3.5 py-2.5 text-center text-[0.86rem] font-medium text-[color:var(--foreground)] transition-colors hover:bg-white"
           >
             Fine-tune assumptions
           </Link>
@@ -230,7 +230,7 @@ export function SimulatorClient({
 
         <div
           data-testid="calculator-sidebar-scroll"
-          className="quiet-scrollbar relative mt-7 space-y-6 md:min-h-0 md:flex-1 md:overflow-y-auto md:pr-4 md:[scrollbar-gutter:stable]"
+          className="quiet-scrollbar relative mt-5 space-y-5 md:min-h-0 md:flex-1 md:overflow-y-auto md:pr-3 md:[scrollbar-gutter:stable]"
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 z-10 hidden h-8 bg-[linear-gradient(180deg,#f7f3eb,rgba(247,243,235,0))] md:block" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 hidden h-14 bg-[linear-gradient(0deg,#f7f3eb,rgba(247,243,235,0))] md:block" />
