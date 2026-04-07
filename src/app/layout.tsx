@@ -18,7 +18,7 @@ const sans = Public_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Alaska Rural Health Transformation Navigator",
+  title: "RHT-NAV: Rural Health Transformation Navigator",
   description:
     "Editorial policy microsite, investment calculator, and assumptions workspace for sequencing diabetic eye screening investments across Alaska.",
 };
