@@ -1,75 +1,386 @@
 /**
- * Kentucky Healthcare Facility Sample Data
+ * Kentucky Healthcare Facility Data
  *
- * IMPORTANT: This is SAMPLE DATA for initial development and demo.
- * Replace with real data from:
- *   - HIFLD (hospitals/CAHs with geocoordinates)
- *   - HRSA Data Warehouse (FQHCs with geocoordinates)
- *   - CMS POS file (RHCs, cross-reference)
+ * REAL DATA SOURCES:
+ *   - FQHCs: HRSA Data Warehouse, Health Center Service Delivery Sites (Apr 2026)
+ *   - Census: ACS 2020-2024 5-year estimates, tables B01003 + B11001
+ *   - County boundaries: Census Cartographic Boundary 2024 (500k)
  *
- * Broadband status is ESTIMATED based on county-level FCC data.
- * Replace with facility-level verification when available.
- *
- * [development note: run scripts/load-kentucky-facilities.ts to
- *  regenerate this file from downloaded CSV sources]
+ * SAMPLE DATA (flagged):
+ *   - Hospitals/CAHs: Real names, approximate coordinates. Replace with HIFLD download.
+ *   - RHCs: Real names, approximate coordinates. Replace with CMS POS file.
+ *   - Broadband status: Estimated from county-level data. Replace with FCC BDC.
+ *   - County broadband %: Placeholder estimates. Replace with FCC/ArcGIS Living Atlas.
  */
 
 import type { KYFacility } from "./kentucky-config";
 
 export const KY_FACILITIES: KYFacility[] = [
-  // ── Critical Access Hospitals (Eastern KY Appalachian region) ──────
-  { id: "cah-001", name: "Morgan County ARH Hospital", type: "cah", county: "Morgan", countyFips: "21175", lat: 38.033, lng: -83.264, beds: 25, hasBroadband: false },
-  { id: "cah-002", name: "McDowell ARH Hospital", type: "cah", county: "Floyd", countyFips: "21071", lat: 37.647, lng: -82.674, beds: 25, hasBroadband: false },
-  { id: "cah-003", name: "Whitesburg ARH Hospital", type: "cah", county: "Letcher", countyFips: "21133", lat: 37.118, lng: -82.826, beds: 25, hasBroadband: false },
-  { id: "cah-004", name: "Mary Breckinridge ARH Hospital", type: "cah", county: "Leslie", countyFips: "21131", lat: 37.099, lng: -83.380, beds: 25, hasBroadband: false },
-  { id: "cah-005", name: "Middlesboro ARH Hospital", type: "cah", county: "Bell", countyFips: "21013", lat: 36.608, lng: -83.717, beds: 25, hasBroadband: false },
-  { id: "cah-006", name: "Bourbon Community Hospital", type: "cah", county: "Bourbon", countyFips: "21017", lat: 38.213, lng: -84.252, beds: 25, hasBroadband: true },
-  { id: "cah-007", name: "Carroll County Memorial Hospital", type: "cah", county: "Carroll", countyFips: "21041", lat: 38.680, lng: -85.181, beds: 25, hasBroadband: true },
-  { id: "cah-008", name: "Clinton County Hospital", type: "cah", county: "Clinton", countyFips: "21053", lat: 36.733, lng: -85.129, beds: 25, hasBroadband: false },
-  { id: "cah-009", name: "Livingston Hospital", type: "cah", county: "Rockcastle", countyFips: "21203", lat: 37.388, lng: -84.342, beds: 25, hasBroadband: false },
-  { id: "cah-010", name: "Fleming County Hospital", type: "cah", county: "Fleming", countyFips: "21069", lat: 38.420, lng: -83.734, beds: 25, hasBroadband: false },
-  { id: "cah-011", name: "James B. Haggin Memorial Hospital", type: "cah", county: "Mercer", countyFips: "21167", lat: 37.772, lng: -84.873, beds: 25, hasBroadband: true },
-  { id: "cah-012", name: "Jane Todd Crawford Hospital", type: "cah", county: "Green", countyFips: "21087", lat: 37.260, lng: -85.523, beds: 25, hasBroadband: false },
-
-  // ── General Acute Care Hospitals ──────────────────────────────────
-  { id: "hosp-001", name: "University of Kentucky Albert B. Chandler Hospital", type: "hospital", county: "Fayette", countyFips: "21067", lat: 38.031, lng: -84.508, beds: 945, hasBroadband: true },
+  // ── Hospitals (sample data — replace with HIFLD download) ──
+  { id: "hosp-001", name: "University of Kentucky Chandler Hospital", type: "hospital", county: "Fayette", countyFips: "21067", lat: 38.031, lng: -84.508, beds: 945, hasBroadband: true },
   { id: "hosp-002", name: "Norton Hospital", type: "hospital", county: "Jefferson", countyFips: "21111", lat: 38.243, lng: -85.749, beds: 583, hasBroadband: true },
   { id: "hosp-003", name: "Baptist Health Lexington", type: "hospital", county: "Fayette", countyFips: "21067", lat: 38.003, lng: -84.525, beds: 383, hasBroadband: true },
   { id: "hosp-004", name: "St. Elizabeth Medical Center", type: "hospital", county: "Kenton", countyFips: "21117", lat: 39.029, lng: -84.517, beds: 488, hasBroadband: true },
-  { id: "hosp-005", name: "Pikeville Medical Center", type: "hospital", county: "Pike", countyFips: "21195", lat: 37.480, lng: -82.520, beds: 261, hasBroadband: true },
-  { id: "hosp-006", name: "Hazard ARH Regional Medical Center", type: "hospital", county: "Perry", countyFips: "21193", lat: 37.250, lng: -83.192, beds: 308, hasBroadband: true },
+  { id: "hosp-005", name: "Pikeville Medical Center", type: "hospital", county: "Pike", countyFips: "21195", lat: 37.48, lng: -82.52, beds: 261, hasBroadband: true },
+  { id: "hosp-006", name: "Hazard ARH Regional Medical Center", type: "hospital", county: "Perry", countyFips: "21193", lat: 37.25, lng: -83.192, beds: 308, hasBroadband: true },
   { id: "hosp-007", name: "Lake Cumberland Regional Hospital", type: "hospital", county: "Pulaski", countyFips: "21199", lat: 37.085, lng: -84.609, beds: 295, hasBroadband: true },
   { id: "hosp-008", name: "Owensboro Health Regional Hospital", type: "hospital", county: "Daviess", countyFips: "21059", lat: 37.762, lng: -87.095, beds: 477, hasBroadband: true },
   { id: "hosp-009", name: "The Medical Center at Bowling Green", type: "hospital", county: "Warren", countyFips: "21227", lat: 36.977, lng: -86.456, beds: 337, hasBroadband: true },
   { id: "hosp-010", name: "Baptist Health Corbin", type: "hospital", county: "Whitley", countyFips: "21235", lat: 36.949, lng: -84.097, beds: 273, hasBroadband: true },
 
-  // ── FQHCs (community health centers serving underserved populations) ─
-  { id: "fqhc-001", name: "Kentucky River Community Care", type: "fqhc", county: "Perry", countyFips: "21193", lat: 37.258, lng: -83.215, hasBroadband: true },
-  { id: "fqhc-002", name: "Big Sandy Health Care", type: "fqhc", county: "Johnson", countyFips: "21115", lat: 37.830, lng: -82.731, hasBroadband: false },
-  { id: "fqhc-003", name: "Mountain Comprehensive Health Corporation", type: "fqhc", county: "Knott", countyFips: "21119", lat: 37.353, lng: -82.932, hasBroadband: false },
-  { id: "fqhc-004", name: "White House Clinics", type: "fqhc", county: "Madison", countyFips: "21151", lat: 37.735, lng: -84.295, hasBroadband: true },
-  { id: "fqhc-005", name: "Grace Community Health Center", type: "fqhc", county: "Laurel", countyFips: "21125", lat: 37.077, lng: -84.116, hasBroadband: true },
-  { id: "fqhc-006", name: "Park DuValle Community Health Center", type: "fqhc", county: "Jefferson", countyFips: "21111", lat: 38.224, lng: -85.787, hasBroadband: true },
-  { id: "fqhc-007", name: "Bluegrass Community Health Center", type: "fqhc", county: "Fayette", countyFips: "21067", lat: 38.053, lng: -84.491, hasBroadband: true },
-  { id: "fqhc-008", name: "Primary Care Centers of Eastern Kentucky", type: "fqhc", county: "Floyd", countyFips: "21071", lat: 37.598, lng: -82.748, hasBroadband: false },
-  { id: "fqhc-009", name: "Daniel Boone Clinic", type: "fqhc", county: "Clay", countyFips: "21051", lat: 37.160, lng: -83.778, hasBroadband: false },
-  { id: "fqhc-010", name: "Family Health Centers", type: "fqhc", county: "Jefferson", countyFips: "21111", lat: 38.185, lng: -85.770, hasBroadband: true },
+  // ── Critical Access Hospitals (sample data — replace with HIFLD download) ──
+  { id: "cah-001", name: "Morgan County ARH Hospital", type: "cah", county: "Morgan", countyFips: "21175", lat: 38.033, lng: -83.264, beds: 25, hasBroadband: false },
+  { id: "cah-002", name: "McDowell ARH Hospital", type: "cah", county: "Floyd", countyFips: "21071", lat: 37.647, lng: -82.674, beds: 25, hasBroadband: false },
+  { id: "cah-003", name: "Whitesburg ARH Hospital", type: "cah", county: "Letcher", countyFips: "21133", lat: 37.118, lng: -82.826, beds: 25, hasBroadband: false },
+  { id: "cah-004", name: "Mary Breckinridge ARH Hospital", type: "cah", county: "Leslie", countyFips: "21131", lat: 37.099, lng: -83.38, beds: 25, hasBroadband: false },
+  { id: "cah-005", name: "Middlesboro ARH Hospital", type: "cah", county: "Bell", countyFips: "21013", lat: 36.608, lng: -83.717, beds: 25, hasBroadband: false },
+  { id: "cah-006", name: "Bourbon Community Hospital", type: "cah", county: "Bourbon", countyFips: "21017", lat: 38.213, lng: -84.252, beds: 25, hasBroadband: true },
+  { id: "cah-007", name: "Carroll County Memorial Hospital", type: "cah", county: "Carroll", countyFips: "21041", lat: 38.68, lng: -85.181, beds: 25, hasBroadband: true },
+  { id: "cah-008", name: "Clinton County Hospital", type: "cah", county: "Clinton", countyFips: "21053", lat: 36.733, lng: -85.129, beds: 25, hasBroadband: false },
+  { id: "cah-009", name: "Livingston Hospital", type: "cah", county: "Rockcastle", countyFips: "21203", lat: 37.388, lng: -84.342, beds: 25, hasBroadband: false },
+  { id: "cah-010", name: "Fleming County Hospital", type: "cah", county: "Fleming", countyFips: "21069", lat: 38.42, lng: -83.734, beds: 25, hasBroadband: false },
+  { id: "cah-011", name: "James B. Haggin Memorial Hospital", type: "cah", county: "Mercer", countyFips: "21167", lat: 37.772, lng: -84.873, beds: 25, hasBroadband: true },
+  { id: "cah-012", name: "Jane Todd Crawford Hospital", type: "cah", county: "Green", countyFips: "21087", lat: 37.26, lng: -85.523, beds: 25, hasBroadband: false },
 
-  // ── Rural Health Clinics ──────────────────────────────────────────
+  // ── RHCs (sample data — replace with CMS POS file) ──
   { id: "rhc-001", name: "Wolfe County Primary Care", type: "rhc", county: "Wolfe", countyFips: "21237", lat: 37.742, lng: -83.494, hasBroadband: false },
-  { id: "rhc-002", name: "Menifee County Health Department Clinic", type: "rhc", county: "Menifee", countyFips: "21165", lat: 37.941, lng: -83.607, hasBroadband: false },
+  { id: "rhc-002", name: "Menifee County Health Dept Clinic", type: "rhc", county: "Menifee", countyFips: "21165", lat: 37.941, lng: -83.607, hasBroadband: false },
   { id: "rhc-003", name: "Elliott County Medical Center", type: "rhc", county: "Elliott", countyFips: "21063", lat: 38.149, lng: -83.102, hasBroadband: false },
   { id: "rhc-004", name: "Owsley County Health Center", type: "rhc", county: "Owsley", countyFips: "21189", lat: 37.423, lng: -83.681, hasBroadband: false },
   { id: "rhc-005", name: "Lee County Primary Care", type: "rhc", county: "Lee", countyFips: "21129", lat: 37.601, lng: -83.684, hasBroadband: false },
-  { id: "rhc-006", name: "Metcalfe County Medical Clinic", type: "rhc", county: "Metcalfe", countyFips: "21169", lat: 36.986, lng: -85.610, hasBroadband: false },
-  { id: "rhc-007", name: "Casey County Primary Care", type: "rhc", county: "Casey", countyFips: "21045", lat: 37.330, lng: -84.917, hasBroadband: false },
-  { id: "rhc-008", name: "Monroe County Medical Center Clinic", type: "rhc", county: "Monroe", countyFips: "21171", lat: 36.710, lng: -85.693, hasBroadband: false },
+  { id: "rhc-006", name: "Metcalfe County Medical Clinic", type: "rhc", county: "Metcalfe", countyFips: "21169", lat: 36.986, lng: -85.61, hasBroadband: false },
+  { id: "rhc-007", name: "Casey County Primary Care", type: "rhc", county: "Casey", countyFips: "21045", lat: 37.33, lng: -84.917, hasBroadband: false },
+  { id: "rhc-008", name: "Monroe County Medical Clinic", type: "rhc", county: "Monroe", countyFips: "21171", lat: 36.71, lng: -85.693, hasBroadband: false },
   { id: "rhc-009", name: "Nicholas County Family Practice", type: "rhc", county: "Nicholas", countyFips: "21181", lat: 38.294, lng: -84.007, hasBroadband: false },
   { id: "rhc-010", name: "Jackson County Medical Clinic", type: "rhc", county: "Jackson", countyFips: "21109", lat: 37.574, lng: -84.001, hasBroadband: false },
+
+  // ── FQHCs (REAL DATA — HRSA Data Warehouse, Apr 2026) ──
+  { id: "fqhc-001", name: "First Choice Immediate Care Center", type: "fqhc", county: "Adair", countyFips: "21001", lat: 37.0774, lng: -85.3386, hasBroadband: false },
+  { id: "fqhc-002", name: "Adair Family Medical Center", type: "fqhc", county: "Adair", countyFips: "21001", lat: 37.1137, lng: -85.3005, hasBroadband: false },
+  { id: "fqhc-003", name: "Family Care of the Bluegrass-Lawrenceburg", type: "fqhc", county: "Anderson", countyFips: "21005", lat: 38.0357, lng: -84.9, hasBroadband: false },
+  { id: "fqhc-004", name: "Anderson Co. Middle Healthy Kids Clinic", type: "fqhc", county: "Anderson", countyFips: "21005", lat: 38.0395, lng: -84.9009, hasBroadband: false },
+  { id: "fqhc-005", name: "KentuckyCare - 112", type: "fqhc", county: "Ballard", countyFips: "21007", lat: 37.0522, lng: -89.047, hasBroadband: false },
+  { id: "fqhc-006", name: "Barren County High Healthy Kids Clinic", type: "fqhc", county: "Barren", countyFips: "21009", lat: 36.9785, lng: -85.9219, hasBroadband: true },
+  { id: "fqhc-007", name: "Highland Elementary Healthy Kids Clinic", type: "fqhc", county: "Barren", countyFips: "21009", lat: 37.0128, lng: -85.8898, hasBroadband: true },
+  { id: "fqhc-008", name: "Sterling Health Care - Owingsville", type: "fqhc", county: "Bath", countyFips: "21011", lat: 38.146, lng: -83.7637, hasBroadband: false },
+  { id: "fqhc-009", name: "Owingsville Elementary School Based Health", type: "fqhc", county: "Bath", countyFips: "21011", lat: 38.1426, lng: -83.7747, hasBroadband: false },
+  { id: "fqhc-010", name: "Grace CHC SBH Frakes School", type: "fqhc", county: "Bell", countyFips: "21013", lat: 36.6411, lng: -83.9321, hasBroadband: false },
+  { id: "fqhc-011", name: "Grace Health SBHC Pineville Independent School", type: "fqhc", county: "Bell", countyFips: "21013", lat: 36.7631, lng: -83.698, hasBroadband: false },
+  { id: "fqhc-012", name: "HealthPoint Florence", type: "fqhc", county: "Boone", countyFips: "21015", lat: 38.9925, lng: -84.6237, hasBroadband: true },
+  { id: "fqhc-013", name: "Bourbon Co Middle School Based Health", type: "fqhc", county: "Bourbon", countyFips: "21017", lat: 38.195, lng: -84.2739, hasBroadband: false },
+  { id: "fqhc-014", name: "Cane Ridge Elementary School Based Health", type: "fqhc", county: "Bourbon", countyFips: "21017", lat: 38.2246, lng: -84.2422, hasBroadband: false },
+  { id: "fqhc-015", name: "HomePlace Clinic - Ashland", type: "fqhc", county: "Boyd", countyFips: "21019", lat: 38.4747, lng: -82.6317, hasBroadband: true },
+  { id: "fqhc-016", name: "Ashland Family Health Center", type: "fqhc", county: "Boyd", countyFips: "21019", lat: 38.477, lng: -82.6408, hasBroadband: true },
+  { id: "fqhc-017", name: "Women's Care of the Commonwealth", type: "fqhc", county: "Boyle", countyFips: "21021", lat: 37.6427, lng: -84.773, hasBroadband: false },
+  { id: "fqhc-018", name: "Bracken County School- based Center", type: "fqhc", county: "Bracken", countyFips: "21023", lat: 38.6844, lng: -84.0684, hasBroadband: false },
+  { id: "fqhc-019", name: "Bracken County Family Health Center", type: "fqhc", county: "Bracken", countyFips: "21023", lat: 38.7348, lng: -84.0149, hasBroadband: false },
+  { id: "fqhc-020", name: "Juniper Health Jackson City School", type: "fqhc", county: "Breathitt", countyFips: "21025", lat: 37.5534, lng: -83.3795, hasBroadband: false },
+  { id: "fqhc-021", name: "Juniper Health Breathitt County", type: "fqhc", county: "Breathitt", countyFips: "21025", lat: 37.5735, lng: -83.3728, hasBroadband: false },
+  { id: "fqhc-022", name: "Community Medical Clinic, Princeton", type: "fqhc", county: "Caldwell", countyFips: "21033", lat: 37.1163, lng: -87.8953, hasBroadband: false },
+  { id: "fqhc-023", name: "Mobile Unit", type: "fqhc", county: "Caldwell", countyFips: "21033", lat: 37.1163, lng: -87.8953, hasBroadband: false },
+  { id: "fqhc-024", name: "KentuckyCare - 128", type: "fqhc", county: "Calloway", countyFips: "21035", lat: 36.6059, lng: -88.3091, hasBroadband: false },
+  { id: "fqhc-025", name: "Newport Primary School", type: "fqhc", county: "Campbell", countyFips: "21037", lat: 39.0844, lng: -84.4894, hasBroadband: true },
+  { id: "fqhc-026", name: "Newport High School", type: "fqhc", county: "Campbell", countyFips: "21037", lat: 39.0967, lng: -84.4841, hasBroadband: true },
+  { id: "fqhc-027", name: "KentuckyCare - 146", type: "fqhc", county: "Carlisle", countyFips: "21039", lat: 36.8691, lng: -89.0087, hasBroadband: false },
+  { id: "fqhc-028", name: "KentuckyCare - 021", type: "fqhc", county: "Carlisle", countyFips: "21039", lat: 36.8678, lng: -89.0063, hasBroadband: false },
+  { id: "fqhc-029", name: "Carroll County Middle School", type: "fqhc", county: "Carroll", countyFips: "21041", lat: 38.678, lng: -85.1795, hasBroadband: false },
+  { id: "fqhc-030", name: "Carroll County Early Childhood Development Center", type: "fqhc", county: "Carroll", countyFips: "21041", lat: 38.6755, lng: -85.1721, hasBroadband: false },
+  { id: "fqhc-031", name: "HomePlace Clinic - Grayson", type: "fqhc", county: "Carter", countyFips: "21043", lat: 38.3302, lng: -82.9485, hasBroadband: false },
+  { id: "fqhc-032", name: "PrimaryPlus - Grayson", type: "fqhc", county: "Carter", countyFips: "21043", lat: 38.3444, lng: -82.9338, hasBroadband: false },
+  { id: "fqhc-033", name: "Casey Family Medical Center", type: "fqhc", county: "Casey", countyFips: "21045", lat: 37.3225, lng: -84.9344, hasBroadband: false },
+  { id: "fqhc-034", name: "Liberty Healthy Kids Clinic", type: "fqhc", county: "Casey", countyFips: "21045", lat: 37.3165, lng: -84.9346, hasBroadband: false },
+  { id: "fqhc-035", name: "Community Medical Clinic, Hopkinsville", type: "fqhc", county: "Christian", countyFips: "21047", lat: 36.864, lng: -87.4887, hasBroadband: true },
+  { id: "fqhc-036", name: "Community Medical Clinic, Oak Grove", type: "fqhc", county: "Christian", countyFips: "21047", lat: 36.6653, lng: -87.439, hasBroadband: true },
+  { id: "fqhc-037", name: "Bluegrass Community Health Center- Clark County School Clinic", type: "fqhc", county: "Clark", countyFips: "21049", lat: 37.977, lng: -84.1944, hasBroadband: false },
+  { id: "fqhc-038", name: "HomePlace Clinic - Winchester", type: "fqhc", county: "Clark", countyFips: "21049", lat: 37.9961, lng: -84.1756, hasBroadband: false },
+  { id: "fqhc-039", name: "Grace Health Manchester", type: "fqhc", county: "Clay", countyFips: "21051", lat: 37.1377, lng: -83.7688, hasBroadband: false },
+  { id: "fqhc-040", name: "Albany Family Medical Center", type: "fqhc", county: "Clinton", countyFips: "21053", lat: 36.6812, lng: -85.1294, hasBroadband: false },
+  { id: "fqhc-041", name: "Clinton County High Healthy Kids Clinic", type: "fqhc", county: "Clinton", countyFips: "21053", lat: 36.7097, lng: -85.1326, hasBroadband: false },
+  { id: "fqhc-042", name: "Cumberland County Elementary Healthy Kids Clinic", type: "fqhc", county: "Cumberland", countyFips: "21057", lat: 36.7937, lng: -85.3695, hasBroadband: false },
+  { id: "fqhc-043", name: "Cumberland County Middle Healthy Kids Clinic", type: "fqhc", county: "Cumberland", countyFips: "21057", lat: 36.7998, lng: -85.364, hasBroadband: false },
+  { id: "fqhc-044", name: "Audubon Area Community Care Clinic - Newton Parrish Elementary School", type: "fqhc", county: "Daviess", countyFips: "21059", lat: 37.7415, lng: -87.1137, hasBroadband: true },
+  { id: "fqhc-045", name: "Audubon Area Community Care Clinic - Cravens Elementary School", type: "fqhc", county: "Daviess", countyFips: "21059", lat: 37.768, lng: -87.1452, hasBroadband: true },
+  { id: "fqhc-046", name: "Edmonson County Middle School", type: "fqhc", county: "Edmonson", countyFips: "21061", lat: 37.192, lng: -86.2529, hasBroadband: false },
+  { id: "fqhc-047", name: "Edmonson County High School", type: "fqhc", county: "Edmonson", countyFips: "21061", lat: 37.1918, lng: -86.2531, hasBroadband: false },
+  { id: "fqhc-048", name: "Juniper Health Elliott County", type: "fqhc", county: "Elliott", countyFips: "21063", lat: 38.0909, lng: -83.1255, hasBroadband: false },
+  { id: "fqhc-049", name: "Kentucky River Foothills", type: "fqhc", county: "Estill", countyFips: "21065", lat: 37.7021, lng: -84.0082, hasBroadband: false },
+  { id: "fqhc-050", name: "White House Clinic - Irvine", type: "fqhc", county: "Estill", countyFips: "21065", lat: 37.7031, lng: -84.0005, hasBroadband: false },
+  { id: "fqhc-051", name: "Tates Creek Elementary HealthFirst Bluegrass School Clinic", type: "fqhc", county: "Fayette", countyFips: "21067", lat: 37.984, lng: -84.4834, hasBroadband: true },
+  { id: "fqhc-052", name: "DBA Bluegrass Community Health Center", type: "fqhc", county: "Fayette", countyFips: "21067", lat: 38.0499, lng: -84.5218, hasBroadband: true },
+  { id: "fqhc-053", name: "FLEMINGBURG COUNTY FAMILY H.C", type: "fqhc", county: "Fleming", countyFips: "21069", lat: 38.42, lng: -83.7441, hasBroadband: false },
+  { id: "fqhc-054", name: "PHYSICIANS FOR WOMEN AND FAMILIES", type: "fqhc", county: "Floyd", countyFips: "21071", lat: 37.73, lng: -82.7551, hasBroadband: false },
+  { id: "fqhc-055", name: "HomePlace Clinic - Martin", type: "fqhc", county: "Floyd", countyFips: "21071", lat: 37.5602, lng: -82.7599, hasBroadband: false },
+  { id: "fqhc-056", name: "Second Street Healthy Kids Clinic", type: "fqhc", county: "Franklin", countyFips: "21073", lat: 38.1952, lng: -84.8814, hasBroadband: true },
+  { id: "fqhc-057", name: "Women's Care of the Bluegrass", type: "fqhc", county: "Franklin", countyFips: "21073", lat: 38.1602, lng: -84.9053, hasBroadband: true },
+  { id: "fqhc-058", name: "KentuckyCare - 058", type: "fqhc", county: "Fulton", countyFips: "21075", lat: 36.5175, lng: -88.8961, hasBroadband: false },
+  { id: "fqhc-059", name: "Gallatin County High School", type: "fqhc", county: "Gallatin", countyFips: "21077", lat: 38.7865, lng: -84.8903, hasBroadband: false },
+  { id: "fqhc-060", name: "TRIAD HEALTH SYSTEMS CHC", type: "fqhc", county: "Gallatin", countyFips: "21077", lat: 38.7752, lng: -84.9188, hasBroadband: false },
+  { id: "fqhc-061", name: "White House Clinics - Lancaster", type: "fqhc", county: "Garrard", countyFips: "21079", lat: 37.6279, lng: -84.5779, hasBroadband: false },
+  { id: "fqhc-062", name: "Women's Care of the Commonwealth-Lancaster", type: "fqhc", county: "Garrard", countyFips: "21079", lat: 37.6112, lng: -84.5812, hasBroadband: false },
+  { id: "fqhc-063", name: "KentuckyCare - 63", type: "fqhc", county: "Graves", countyFips: "21083", lat: 36.7543, lng: -88.6385, hasBroadband: false },
+  { id: "fqhc-064", name: "Green County Middle Healthy Kids Clinic", type: "fqhc", county: "Green", countyFips: "21087", lat: 37.2543, lng: -85.4879, hasBroadband: false },
+  { id: "fqhc-065", name: "Green County Primary Healthy Kids Clinic", type: "fqhc", county: "Green", countyFips: "21087", lat: 37.26, lng: -85.4942, hasBroadband: false },
+  { id: "fqhc-066", name: "South Shore Family Health Center", type: "fqhc", county: "Greenup", countyFips: "21089", lat: 38.7212, lng: -82.9609, hasBroadband: false },
+  { id: "fqhc-067", name: "Rineyville Healthy Kids Clinic", type: "fqhc", county: "Hardin", countyFips: "21093", lat: 37.7467, lng: -85.9718, hasBroadband: true },
+  { id: "fqhc-068", name: "Creekside Healthy Kids Clinic", type: "fqhc", county: "Hardin", countyFips: "21093", lat: 37.5232, lng: -85.9022, hasBroadband: true },
+  { id: "fqhc-069", name: "Clover Fork School Based Health at Harlan Independent Schools", type: "fqhc", county: "Harlan", countyFips: "21095", lat: 36.8471, lng: -83.3184, hasBroadband: false },
+  { id: "fqhc-070", name: "Clover Fork School Based Health at Verda Headstart", type: "fqhc", county: "Harlan", countyFips: "21095", lat: 36.8983, lng: -83.14, hasBroadband: false },
+  { id: "fqhc-071", name: "HomePlace Clinic - Cynthiana", type: "fqhc", county: "Harrison", countyFips: "21097", lat: 38.3886, lng: -84.296, hasBroadband: false },
+  { id: "fqhc-072", name: "Munfordville Healthy Kids Clinic", type: "fqhc", county: "Hart", countyFips: "21099", lat: 37.2687, lng: -85.8931, hasBroadband: false },
+  { id: "fqhc-073", name: "LeGrande Healthy Kids Clinic", type: "fqhc", county: "Hart", countyFips: "21099", lat: 37.1716, lng: -85.7947, hasBroadband: false },
+  { id: "fqhc-074", name: "Regional Health Care Affiliates, Inc. dba. Health First Community Health Center- Cabell Platt", type: "fqhc", county: "Henderson", countyFips: "21101", lat: 37.8305, lng: -87.5907, hasBroadband: true },
+  { id: "fqhc-075", name: "Henry County Community Health Center", type: "fqhc", county: "Henry", countyFips: "21103", lat: 38.3727, lng: -85.1867, hasBroadband: false },
+  { id: "fqhc-076", name: "KentuckyCare - 145", type: "fqhc", county: "Hickman", countyFips: "21105", lat: 36.6673, lng: -88.9942, hasBroadband: false },
+  { id: "fqhc-077", name: "Kentuckycare - 39", type: "fqhc", county: "Hickman", countyFips: "21105", lat: 36.6645, lng: -88.9939, hasBroadband: false },
+  { id: "fqhc-078", name: "Regional Health Care Affiliates, Inc. dba. Health First Community Health Center - Earlington", type: "fqhc", county: "Hopkins", countyFips: "21107", lat: 37.2744, lng: -87.512, hasBroadband: true },
+  { id: "fqhc-079", name: "White House Clinic - McKee", type: "fqhc", county: "Jackson", countyFips: "21109", lat: 37.4323, lng: -83.9808, hasBroadband: false },
+  { id: "fqhc-080", name: "FAMILY HEALTH CENTER - FAIRDALE", type: "fqhc", county: "Jefferson", countyFips: "21111", lat: 38.1159, lng: -85.751, hasBroadband: true },
+  { id: "fqhc-081", name: "PHOENIX HEALTH CENTER FOR THE HOMELESS", type: "fqhc", county: "Jefferson", countyFips: "21111", lat: 38.2491, lng: -85.7401, hasBroadband: true },
+  { id: "fqhc-082", name: "HealthPoint Nicholasville", type: "fqhc", county: "Jessamine", countyFips: "21113", lat: 37.8942, lng: -84.5653, hasBroadband: true },
+  { id: "fqhc-083", name: "Brookside Elementary", type: "fqhc", county: "Jessamine", countyFips: "21113", lat: 37.8873, lng: -84.5891, hasBroadband: true },
+  { id: "fqhc-084", name: "HomePlace Clinic - Paintsville", type: "fqhc", county: "Johnson", countyFips: "21115", lat: 37.8044, lng: -82.7982, hasBroadband: false },
+  { id: "fqhc-085", name: "HomePlace Clinic - Mobile Medical Unit", type: "fqhc", county: "Johnson", countyFips: "21115", lat: 37.806, lng: -82.7982, hasBroadband: false },
+  { id: "fqhc-086", name: "Holmes Middle School", type: "fqhc", county: "Kenton", countyFips: "21117", lat: 39.0618, lng: -84.5017, hasBroadband: true },
+  { id: "fqhc-087", name: "Dorothy Howell Elementary School", type: "fqhc", county: "Kenton", countyFips: "21117", lat: 39.0059, lng: -84.6011, hasBroadband: true },
+  { id: "fqhc-088", name: "June Buchanan Medical Clinic", type: "fqhc", county: "Knott", countyFips: "21119", lat: 37.3298, lng: -82.9879, hasBroadband: false },
+  { id: "fqhc-089", name: "Knott County Medical Clinic", type: "fqhc", county: "Knott", countyFips: "21119", lat: 37.3151, lng: -82.9402, hasBroadband: false },
+  { id: "fqhc-090", name: "Trinity Family Health Behavioral - Corbin", type: "fqhc", county: "Knox", countyFips: "21121", lat: 36.9605, lng: -84.0746, hasBroadband: false },
+  { id: "fqhc-091", name: "Grace SBHC Knox Central High School", type: "fqhc", county: "Knox", countyFips: "21121", lat: 36.8681, lng: -83.8319, hasBroadband: false },
+  { id: "fqhc-092", name: "Hodgenville Healthy Kids Clinic", type: "fqhc", county: "Larue", countyFips: "21123", lat: 37.5548, lng: -85.7291, hasBroadband: false },
+  { id: "fqhc-093", name: "Larue County High Healthy Kids Clinic", type: "fqhc", county: "Larue", countyFips: "21123", lat: 37.5527, lng: -85.7342, hasBroadband: false },
+  { id: "fqhc-094", name: "Grace Health Levi Center Clinic", type: "fqhc", county: "Laurel", countyFips: "21125", lat: 37.0947, lng: -84.066, hasBroadband: true },
+  { id: "fqhc-095", name: "Grace Health Mountain View", type: "fqhc", county: "Laurel", countyFips: "21125", lat: 37.1528, lng: -84.1191, hasBroadband: true },
+  { id: "fqhc-096", name: "Valley Health Louisa", type: "fqhc", county: "Lawrence", countyFips: "21127", lat: 38.1162, lng: -82.6021, hasBroadband: false },
+  { id: "fqhc-097", name: "HomePlace Clinic - Louisa", type: "fqhc", county: "Lawrence", countyFips: "21127", lat: 38.0986, lng: -82.6203, hasBroadband: false },
+  { id: "fqhc-098", name: "Juniper Health Lee County", type: "fqhc", county: "Lee", countyFips: "21129", lat: 37.5838, lng: -83.6983, hasBroadband: false },
+  { id: "fqhc-099", name: "Juniper Health Lee County Elementary", type: "fqhc", county: "Lee", countyFips: "21129", lat: 37.5511, lng: -83.7194, hasBroadband: false },
+  { id: "fqhc-100", name: "Grace CHC Hayes Lewis Elementary School Based Health", type: "fqhc", county: "Leslie", countyFips: "21131", lat: 37.0799, lng: -83.2331, hasBroadband: false },
+  { id: "fqhc-101", name: "Grace CHC SBH Stinnett Elementary School", type: "fqhc", county: "Leslie", countyFips: "21131", lat: 37.0678, lng: -83.4066, hasBroadband: false },
+  { id: "fqhc-102", name: "Jenkins Middle High School Based Clinic", type: "fqhc", county: "Letcher", countyFips: "21133", lat: 37.162, lng: -82.6442, hasBroadband: false },
+  { id: "fqhc-103", name: "Whitesburg Middle School Based Clinic", type: "fqhc", county: "Letcher", countyFips: "21133", lat: 37.1199, lng: -82.8357, hasBroadband: false },
+  { id: "fqhc-104", name: "Tollesboro Family Health Center & Clinic Pharmacy", type: "fqhc", county: "Lewis", countyFips: "21135", lat: 38.5568, lng: -83.5926, hasBroadband: false },
+  { id: "fqhc-105", name: "LEWIS CO FAMILY DENTAL CLINIC", type: "fqhc", county: "Lewis", countyFips: "21135", lat: 38.5826, lng: -83.3273, hasBroadband: false },
+  { id: "fqhc-106", name: "Waynesburg Healthy Kids Clinic", type: "fqhc", county: "Lincoln", countyFips: "21137", lat: 37.3338, lng: -84.6654, hasBroadband: false },
+  { id: "fqhc-107", name: "Stanford Healthy Kids Clinic", type: "fqhc", county: "Lincoln", countyFips: "21137", lat: 37.5454, lng: -84.6726, hasBroadband: false },
+  { id: "fqhc-108", name: "KentuckyCare - 151", type: "fqhc", county: "Livingston", countyFips: "21139", lat: 37.0818, lng: -88.3826, hasBroadband: false },
+  { id: "fqhc-109", name: "KentuckyCare - 153", type: "fqhc", county: "Livingston", countyFips: "21139", lat: 37.1315, lng: -88.4051, hasBroadband: false },
+  { id: "fqhc-110", name: "Logan County Community Health Center", type: "fqhc", county: "Logan", countyFips: "21141", lat: 36.819, lng: -86.8842, hasBroadband: false },
+  { id: "fqhc-111", name: "White House Clinics - Mobile Medical", type: "fqhc", county: "Madison", countyFips: "21151", lat: 37.6053, lng: -84.3168, hasBroadband: true },
+  { id: "fqhc-112", name: "KENTUCKY RIVER FOOTHILLS DEVELOPMENT COUNCIL, INC.", type: "fqhc", county: "Madison", countyFips: "21151", lat: 37.7349, lng: -84.3158, hasBroadband: true },
+  { id: "fqhc-113", name: "HomePlace Eye Care", type: "fqhc", county: "Magoffin", countyFips: "21153", lat: 37.7465, lng: -83.063, hasBroadband: false },
+  { id: "fqhc-114", name: "Hope Family Health Services-Pediatrics", type: "fqhc", county: "Magoffin", countyFips: "21153", lat: 37.74, lng: -83.0464, hasBroadband: false },
+  { id: "fqhc-115", name: "Lebanon Middle Healthy Kids Clinic", type: "fqhc", county: "Marion", countyFips: "21155", lat: 37.5774, lng: -85.2364, hasBroadband: false },
+  { id: "fqhc-116", name: "Lebanon Healthy Kids Clinic", type: "fqhc", county: "Marion", countyFips: "21155", lat: 37.5668, lng: -85.2587, hasBroadband: false },
+  { id: "fqhc-117", name: "Eden Elementary School", type: "fqhc", county: "Martin", countyFips: "21159", lat: 37.9062, lng: -82.5684, hasBroadband: false },
+  { id: "fqhc-118", name: "Warfield Elementary School", type: "fqhc", county: "Martin", countyFips: "21159", lat: 37.8673, lng: -82.4097, hasBroadband: false },
+  { id: "fqhc-119", name: "PrimaryPlus Pharmacy", type: "fqhc", county: "Mason", countyFips: "21161", lat: 38.6274, lng: -83.7995, hasBroadband: false },
+  { id: "fqhc-120", name: "PrimaryPlus Mobile Unit 2", type: "fqhc", county: "Mason", countyFips: "21161", lat: 38.6397, lng: -83.8058, hasBroadband: false },
+  { id: "fqhc-121", name: "KentuckyCare - 44", type: "fqhc", county: "McCracken", countyFips: "21145", lat: 37.0531, lng: -88.5646, hasBroadband: true },
+  { id: "fqhc-122", name: "KentuckyCare - 038", type: "fqhc", county: "McCracken", countyFips: "21145", lat: 37.0745, lng: -88.6219, hasBroadband: true },
+  { id: "fqhc-123", name: "Family Dental of Whitley City", type: "fqhc", county: "McCreary", countyFips: "21147", lat: 36.7343, lng: -84.4711, hasBroadband: false },
+  { id: "fqhc-124", name: "Pine Knot Primary Healthy Kids Clinic", type: "fqhc", county: "McCreary", countyFips: "21147", lat: 36.6633, lng: -84.4379, hasBroadband: false },
+  { id: "fqhc-125", name: "Regional Health Care Affiliates, Inc.  dba. Health First Community Health Center - Calhoun", type: "fqhc", county: "McLean", countyFips: "21149", lat: 37.5382, lng: -87.2584, hasBroadband: false },
+  { id: "fqhc-126", name: "Payneville Elementary Healthy Kids Clinic", type: "fqhc", county: "Meade", countyFips: "21163", lat: 37.9958, lng: -86.3179, hasBroadband: false },
+  { id: "fqhc-127", name: "Barry Hahn Healthy Kids Clinic", type: "fqhc", county: "Meade", countyFips: "21163", lat: 37.9838, lng: -86.1574, hasBroadband: false },
+  { id: "fqhc-128", name: "Juniper Health Menifee County", type: "fqhc", county: "Menifee", countyFips: "21165", lat: 37.9338, lng: -83.6069, hasBroadband: false },
+  { id: "fqhc-129", name: "Women's Care of the Commonwealth - Harrodsburg", type: "fqhc", county: "Mercer", countyFips: "21167", lat: 37.7996, lng: -84.8474, hasBroadband: false },
+  { id: "fqhc-130", name: "Mercer County Elementary Healthy Kids Clinic", type: "fqhc", county: "Mercer", countyFips: "21167", lat: 37.7791, lng: -84.8549, hasBroadband: false },
+  { id: "fqhc-131", name: "Metcalfe Family Medical Center", type: "fqhc", county: "Metcalfe", countyFips: "21169", lat: 36.9812, lng: -85.6216, hasBroadband: false },
+  { id: "fqhc-132", name: "Metcalfe County Elementary Healthy Kids Clinic", type: "fqhc", county: "Metcalfe", countyFips: "21169", lat: 36.9816, lng: -85.6236, hasBroadband: false },
+  { id: "fqhc-133", name: "Monroe Family Medical Center", type: "fqhc", county: "Monroe", countyFips: "21171", lat: 36.7222, lng: -85.6874, hasBroadband: false },
+  { id: "fqhc-134", name: "Gamaliel Family Medical Center", type: "fqhc", county: "Monroe", countyFips: "21171", lat: 36.6392, lng: -85.7981, hasBroadband: false },
+  { id: "fqhc-135", name: "MCIS Community Health Center", type: "fqhc", county: "Montgomery", countyFips: "21173", lat: 38.0822, lng: -83.9495, hasBroadband: false },
+  { id: "fqhc-136", name: "MSE Community Health Center", type: "fqhc", county: "Montgomery", countyFips: "21173", lat: 38.061, lng: -83.9139, hasBroadband: false },
+  { id: "fqhc-137", name: "Juniper Health Morgan County", type: "fqhc", county: "Morgan", countyFips: "21175", lat: 37.9134, lng: -83.2641, hasBroadband: false },
+  { id: "fqhc-138", name: "Juniper Health Morgan County Dental", type: "fqhc", county: "Morgan", countyFips: "21175", lat: 37.9234, lng: -83.2594, hasBroadband: false },
+  { id: "fqhc-139", name: "WOMAN'S HEALTH CENTER", type: "fqhc", county: "Muhlenberg", countyFips: "21177", lat: 37.1961, lng: -87.183, hasBroadband: false },
+  { id: "fqhc-140", name: "CHCWK - 228 Hopkinsville Street", type: "fqhc", county: "Muhlenberg", countyFips: "21177", lat: 37.1959, lng: -87.1833, hasBroadband: false },
+  { id: "fqhc-141", name: "Bardstown Early Childhood Healthy Kids Clinic", type: "fqhc", county: "Nelson", countyFips: "21179", lat: 37.823, lng: -85.4727, hasBroadband: true },
+  { id: "fqhc-142", name: "Bardstown Career and Technology Healthy Kids Clinic", type: "fqhc", county: "Nelson", countyFips: "21179", lat: 37.8149, lng: -85.4687, hasBroadband: true },
+  { id: "fqhc-143", name: "Sterling Health Care - Carlisle", type: "fqhc", county: "Nicholas", countyFips: "21181", lat: 38.3168, lng: -84.0658, hasBroadband: false },
+  { id: "fqhc-144", name: "Nicholas County School Based Health", type: "fqhc", county: "Nicholas", countyFips: "21181", lat: 38.3165, lng: -84.0376, hasBroadband: false },
+  { id: "fqhc-145", name: "Owen County Elementary School", type: "fqhc", county: "Owen", countyFips: "21187", lat: 38.5276, lng: -84.8048, hasBroadband: false },
+  { id: "fqhc-146", name: "120 Progress Way", type: "fqhc", county: "Owen", countyFips: "21187", lat: 38.5511, lng: -84.8456, hasBroadband: false },
+  { id: "fqhc-147", name: "Owsley County Medical Clinic", type: "fqhc", county: "Owsley", countyFips: "21189", lat: 37.4786, lng: -83.6896, hasBroadband: false },
+  { id: "fqhc-148", name: "MCHC Owsley County Pharmacy", type: "fqhc", county: "Owsley", countyFips: "21189", lat: 37.4796, lng: -83.7055, hasBroadband: false },
+  { id: "fqhc-149", name: "Little Flower Clinic", type: "fqhc", county: "Perry", countyFips: "21193", lat: 37.2459, lng: -83.187, hasBroadband: false },
+  { id: "fqhc-150", name: "Leatherwood/Blackey Medical Clinic", type: "fqhc", county: "Perry", countyFips: "21193", lat: 37.126, lng: -83.0845, hasBroadband: false },
+  { id: "fqhc-151", name: "HomePlace Clinic for Children and Families", type: "fqhc", county: "Pike", countyFips: "21195", lat: 37.444, lng: -82.5249, hasBroadband: true },
+  { id: "fqhc-152", name: "Elkhorn City Medical Clinic", type: "fqhc", county: "Pike", countyFips: "21195", lat: 37.3036, lng: -82.3516, hasBroadband: true },
+  { id: "fqhc-153", name: "HCH MOBILE VAN CLINIC", type: "fqhc", county: "Powell", countyFips: "21197", lat: 37.8531, lng: -83.9164, hasBroadband: false },
+  { id: "fqhc-154", name: "Sterling Health Care - Stanton", type: "fqhc", county: "Powell", countyFips: "21197", lat: 37.8437, lng: -83.8569, hasBroadband: false },
+  { id: "fqhc-155", name: "Promise Community Health Center", type: "fqhc", county: "Pulaski", countyFips: "21199", lat: 37.0834, lng: -84.6215, hasBroadband: true },
+  { id: "fqhc-156", name: "Lake Cumberland Rheumatology", type: "fqhc", county: "Pulaski", countyFips: "21199", lat: 37.0838, lng: -84.6238, hasBroadband: true },
+  { id: "fqhc-157", name: "Robertson County Family Health Center", type: "fqhc", county: "Robertson", countyFips: "21201", lat: 38.533, lng: -84.0412, hasBroadband: false },
+  { id: "fqhc-158", name: "White House Clinic - Mt. Vernon", type: "fqhc", county: "Rockcastle", countyFips: "21203", lat: 37.3489, lng: -84.3611, hasBroadband: false },
+  { id: "fqhc-159", name: "Mount Vernon Community Care", type: "fqhc", county: "Rockcastle", countyFips: "21203", lat: 37.3573, lng: -84.3394, hasBroadband: false },
+  { id: "fqhc-160", name: "PrimaryPlus - Morehead", type: "fqhc", county: "Rowan", countyFips: "21205", lat: 38.1711, lng: -83.5562, hasBroadband: false },
+  { id: "fqhc-161", name: "Russell Administrative Annex #2", type: "fqhc", county: "Russell", countyFips: "21207", lat: 37.0611, lng: -85.0672, hasBroadband: false },
+  { id: "fqhc-162", name: "Salem Healthy Kids Clinic", type: "fqhc", county: "Russell", countyFips: "21207", lat: 37.0707, lng: -84.9889, hasBroadband: false },
+  { id: "fqhc-163", name: "Taylorsville Community Health Center", type: "fqhc", county: "Spencer", countyFips: "21215", lat: 38.0389, lng: -85.3404, hasBroadband: false },
+  { id: "fqhc-164", name: "Taylor County Intermediate Healthy Kids Clinic", type: "fqhc", county: "Taylor", countyFips: "21217", lat: 37.3501, lng: -85.3334, hasBroadband: false },
+  { id: "fqhc-165", name: "One Cross Health", type: "fqhc", county: "Taylor", countyFips: "21217", lat: 37.3519, lng: -85.3549, hasBroadband: false },
+  { id: "fqhc-166", name: "CHCWK - Todd County Site", type: "fqhc", county: "Todd", countyFips: "21219", lat: 36.6466, lng: -87.195, hasBroadband: false },
+  { id: "fqhc-167", name: "Blount Rural Health Center", type: "fqhc", county: "Todd", countyFips: "21219", lat: 36.7948, lng: -87.1617, hasBroadband: false },
+  { id: "fqhc-168", name: "Regional Health Care Affiliates, Inc. dba Health First Community Health Center- Union County", type: "fqhc", county: "Union", countyFips: "21225", lat: 37.6855, lng: -87.9151, hasBroadband: false },
+  { id: "fqhc-169", name: "North Warren Elementary Healthy Kids Clinic", type: "fqhc", county: "Warren", countyFips: "21227", lat: 37.0566, lng: -86.2063, hasBroadband: true },
+  { id: "fqhc-170", name: "Oakland Elementary Healthy Kids Clinic", type: "fqhc", county: "Warren", countyFips: "21227", lat: 37.0351, lng: -86.2491, hasBroadband: true },
+  { id: "fqhc-171", name: "Washington County Middle Healthy Kids Clinic", type: "fqhc", county: "Washington", countyFips: "21229", lat: 37.6922, lng: -85.2181, hasBroadband: false },
+  { id: "fqhc-172", name: "North Washington Healthy Kids Clinic", type: "fqhc", county: "Washington", countyFips: "21229", lat: 37.8023, lng: -85.1134, hasBroadband: false },
+  { id: "fqhc-173", name: "Otter Creek Academy Healthy Kids Clinic", type: "fqhc", county: "Wayne", countyFips: "21231", lat: 36.7845, lng: -84.9786, hasBroadband: false },
+  { id: "fqhc-174", name: "Promise Community Health Care-Monticello", type: "fqhc", county: "Wayne", countyFips: "21231", lat: 36.8249, lng: -84.8629, hasBroadband: false },
+  { id: "fqhc-175", name: "Administrative Services.", type: "fqhc", county: "Webster", countyFips: "21233", lat: 37.3993, lng: -87.7604, hasBroadband: false },
+  { id: "fqhc-176", name: "Regional Health Care Affiliates, Inc. dba. Health First Community Health Center- Clay", type: "fqhc", county: "Webster", countyFips: "21233", lat: 37.4758, lng: -87.8181, hasBroadband: false },
+  { id: "fqhc-177", name: "Dayspring Mobile Clinic (1)", type: "fqhc", county: "Whitley", countyFips: "21235", lat: 36.7315, lng: -84.1558, hasBroadband: false },
+  { id: "fqhc-178", name: "Grace CHC SBH Corbin Primary", type: "fqhc", county: "Whitley", countyFips: "21235", lat: 36.9276, lng: -84.1461, hasBroadband: false },
+  { id: "fqhc-179", name: "Juniper Health Red River Elementary School", type: "fqhc", county: "Wolfe", countyFips: "21237", lat: 37.7937, lng: -83.3942, hasBroadband: false },
+  { id: "fqhc-180", name: "Juniper Health Rogers Elementary School", type: "fqhc", county: "Wolfe", countyFips: "21237", lat: 37.7213, lng: -83.6525, hasBroadband: false },
+  { id: "fqhc-181", name: "Woodford County High Healthy Kids Clinic", type: "fqhc", county: "Woodford", countyFips: "21239", lat: 38.062, lng: -84.7323, hasBroadband: false },
+  { id: "fqhc-182", name: "Versailles Pediatrics", type: "fqhc", county: "Woodford", countyFips: "21239", lat: 38.0553, lng: -84.7234, hasBroadband: false },
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Summary Statistics (auto-derived)                                  */
+/*  County Population (REAL — Census ACS 2020-2024 5yr)               */
+/* ------------------------------------------------------------------ */
+
+export interface KYCountyData {
+  fips: string;
+  name: string;
+  population: number;
+  households: number;
+  pctServed25_3: number;
+  unservedHouseholds: number;
+}
+
+/**
+ * All 120 Kentucky counties with real Census population/household data.
+ * Broadband coverage % is ESTIMATED — replace with FCC BDC data.
+ */
+export const KY_COUNTY_DATA: KYCountyData[] = [
+  { fips: "21001", name: "Adair", population: 19089, households: 7136, pctServed25_3: 53, unservedHouseholds: 3354 },
+  { fips: "21003", name: "Allen", population: 21293, households: 8035, pctServed25_3: 50, unservedHouseholds: 4018 },
+  { fips: "21005", name: "Anderson", population: 24353, households: 9653, pctServed25_3: 58, unservedHouseholds: 4054 },
+  { fips: "21007", name: "Ballard", population: 7654, households: 3209, pctServed25_3: 41, unservedHouseholds: 1893 },
+  { fips: "21009", name: "Barren", population: 44938, households: 18017, pctServed25_3: 69, unservedHouseholds: 5585 },
+  { fips: "21011", name: "Bath", population: 12851, households: 4698, pctServed25_3: 46, unservedHouseholds: 2537 },
+  { fips: "21013", name: "Bell", population: 23509, households: 9939, pctServed25_3: 53, unservedHouseholds: 4671 },
+  { fips: "21015", name: "Boone", population: 139841, households: 50963, pctServed25_3: 96, unservedHouseholds: 2039 },
+  { fips: "21017", name: "Bourbon", population: 20240, households: 8134, pctServed25_3: 52, unservedHouseholds: 3904 },
+  { fips: "21019", name: "Boyd", population: 47911, households: 19309, pctServed25_3: 80, unservedHouseholds: 3862 },
+  { fips: "21021", name: "Boyle", population: 30941, households: 12045, pctServed25_3: 75, unservedHouseholds: 3011 },
+  { fips: "21023", name: "Bracken", population: 8444, households: 3364, pctServed25_3: 35, unservedHouseholds: 2187 },
+  { fips: "21025", name: "Breathitt", population: 13276, households: 5464, pctServed25_3: 42, unservedHouseholds: 3169 },
+  { fips: "21027", name: "Breckinridge", population: 20881, households: 8069, pctServed25_3: 52, unservedHouseholds: 3873 },
+  { fips: "21029", name: "Bullitt", population: 84027, households: 31747, pctServed25_3: 81, unservedHouseholds: 6032 },
+  { fips: "21031", name: "Butler", population: 12393, households: 4567, pctServed25_3: 49, unservedHouseholds: 2329 },
+  { fips: "21033", name: "Caldwell", population: 12618, households: 5025, pctServed25_3: 58, unservedHouseholds: 2110 },
+  { fips: "21035", name: "Calloway", population: 38224, households: 15239, pctServed25_3: 62, unservedHouseholds: 5791 },
+  { fips: "21037", name: "Campbell", population: 93426, households: 39232, pctServed25_3: 86, unservedHouseholds: 5492 },
+  { fips: "21039", name: "Carlisle", population: 4762, households: 1865, pctServed25_3: 40, unservedHouseholds: 1119 },
+  { fips: "21041", name: "Carroll", population: 10954, households: 4178, pctServed25_3: 55, unservedHouseholds: 1880 },
+  { fips: "21043", name: "Carter", population: 26341, households: 10794, pctServed25_3: 69, unservedHouseholds: 3346 },
+  { fips: "21045", name: "Casey", population: 15914, households: 6482, pctServed25_3: 64, unservedHouseholds: 2334 },
+  { fips: "21047", name: "Christian", population: 72069, households: 25725, pctServed25_3: 87, unservedHouseholds: 3344 },
+  { fips: "21049", name: "Clark", population: 37192, households: 15055, pctServed25_3: 70, unservedHouseholds: 4517 },
+  { fips: "21051", name: "Clay", population: 19921, households: 7288, pctServed25_3: 50, unservedHouseholds: 3644 },
+  { fips: "21053", name: "Clinton", population: 9202, households: 3854, pctServed25_3: 39, unservedHouseholds: 2351 },
+  { fips: "21055", name: "Crittenden", population: 8979, households: 3543, pctServed25_3: 47, unservedHouseholds: 1878 },
+  { fips: "21057", name: "Cumberland", population: 5948, households: 2630, pctServed25_3: 44, unservedHouseholds: 1473 },
+  { fips: "21059", name: "Daviess", population: 103648, households: 41639, pctServed25_3: 92, unservedHouseholds: 3331 },
+  { fips: "21061", name: "Edmonson", population: 12355, households: 5099, pctServed25_3: 46, unservedHouseholds: 2753 },
+  { fips: "21063", name: "Elliott", population: 7307, households: 2440, pctServed25_3: 40, unservedHouseholds: 1464 },
+  { fips: "21065", name: "Estill", population: 14035, households: 5975, pctServed25_3: 52, unservedHouseholds: 2868 },
+  { fips: "21067", name: "Fayette", population: 323725, households: 139715, pctServed25_3: 89, unservedHouseholds: 15369 },
+  { fips: "21069", name: "Fleming", population: 15323, households: 5859, pctServed25_3: 52, unservedHouseholds: 2812 },
+  { fips: "21071", name: "Floyd", population: 35224, households: 14700, pctServed25_3: 74, unservedHouseholds: 3822 },
+  { fips: "21073", name: "Franklin", population: 51842, households: 22718, pctServed25_3: 79, unservedHouseholds: 4771 },
+  { fips: "21075", name: "Fulton", population: 6409, households: 2550, pctServed25_3: 45, unservedHouseholds: 1402 },
+  { fips: "21077", name: "Gallatin", population: 8769, households: 3265, pctServed25_3: 45, unservedHouseholds: 1796 },
+  { fips: "21079", name: "Garrard", population: 17568, households: 6695, pctServed25_3: 58, unservedHouseholds: 2812 },
+  { fips: "21081", name: "Grant", population: 25418, households: 9224, pctServed25_3: 63, unservedHouseholds: 3413 },
+  { fips: "21083", name: "Graves", population: 36630, households: 14139, pctServed25_3: 76, unservedHouseholds: 3393 },
+  { fips: "21085", name: "Grayson", population: 26707, households: 10129, pctServed25_3: 79, unservedHouseholds: 2127 },
+  { fips: "21087", name: "Green", population: 11369, households: 4421, pctServed25_3: 45, unservedHouseholds: 2432 },
+  { fips: "21089", name: "Greenup", population: 35501, households: 14739, pctServed25_3: 74, unservedHouseholds: 3832 },
+  { fips: "21091", name: "Hancock", population: 9034, households: 3638, pctServed25_3: 36, unservedHouseholds: 2328 },
+  { fips: "21093", name: "Hardin", population: 111942, households: 44622, pctServed25_3: 96, unservedHouseholds: 1785 },
+  { fips: "21095", name: "Harlan", population: 25772, households: 10731, pctServed25_3: 71, unservedHouseholds: 3112 },
+  { fips: "21097", name: "Harrison", population: 19140, households: 7293, pctServed25_3: 61, unservedHouseholds: 2844 },
+  { fips: "21099", name: "Hart", population: 19603, households: 7376, pctServed25_3: 68, unservedHouseholds: 2360 },
+  { fips: "21101", name: "Henderson", population: 44280, households: 18522, pctServed25_3: 68, unservedHouseholds: 5927 },
+  { fips: "21103", name: "Henry", population: 15856, households: 6147, pctServed25_3: 52, unservedHouseholds: 2951 },
+  { fips: "21105", name: "Hickman", population: 4439, households: 1731, pctServed25_3: 35, unservedHouseholds: 1125 },
+  { fips: "21107", name: "Hopkins", population: 45119, households: 18397, pctServed25_3: 69, unservedHouseholds: 5703 },
+  { fips: "21109", name: "Jackson", population: 13086, households: 5122, pctServed25_3: 51, unservedHouseholds: 2510 },
+  { fips: "21111", name: "Jefferson", population: 783022, households: 331554, pctServed25_3: 89, unservedHouseholds: 36471 },
+  { fips: "21113", name: "Jessamine", population: 54588, households: 19913, pctServed25_3: 81, unservedHouseholds: 3783 },
+  { fips: "21115", name: "Johnson", population: 22334, households: 9040, pctServed25_3: 53, unservedHouseholds: 4249 },
+  { fips: "21117", name: "Kenton", population: 171288, households: 67367, pctServed25_3: 94, unservedHouseholds: 4042 },
+  { fips: "21119", name: "Knott", population: 13830, households: 5521, pctServed25_3: 50, unservedHouseholds: 2760 },
+  { fips: "21121", name: "Knox", population: 29865, households: 11711, pctServed25_3: 76, unservedHouseholds: 2811 },
+  { fips: "21123", name: "Larue", population: 15107, households: 5996, pctServed25_3: 61, unservedHouseholds: 2338 },
+  { fips: "21125", name: "Laurel", population: 62983, households: 23996, pctServed25_3: 80, unservedHouseholds: 4799 },
+  { fips: "21127", name: "Lawrence", population: 16077, households: 6342, pctServed25_3: 61, unservedHouseholds: 2473 },
+  { fips: "21129", name: "Lee", population: 7339, households: 2595, pctServed25_3: 45, unservedHouseholds: 1427 },
+  { fips: "21131", name: "Leslie", population: 10079, households: 4231, pctServed25_3: 48, unservedHouseholds: 2200 },
+  { fips: "21133", name: "Letcher", population: 20808, households: 8463, pctServed25_3: 58, unservedHouseholds: 3554 },
+  { fips: "21135", name: "Lewis", population: 12965, households: 5019, pctServed25_3: 44, unservedHouseholds: 2811 },
+  { fips: "21137", name: "Lincoln", population: 24504, households: 9705, pctServed25_3: 55, unservedHouseholds: 4367 },
+  { fips: "21139", name: "Livingston", population: 8903, households: 3603, pctServed25_3: 51, unservedHouseholds: 1765 },
+  { fips: "21141", name: "Logan", population: 27986, households: 11005, pctServed25_3: 69, unservedHouseholds: 3412 },
+  { fips: "21143", name: "Lyon", population: 8900, households: 3419, pctServed25_3: 39, unservedHouseholds: 2086 },
+  { fips: "21145", name: "McCracken", population: 67564, households: 27601, pctServed25_3: 85, unservedHouseholds: 4140 },
+  { fips: "21147", name: "McCreary", population: 16867, households: 5861, pctServed25_3: 62, unservedHouseholds: 2227 },
+  { fips: "21149", name: "McLean", population: 9114, households: 3641, pctServed25_3: 42, unservedHouseholds: 2112 },
+  { fips: "21151", name: "Madison", population: 95769, households: 37051, pctServed25_3: 88, unservedHouseholds: 4446 },
+  { fips: "21153", name: "Magoffin", population: 11348, households: 4734, pctServed25_3: 49, unservedHouseholds: 2414 },
+  { fips: "21155", name: "Marion", population: 19749, households: 7724, pctServed25_3: 60, unservedHouseholds: 3090 },
+  { fips: "21157", name: "Marshall", population: 31743, households: 13209, pctServed25_3: 63, unservedHouseholds: 4887 },
+  { fips: "21159", name: "Martin", population: 11027, households: 3854, pctServed25_3: 49, unservedHouseholds: 1966 },
+  { fips: "21161", name: "Mason", population: 16956, households: 7131, pctServed25_3: 51, unservedHouseholds: 3494 },
+  { fips: "21163", name: "Meade", population: 30158, households: 11007, pctServed25_3: 72, unservedHouseholds: 3082 },
+  { fips: "21165", name: "Menifee", population: 6230, households: 2478, pctServed25_3: 46, unservedHouseholds: 1338 },
+  { fips: "21167", name: "Mercer", population: 23028, households: 9181, pctServed25_3: 58, unservedHouseholds: 3856 },
+  { fips: "21169", name: "Metcalfe", population: 10425, households: 4100, pctServed25_3: 44, unservedHouseholds: 2296 },
+  { fips: "21171", name: "Monroe", population: 11269, households: 4645, pctServed25_3: 48, unservedHouseholds: 2415 },
+  { fips: "21173", name: "Montgomery", population: 28395, households: 11005, pctServed25_3: 80, unservedHouseholds: 2201 },
+  { fips: "21175", name: "Morgan", population: 14053, households: 4882, pctServed25_3: 52, unservedHouseholds: 2343 },
+  { fips: "21177", name: "Muhlenberg", population: 30591, households: 12123, pctServed25_3: 68, unservedHouseholds: 3879 },
+  { fips: "21179", name: "Nelson", population: 47606, households: 19150, pctServed25_3: 77, unservedHouseholds: 4404 },
+  { fips: "21181", name: "Nicholas", population: 7708, households: 2776, pctServed25_3: 46, unservedHouseholds: 1499 },
+  { fips: "21183", name: "Ohio", population: 23735, households: 9107, pctServed25_3: 64, unservedHouseholds: 3279 },
+  { fips: "21185", name: "Oldham", population: 69257, households: 23025, pctServed25_3: 80, unservedHouseholds: 4605 },
+  { fips: "21187", name: "Owen", population: 11330, households: 4252, pctServed25_3: 50, unservedHouseholds: 2126 },
+  { fips: "21189", name: "Owsley", population: 3971, households: 1567, pctServed25_3: 38, unservedHouseholds: 972 },
+  { fips: "21191", name: "Pendleton", population: 14723, households: 5442, pctServed25_3: 49, unservedHouseholds: 2775 },
+  { fips: "21193", name: "Perry", population: 27499, households: 11078, pctServed25_3: 79, unservedHouseholds: 2326 },
+  { fips: "21195", name: "Pike", population: 56727, households: 24284, pctServed25_3: 86, unservedHouseholds: 3400 },
+  { fips: "21197", name: "Powell", population: 13038, households: 4790, pctServed25_3: 50, unservedHouseholds: 2395 },
+  { fips: "21199", name: "Pulaski", population: 65897, households: 26210, pctServed25_3: 89, unservedHouseholds: 2883 },
+  { fips: "21201", name: "Robertson", population: 2283, households: 810, pctServed25_3: 52, unservedHouseholds: 389 },
+  { fips: "21203", name: "Rockcastle", population: 16163, households: 6534, pctServed25_3: 63, unservedHouseholds: 2418 },
+  { fips: "21205", name: "Rowan", population: 24578, households: 9592, pctServed25_3: 68, unservedHouseholds: 3069 },
+  { fips: "21207", name: "Russell", population: 18221, households: 7562, pctServed25_3: 62, unservedHouseholds: 2874 },
+  { fips: "21209", name: "Scott", population: 59536, households: 22642, pctServed25_3: 83, unservedHouseholds: 3849 },
+  { fips: "21211", name: "Shelby", population: 49096, households: 18484, pctServed25_3: 69, unservedHouseholds: 5730 },
+  { fips: "21213", name: "Simpson", population: 19972, households: 8025, pctServed25_3: 54, unservedHouseholds: 3691 },
+  { fips: "21215", name: "Spencer", population: 20193, households: 7308, pctServed25_3: 66, unservedHouseholds: 2485 },
+  { fips: "21217", name: "Taylor", population: 26397, households: 10260, pctServed25_3: 77, unservedHouseholds: 2360 },
+  { fips: "21219", name: "Todd", population: 12469, households: 4559, pctServed25_3: 44, unservedHouseholds: 2553 },
+  { fips: "21221", name: "Trigg", population: 14315, households: 6060, pctServed25_3: 43, unservedHouseholds: 3454 },
+  { fips: "21223", name: "Trimble", population: 8550, households: 3382, pctServed25_3: 37, unservedHouseholds: 2131 },
+  { fips: "21225", name: "Union", population: 13260, households: 5198, pctServed25_3: 46, unservedHouseholds: 2807 },
+  { fips: "21227", name: "Warren", population: 140918, households: 55643, pctServed25_3: 90, unservedHouseholds: 5564 },
+  { fips: "21229", name: "Washington", population: 12140, households: 4852, pctServed25_3: 55, unservedHouseholds: 2183 },
+  { fips: "21231", name: "Wayne", population: 19602, households: 8074, pctServed25_3: 52, unservedHouseholds: 3876 },
+  { fips: "21233", name: "Webster", population: 12842, households: 4923, pctServed25_3: 54, unservedHouseholds: 2265 },
+  { fips: "21235", name: "Whitley", population: 36920, households: 13541, pctServed25_3: 74, unservedHouseholds: 3521 },
+  { fips: "21237", name: "Wolfe", population: 6443, households: 2673, pctServed25_3: 48, unservedHouseholds: 1390 },
+  { fips: "21239", name: "Woodford", population: 27279, households: 10814, pctServed25_3: 78, unservedHouseholds: 2379 },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Summary functions                                                  */
 /* ------------------------------------------------------------------ */
 
 export function getKYFacilitySummary() {
@@ -101,65 +412,14 @@ export function getKYFacilitySummary() {
   };
 }
 
-/* ------------------------------------------------------------------ */
-/*  County-level broadband summary (sample — replace with FCC data)    */
-/* ------------------------------------------------------------------ */
-
-export interface KYCountyBroadband {
-  fips: string;
-  name: string;
-  population: number;
-  households: number;
-  pctServed25_3: number;       // % of locations with 25/3 Mbps
-  pctServed100_20: number;     // % of locations with 100/20 Mbps
-  unservedHouseholds: number;  // households below 25/3
-}
-
-/**
- * Sample county broadband data for Eastern Kentucky.
- * [development note: replace with FCC BDC + Census ACS merged data]
- */
-export const KY_COUNTY_BROADBAND: KYCountyBroadband[] = [
-  { fips: "21013", name: "Bell", population: 24_757, households: 10_200, pctServed25_3: 62, pctServed100_20: 28, unservedHouseholds: 3_876 },
-  { fips: "21019", name: "Boyd", population: 46_718, households: 19_800, pctServed25_3: 89, pctServed100_20: 61, unservedHouseholds: 2_178 },
-  { fips: "21025", name: "Breathitt", population: 12_175, households: 5_100, pctServed25_3: 48, pctServed100_20: 15, unservedHouseholds: 2_652 },
-  { fips: "21043", name: "Carter", population: 26_521, households: 10_900, pctServed25_3: 58, pctServed100_20: 22, unservedHouseholds: 4_578 },
-  { fips: "21051", name: "Clay", population: 19_447, households: 7_800, pctServed25_3: 44, pctServed100_20: 12, unservedHouseholds: 4_368 },
-  { fips: "21053", name: "Clinton", population: 9_533, households: 4_000, pctServed25_3: 52, pctServed100_20: 18, unservedHouseholds: 1_920 },
-  { fips: "21063", name: "Elliott", population: 7_316, households: 2_900, pctServed25_3: 38, pctServed100_20: 8, unservedHouseholds: 1_798 },
-  { fips: "21069", name: "Fleming", population: 14_422, households: 5_700, pctServed25_3: 55, pctServed100_20: 20, unservedHouseholds: 2_565 },
-  { fips: "21071", name: "Floyd", population: 34_544, households: 14_200, pctServed25_3: 61, pctServed100_20: 25, unservedHouseholds: 5_538 },
-  { fips: "21087", name: "Green", population: 10_879, households: 4_500, pctServed25_3: 50, pctServed100_20: 16, unservedHouseholds: 2_250 },
-  { fips: "21109", name: "Jackson", population: 12_961, households: 5_200, pctServed25_3: 42, pctServed100_20: 11, unservedHouseholds: 3_016 },
-  { fips: "21115", name: "Johnson", population: 21_535, households: 8_800, pctServed25_3: 56, pctServed100_20: 21, unservedHouseholds: 3_872 },
-  { fips: "21119", name: "Knott", population: 13_543, households: 5_600, pctServed25_3: 45, pctServed100_20: 13, unservedHouseholds: 3_080 },
-  { fips: "21125", name: "Laurel", population: 63_426, households: 25_100, pctServed25_3: 78, pctServed100_20: 45, unservedHouseholds: 5_522 },
-  { fips: "21129", name: "Lee", population: 6_538, households: 2_700, pctServed25_3: 40, pctServed100_20: 10, unservedHouseholds: 1_620 },
-  { fips: "21131", name: "Leslie", population: 9_426, households: 3_800, pctServed25_3: 43, pctServed100_20: 12, unservedHouseholds: 2_166 },
-  { fips: "21133", name: "Letcher", population: 20_345, households: 8_600, pctServed25_3: 51, pctServed100_20: 19, unservedHouseholds: 4_214 },
-  { fips: "21135", name: "Lewis", population: 13_092, households: 5_300, pctServed25_3: 46, pctServed100_20: 14, unservedHouseholds: 2_862 },
-  { fips: "21153", name: "Magoffin", population: 12_027, households: 4_800, pctServed25_3: 41, pctServed100_20: 10, unservedHouseholds: 2_832 },
-  { fips: "21159", name: "Martin", population: 10_582, households: 4_200, pctServed25_3: 39, pctServed100_20: 9, unservedHouseholds: 2_562 },
-  { fips: "21165", name: "Menifee", population: 6_034, households: 2_500, pctServed25_3: 36, pctServed100_20: 8, unservedHouseholds: 1_600 },
-  { fips: "21171", name: "Monroe", population: 10_295, households: 4_300, pctServed25_3: 54, pctServed100_20: 17, unservedHouseholds: 1_978 },
-  { fips: "21175", name: "Morgan", population: 12_658, households: 5_100, pctServed25_3: 43, pctServed100_20: 11, unservedHouseholds: 2_907 },
-  { fips: "21181", name: "Nicholas", population: 7_438, households: 3_000, pctServed25_3: 49, pctServed100_20: 16, unservedHouseholds: 1_530 },
-  { fips: "21189", name: "Owsley", population: 4_189, households: 1_700, pctServed25_3: 34, pctServed100_20: 7, unservedHouseholds: 1_122 },
-  { fips: "21193", name: "Perry", population: 24_098, households: 10_000, pctServed25_3: 65, pctServed100_20: 30, unservedHouseholds: 3_500 },
-  { fips: "21195", name: "Pike", population: 56_300, households: 23_100, pctServed25_3: 68, pctServed100_20: 32, unservedHouseholds: 7_392 },
-  { fips: "21199", name: "Pulaski", population: 65_486, households: 27_000, pctServed25_3: 75, pctServed100_20: 42, unservedHouseholds: 6_750 },
-  { fips: "21203", name: "Rockcastle", population: 16_051, households: 6_600, pctServed25_3: 53, pctServed100_20: 19, unservedHouseholds: 3_102 },
-  { fips: "21237", name: "Wolfe", population: 6_804, households: 2_800, pctServed25_3: 37, pctServed100_20: 9, unservedHouseholds: 1_764 },
-];
-
 export function getKYBroadbandSummary() {
-  const totalHouseholds = KY_COUNTY_BROADBAND.reduce((s, c) => s + c.households, 0);
-  const totalUnserved = KY_COUNTY_BROADBAND.reduce((s, c) => s + c.unservedHouseholds, 0);
-  const totalPop = KY_COUNTY_BROADBAND.reduce((s, c) => s + c.population, 0);
-  const avgServedPct = KY_COUNTY_BROADBAND.reduce((s, c) => s + c.pctServed25_3, 0) / KY_COUNTY_BROADBAND.length;
+  const totalHouseholds = KY_COUNTY_DATA.reduce((s, c) => s + c.households, 0);
+  const totalUnserved = KY_COUNTY_DATA.reduce((s, c) => s + c.unservedHouseholds, 0);
+  const totalPop = KY_COUNTY_DATA.reduce((s, c) => s + c.population, 0);
+  const avgServedPct = KY_COUNTY_DATA.reduce((s, c) => s + c.pctServed25_3, 0) / KY_COUNTY_DATA.length;
 
   return {
-    countiesTracked: KY_COUNTY_BROADBAND.length,
+    countiesTracked: KY_COUNTY_DATA.length,
     totalHouseholds,
     totalUnserved,
     totalPop,

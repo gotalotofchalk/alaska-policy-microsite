@@ -26,7 +26,7 @@ import {
 import {
   getKYBroadbandSummary,
   getKYFacilitySummary,
-  KY_COUNTY_BROADBAND,
+  KY_COUNTY_DATA,
   KY_FACILITIES,
 } from "@/data/kentucky-facilities";
 
@@ -73,7 +73,7 @@ export default function SatellitePlannerPage() {
   const [showSettings, setShowSettings] = useState(false);
 
   const discountMult = 1 - discountPct / 100;
-  const plan = STARLINK_PRICING.residential.plans[STARLINK_PRICING.defaultPlanIndex];
+  const plan = STARLINK_PRICING.business.plans[STARLINK_PRICING.defaultBusinessPlanIndex];
   const effectiveHardware = Math.round(plan.hardwareRetail * discountMult * 100) / 100;
   const effectiveMonthly = Math.round(plan.monthlyRetail * discountMult * 100) / 100;
   const yearOnePerUnit = effectiveHardware + effectiveMonthly * 12;
@@ -387,7 +387,7 @@ function haversineDistMiles(lat1: number, lng1: number, lat2: number, lng2: numb
  * [development note: replace with actual population density grid]
  */
 function estimateHouseholdsNear(facility: KYFacility): number {
-  const county = KY_COUNTY_BROADBAND.find((c) => c.fips === facility.countyFips);
+  const county = KY_COUNTY_DATA.find((c) => c.fips === facility.countyFips);
   if (!county) return 50;
   const unservedDensity = county.unservedHouseholds / (county.households || 1);
   const radiusSq =
@@ -400,9 +400,9 @@ function estimateHouseholdsNear(facility: KYFacility): number {
 /** Estimate households near an arbitrary map point */
 function estimateHouseholdsAtPoint(lat: number, lng: number): number {
   // Find nearest county by checking facilities
-  let nearest = KY_COUNTY_BROADBAND[0];
+  let nearest = KY_COUNTY_DATA[0];
   let minDist = Infinity;
-  for (const county of KY_COUNTY_BROADBAND) {
+  for (const county of KY_COUNTY_DATA) {
     const f = KY_FACILITIES.find((fac) => fac.countyFips === county.fips);
     if (f) {
       const d = haversineDistMiles(lat, lng, f.lat, f.lng);

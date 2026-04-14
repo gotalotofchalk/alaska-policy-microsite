@@ -54,15 +54,19 @@ export const STARLINK_PRICING = {
 
   /**
    * Default plan used for cost calculations.
-   * "residential-200" is the sweet spot: 200 Mbps exceeds the 100/20
-   * BEAD threshold and uses the $499 standard kit.
+   * IMPORTANT: Residential plans PROHIBIT redistribution per Starlink ToS.
+   * Community distribution hubs MUST use Business plans.
+   * For facility-only (no redistribution), residential is fine.
+   * The planner uses Business Standard as default for hub deployments.
    */
-  defaultPlanIndex: 1, // index into residential.plans
+  defaultResidentialPlanIndex: 1, // Residential 200 Mbps — for facility-only
+  defaultBusinessPlanIndex: 0,    // Business Standard — for community hubs
 
   /** Year-one calculation includes hardware + 12 months service */
-  getEffectiveCosts(planType: "residential" | "business" = "residential", planIndex?: number) {
+  getEffectiveCosts(planType: "residential" | "business" = "business", planIndex?: number) {
     const plans = planType === "residential" ? this.residential.plans : this.business.plans;
-    const plan = plans[planIndex ?? this.defaultPlanIndex];
+    const defaultIdx = planType === "residential" ? this.defaultResidentialPlanIndex : this.defaultBusinessPlanIndex;
+    const plan = plans[planIndex ?? defaultIdx];
     const mult = this.bulkDiscountMultiplier;
     return {
       planName: plan.name,
@@ -97,11 +101,31 @@ export const COVERAGE_MODEL = {
   },
 
   communityDistributionModel: {
-    /** Estimated radius (miles) of local Wi-Fi/fixed-wireless redistribution */
+    /**
+     * Estimated radius (miles) of local fixed-wireless redistribution.
+     * Research basis: Ubiquiti PtMP on 5 GHz achieves 4-5 mi line-of-sight;
+     * Kentucky Appalachian terrain (hills, hollows, canopy) reduces to 50-70%
+     * of theoretical max. 3 miles is the conservative, defensible planning
+     * radius per the data gaps research.
+     * Equipment: Starlink Business terminal + PtMP sector antenna + CPEs.
+     */
     coverageRadiusMiles: 3,
-    /** Cost of local distribution equipment (Wi-Fi AP, router, mounting) */
+    /**
+     * Cost of local distribution equipment per hub site.
+     * Based on WISP standard config: Ubiquiti airMAX sector antenna ($300-500),
+     * mounting hardware ($200-400), network gateway ($200-300), installation.
+     * Karibu/WELCOME project reference: $826-$2,911 per site.
+     * Using mid-range estimate for rural KY deployment.
+     */
     localDistributionCostPerSite: 2_500,
-    description: "Starlink terminal + local fixed-wireless redistribution hub",
+    /**
+     * Max households supportable per hub at 100/20 Mbps.
+     * Vernonburg Group analysis: ~7 BSLs per sq mi for reliable 100/20.
+     * At 3-mi radius (~28 sq mi), theoretical max ~196 households,
+     * but rural density is far lower.
+     */
+    maxHouseholdsPerHub: 196,
+    description: "Starlink Business terminal + PtMP fixed-wireless redistribution hub (5 GHz unlicensed)",
   },
 
   /** FCC broadband threshold for 'served' classification */
@@ -115,11 +139,11 @@ export const COVERAGE_MODEL = {
 /* ------------------------------------------------------------------ */
 
 export const KY_CONTEXT = {
-  totalPopulation: 4_526_154,             // Census ACS 2024 5-year
-  ruralPopulation: 1_882_376,             // ~41.6% per CMS allocation formula
+  totalPopulation: 4_534_824,             // Census ACS 2020-2024 5-year
+  ruralPopulation: 1_886_487,             // ~41.6% per CMS allocation formula
   ruralPct: 0.416,
   totalCounties: 120,
-  totalHouseholds: 1_776_000,             // approx from ACS
+  totalHouseholds: 1_814_469,             // Census ACS 2020-2024 5-year
   maternityDesertCounties: 40,            // from KY RHTP narrative
   primaryCareHPSACounties: 98,            // estimate — verify
   mentalHealthHPSACounties: 110,          // estimate — verify

@@ -172,7 +172,7 @@ export function SiteHeader() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }}
             className="overflow-hidden border-t border-[color:var(--line)] lg:hidden"
           >
             <nav className="flex flex-col gap-1 p-4">
