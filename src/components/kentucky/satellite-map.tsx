@@ -96,7 +96,7 @@ function ClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void
 /* ------------------------------------------------------------------ */
 
 function getCountyData(geoid: string) {
-  return KY_COUNTY_DATA.find((c) => c.fips === geoid);
+  return KY_COUNTY_BROADBAND.find((c) => c.fips === geoid);
 }
 
 /* ------------------------------------------------------------------ */
@@ -168,8 +168,8 @@ export default function SatelliteMapComponent({
                 Pop: ${data.population.toLocaleString()} &middot; 
                 HH: ${data.households.toLocaleString()}
               </p>
-              <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(data.pctServed25_3)}">
-                ${data.pctServed25_3}% broadband coverage
+              <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(data.pctServed)}">
+                ${data.pctServed}% broadband coverage
               </p>
               <p style="font-size:11px;color:#999;margin:2px 0 0">
                 ${data.unservedHouseholds.toLocaleString()} unserved households
@@ -186,7 +186,7 @@ export default function SatelliteMapComponent({
           },
           mouseout: (e) => {
             const l = e.target as L.Path;
-            const pct = data?.pctServed25_3 ?? 70;
+            const pct = data?.pctServed ?? 70;
             l.setStyle({
               weight: 1,
               opacity: 0.5,

@@ -24,11 +24,13 @@ import {
   type KYFacility,
 } from "@/data/kentucky-config";
 import {
-  getKYBroadbandSummary,
   getKYFacilitySummary,
-  KY_COUNTY_DATA,
   KY_FACILITIES,
 } from "@/data/kentucky-facilities";
+import {
+  getKYBroadbandSummary,
+  KY_COUNTY_BROADBAND,
+} from "@/data/kentucky-broadband-data";
 
 /* ------------------------------------------------------------------ */
 /*  Lazy-load the Leaflet map (client-only, no SSR)                    */
@@ -387,7 +389,7 @@ function haversineDistMiles(lat1: number, lng1: number, lat2: number, lng2: numb
  * [development note: replace with actual population density grid]
  */
 function estimateHouseholdsNear(facility: KYFacility): number {
-  const county = KY_COUNTY_DATA.find((c) => c.fips === facility.countyFips);
+  const county = KY_COUNTY_BROADBAND.find((c) => c.fips === facility.countyFips);
   if (!county) return 50;
   const unservedDensity = county.unservedHouseholds / (county.households || 1);
   const radiusSq =
@@ -400,9 +402,9 @@ function estimateHouseholdsNear(facility: KYFacility): number {
 /** Estimate households near an arbitrary map point */
 function estimateHouseholdsAtPoint(lat: number, lng: number): number {
   // Find nearest county by checking facilities
-  let nearest = KY_COUNTY_DATA[0];
+  let nearest = KY_COUNTY_BROADBAND[0];
   let minDist = Infinity;
-  for (const county of KY_COUNTY_DATA) {
+  for (const county of KY_COUNTY_BROADBAND) {
     const f = KY_FACILITIES.find((fac) => fac.countyFips === county.fips);
     if (f) {
       const d = haversineDistMiles(lat, lng, f.lat, f.lng);
