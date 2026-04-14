@@ -1,76 +1,256 @@
-import Link from "next/link";
-import { DetailCard } from "@/components/detail-disclosure";
-import { PageHero } from "@/components/page-hero";
-import { Reveal } from "@/components/reveal";
-import { ALASKA_CONFIG, getGreenRegions, getRedRegions } from "@/data/alaska-assessment";
-import { INTERVENTION_CATALOG } from "@/data/intervention-catalog";
+"use client";
 
-export default function Home() {
-  const greenCount = getGreenRegions().length;
-  const redCount = getRedRegions().length;
-  const totalPop = ALASKA_CONFIG.regions.reduce((s, r) => s + r.population, 0);
-  const avgSeverity = ALASKA_CONFIG.regions.reduce((s, r) => s + r.scores.deficitSeverityScore, 0) / ALASKA_CONFIG.regions.length;
+import { motion } from "framer-motion";
+import { ArrowRight, Globe, Lock, MapPin } from "lucide-react";
+import Link from "next/link";
+
+/* ------------------------------------------------------------------ */
+/*  State configuration                                                */
+/* ------------------------------------------------------------------ */
+
+interface StateEntry {
+  slug: string;
+  name: string;
+  abbr: string;
+  status: "active" | "demo" | "coming-soon";
+  description?: string;
+  allocation?: string;
+  highlight?: string;
+}
+
+const STATES: StateEntry[] = [
+  {
+    slug: "alaska",
+    name: "Alaska",
+    abbr: "AK",
+    status: "active",
+    description: "Full assessment, portfolio builder, and investment calculator.",
+    allocation: "$272M/yr",
+    highlight: "Pilot state",
+  },
+  {
+    slug: "kentucky",
+    name: "Kentucky",
+    abbr: "KY",
+    status: "demo",
+    description: "Broadband coverage analysis and satellite deployment planner.",
+    allocation: "$213M/yr",
+    highlight: "Infrastructure demo",
+  },
+  { slug: "west-virginia", name: "West Virginia", abbr: "WV", status: "coming-soon" },
+  { slug: "texas", name: "Texas", abbr: "TX", status: "coming-soon" },
+  { slug: "nebraska", name: "Nebraska", abbr: "NE", status: "coming-soon" },
+  { slug: "california", name: "California", abbr: "CA", status: "coming-soon" },
+  { slug: "mississippi", name: "Mississippi", abbr: "MS", status: "coming-soon" },
+  { slug: "montana", name: "Montana", abbr: "MT", status: "coming-soon" },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Animation variants                                                 */
+/* ------------------------------------------------------------------ */
+
+const containerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
+};
+
+/* ------------------------------------------------------------------ */
+/*  Page                                                               */
+/* ------------------------------------------------------------------ */
+
+export default function LandingPage() {
+  const activeStates = STATES.filter((s) => s.status !== "coming-soon");
+  const comingSoon = STATES.filter((s) => s.status === "coming-soon");
 
   return (
     <>
-      <PageHero eyebrow="RHT-NAV &middot; Alaska Pilot" title="A state decision framework for sequencing technology-enabled rural health investments." lede="RHT-NAV translates severity data into sequenced, CMS-compliant technology portfolios. Assess need, confirm readiness, select coordinated interventions, and demonstrate measurable outcomes within 12 months.">
-        <div className="flex flex-wrap gap-3 pt-2">
-          <Link href="/assess" className="rounded-full bg-[color:var(--foreground)] px-5 py-3 text-sm text-white transition-colors hover:bg-[color:#223a54]">View regional assessment</Link>
-          <Link href="/portfolio-builder" className="rounded-full border border-[color:var(--line)] bg-white px-5 py-3 text-sm text-[color:var(--foreground)] hover:bg-[color:#f9f5ee]">Build a portfolio</Link>
-          <Link href="/map" className="rounded-full border border-[color:var(--line)] bg-white px-5 py-3 text-sm text-[color:var(--foreground)] hover:bg-[color:#f9f5ee]">Explore map layers</Link>
+      {/* ── Hero ──────────────────────────────────────────────── */}
+      <motion.section
+        className="flex flex-col items-center text-center"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[color:var(--muted)]">
+          Rural Health Transformation Program
+        </p>
+        <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.15] text-[color:var(--foreground)] md:text-5xl lg:text-[3.4rem]">
+          A state decision framework for sequencing technology&#8209;enabled rural health investments.
+        </h1>
+        <p className="mt-5 max-w-2xl text-base leading-7 text-[color:var(--muted)]">
+          RHT-NAV helps state administrators identify infrastructure gaps, sequence
+          technology deployments, and build CMS-compliant investment portfolios that
+          demonstrate measurable outcomes within 12 months.
+        </p>
+        <div className="mt-6 flex items-center gap-4 text-sm text-[color:var(--muted)]">
+          <span className="flex items-center gap-1.5">
+            <Globe className="h-3.5 w-3.5" />
+            $50B over 5 years
+          </span>
+          <span className="h-3.5 w-px bg-[color:var(--line)]" />
+          <span className="flex items-center gap-1.5">
+            <MapPin className="h-3.5 w-3.5" />
+            50 states eligible
+          </span>
         </div>
-      </PageHero>
+      </motion.section>
 
-      <Reveal>
-        <section className="grid gap-4 md:grid-cols-4">
-          <DetailCard eyebrow="Step 1" title="Assess need" hoverNote="Burden Severity and Access Gap indicators quantify where deficits are most acute." detail={<p>Domain 1 captures health outcomes, disease prevalence, travel distances, and shortage area designations.</p>} tone="paper"><p className="max-w-xs text-sm leading-7 text-[color:var(--muted)]">Quantify burden and access gaps across every major health domain.</p></DetailCard>
-          <DetailCard eyebrow="Step 2" title="Measure capacity" hoverNote="Workforce counts, facility financial health, and referral patterns." detail={<p>Domain 2 converts the need picture into a system impact assessment.</p>} tone="teal"><p className="max-w-xs text-sm leading-7 text-[color:var(--muted)]">Evaluate workforce, facilities, and referral infrastructure.</p></DetailCard>
-          <DetailCard eyebrow="Step 3" title="Confirm readiness" hoverNote="Digital, operational, policy, and measurement readiness." detail={<p>Domain 3 governs deployment sequencing.</p>} tone="warm"><p className="max-w-xs text-sm leading-7 text-[color:var(--muted)]">Check digital, operational, policy, and measurement infrastructure.</p></DetailCard>
-          <DetailCard eyebrow="Step 4" title="Select portfolio" hoverNote="Coordinated intervention bundles outperform isolated point solutions." detail={<p>The compliance gate confirms CMS alignment. The synergy analysis flags disconnected tools.</p>} tone="navy"><p className="max-w-xs text-sm leading-7 text-[color:var(--muted)]">Build CMS-compliant bundles with synergy scoring.</p></DetailCard>
-        </section>
-      </Reveal>
+      {/* ── Active States ─────────────────────────────────────── */}
+      <motion.section
+        className="mt-4"
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+      >
+        <p className="mb-4 text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">
+          Select a state to explore
+        </p>
 
-      <Reveal delay={0.06}>
-        <section className="surface-card rounded-[2rem] p-6 md:p-8">
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div>
-              <p className="text-[0.72rem] uppercase tracking-[0.32em] text-[color:var(--muted)]">Alaska pilot state</p>
-              <h2 className="mt-3 font-display text-4xl text-[color:var(--foreground)]">Seven regions, two tiers, one coordinated portfolio.</h2>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-[color:var(--muted)]">Alaska was selected as the pilot because it represents one of the most structurally challenging rural healthcare environments in the United States.</p>
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <MiniStat label="Population" value={totalPop.toLocaleString()} />
-                <MiniStat label="RHTP/year" value={`$${Math.round(ALASKA_CONFIG.rhtpAwardPerYear / 1e6)}M`} />
-                <MiniStat label="Avg severity" value={avgSeverity.toFixed(1)} />
-                <MiniStat label="Regions" value={String(ALASKA_CONFIG.regions.length)} />
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <TierCard tier="green" label="Fast-Start" count={greenCount} />
-                <TierCard tier="red" label="Build-First" count={redCount} />
-              </div>
-              <div className="rounded-[1.4rem] border border-[color:var(--line)] bg-white/75 p-4">
-                <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">Severity vs. readiness</p>
-                <div className="relative mt-3 h-44 rounded-xl border border-[color:var(--line)] bg-[linear-gradient(90deg,rgba(196,97,42,0.08),rgba(255,255,255,0.82)_48%,rgba(15,124,134,0.1))]">
-                  {ALASKA_CONFIG.regions.map((r) => (<div key={r.slug} className="absolute flex -translate-x-1/2 translate-y-1/2 flex-col items-center gap-0.5" style={{left:`${r.scores.executionReadinessScore}%`,bottom:`${r.scores.deficitSeverityScore}%`}}><div className={`h-3.5 w-3.5 rounded-full border-2 border-white shadow-md ${r.tier === "green" ? "bg-[color:var(--teal)]" : r.pathway === "coordination-hub" ? "bg-[color:#182f4a]" : "bg-[color:var(--accent)]"}`} /><span className="rounded bg-white/90 px-1.5 py-0.5 text-[9px] font-medium text-[color:var(--foreground)] shadow-sm">{r.name}</span></div>))}
+        <div className="grid gap-4 md:grid-cols-2">
+          {activeStates.map((state) => (
+            <motion.div key={state.slug} variants={itemVariants}>
+              <Link
+                href={state.slug === "alaska" ? "/alaska" : `/${state.slug}`}
+                className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] border border-[color:var(--line)] bg-white/80 p-6 transition-all hover:border-[color:var(--foreground)] hover:shadow-[0_12px_40px_rgba(16,34,53,0.08)] md:p-8"
+              >
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:#102235]">
+                      <span className="text-base font-bold text-white">{state.abbr}</span>
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl text-[color:var(--foreground)]">
+                        {state.name}
+                      </p>
+                      {state.highlight && (
+                        <span className="rounded-full bg-[color:rgba(15,124,134,0.12)] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[color:var(--teal)]">
+                          {state.highlight}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm leading-7 text-[color:var(--muted)]">
+                    {state.description}
+                  </p>
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </Reveal>
 
-      <Reveal delay={0.14}>
-        <section className="grid gap-4 md:grid-cols-3">
-          <ContextCard label="Program" value="$50B over 5 years" note="RHTP authorized under the One Big Beautiful Bill Act. Alaska: $272M/year." />
-          <ContextCard label="Accountability" value="12-month window" note="First CMS performance assessments in October 2026." />
-          <ContextCard label="Constraint" value="$1.1T Medicaid cuts" note="The investment is temporary. The Medicaid reductions are permanent." />
-        </section>
-      </Reveal>
+                <div className="mt-6 flex items-center justify-between">
+                  {state.allocation && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">RHTP allocation</p>
+                      <p className="font-display text-xl text-[color:var(--foreground)]">{state.allocation}</p>
+                    </div>
+                  )}
+                  <span className="flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-4 py-2.5 text-sm text-white transition-transform group-hover:translate-x-1">
+                    Explore
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* ── Coming Soon States ────────────────────────────────── */}
+      <motion.section
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+      >
+        <p className="mb-4 text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">
+          Additional states in development
+        </p>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {comingSoon.map((state) => (
+            <motion.div
+              key={state.slug}
+              variants={itemVariants}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-[color:var(--line)] bg-white/50 p-4 opacity-60"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:#102235]/10">
+                <span className="text-sm font-semibold text-[color:var(--foreground)]">{state.abbr}</span>
+              </div>
+              <p className="text-sm font-medium text-[color:var(--foreground)]">{state.name}</p>
+              <span className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">Coming soon</span>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* ── Framework Overview ────────────────────────────────── */}
+      <motion.section
+        className="surface-card rounded-[2rem] p-6 md:p-8"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.6 }}
+      >
+        <div className="grid gap-6 md:grid-cols-3">
+          <div>
+            <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">The RHT-NAV framework</p>
+            <h2 className="mt-2 font-display text-2xl text-[color:var(--foreground)]">
+              Infrastructure first. Interventions second.
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">
+              States receive RHTP funds and must deploy technology that produces
+              measurable outcomes within 12 months. RHT-NAV ensures foundational
+              infrastructure is in place before intervention spending begins.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <FrameworkStep number="1" title="Map infrastructure gaps" desc="Identify which facilities and communities lack broadband, connectivity, and digital infrastructure." />
+            <FrameworkStep number="2" title="Model coverage solutions" desc="Calculate satellite or broadband deployment costs, coverage, and population impact." />
+          </div>
+          <div className="space-y-4">
+            <FrameworkStep number="3" title="Sequence interventions" desc="Once infrastructure is in place, layer telehealth, RPM, EHR integration, and clinical AI tools." />
+            <FrameworkStep number="4" title="Demonstrate outcomes" desc="Track CMS-required metrics within the 12-month accountability window." />
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ── Future: Access Tiers Teaser ───────────────────────── */}
+      <motion.div
+        className="flex items-center gap-4 rounded-2xl border border-dashed border-[color:var(--line)] bg-white/40 p-5"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+      >
+        <Lock className="h-5 w-5 shrink-0 text-[color:var(--muted)]" />
+        <div>
+          <p className="text-sm font-medium text-[color:var(--foreground)]">
+            Full-stack access coming soon
+          </p>
+          <p className="text-xs leading-5 text-[color:var(--muted)]">
+            Basic broadband and infrastructure analysis is freely available. Registered
+            state accounts will unlock full portfolio building, intervention sequencing,
+            and CMS compliance tools.
+          </p>
+        </div>
+      </motion.div>
     </>
   );
 }
 
-function MiniStat({label,value}:{label:string;value:string}) { return (<div className="rounded-xl border border-[color:var(--line)] bg-white/75 px-3 py-2.5"><p className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p><p className="mt-1 font-display text-xl leading-none text-[color:var(--foreground)]">{value}</p></div>); }
-function TierCard({tier,label,count}:{tier:"green"|"red";label:string;count:number}) { return (<div className={`rounded-[1.3rem] border p-4 ${tier === "green" ? "border-[color:rgba(15,124,134,0.2)] bg-[linear-gradient(180deg,rgba(15,124,134,0.08),rgba(255,255,255,0.92))]" : "border-[color:rgba(196,97,42,0.2)] bg-[linear-gradient(180deg,rgba(196,97,42,0.08),rgba(255,255,255,0.92))]"}`}><div className="flex items-center gap-2"><div className={`h-3 w-3 rounded-full ${tier === "green" ? "bg-[color:var(--teal)]" : "bg-[color:var(--accent)]"}`} /><span className="text-xs font-medium uppercase tracking-wider text-[color:var(--foreground)]">{label}</span></div><p className="mt-2 font-display text-3xl text-[color:var(--foreground)]">{count}</p></div>); }
-function ContextCard({label,value,note}:{label:string;value:string;note:string}) { return (<article className="surface-card rounded-[1.7rem] border p-5"><p className="text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">{label}</p><p className="mt-3 font-display text-[2.2rem] leading-none text-[color:var(--foreground)]">{value}</p><p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">{note}</p></article>); }
+/* ------------------------------------------------------------------ */
+/*  Sub-components                                                     */
+/* ------------------------------------------------------------------ */
+
+function FrameworkStep({ number, title, desc }: { number: string; title: string; desc: string }) {
+  return (
+    <div className="flex gap-3">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[color:var(--foreground)]">
+        <span className="text-xs font-bold text-white">{number}</span>
+      </div>
+      <div>
+        <p className="text-sm font-medium text-[color:var(--foreground)]">{title}</p>
+        <p className="mt-0.5 text-xs leading-5 text-[color:var(--muted)]">{desc}</p>
+      </div>
+    </div>
+  );
+}
