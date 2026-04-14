@@ -5,7 +5,8 @@ import { ArrowRight, Radio, Satellite, Wifi, WifiOff } from "lucide-react";
 import Link from "next/link";
 
 import { COVERAGE_MODEL, KY_CONTEXT, KY_RHTP, STARLINK_PRICING } from "@/data/kentucky-config";
-import { getKYBroadbandSummary, getKYFacilitySummary } from "@/data/kentucky-facilities";
+import { getKYFacilitySummary } from "@/data/kentucky-facilities";
+import { getKYBroadbandSummary } from "@/data/kentucky-broadband-data";
 
 /* ------------------------------------------------------------------ */
 /*  Animation                                                          */
@@ -146,8 +147,8 @@ export default function KentuckyOverview() {
               <MiniStat label="Population affected" value={bSummary.totalPop.toLocaleString()} />
             </div>
             <p className="mt-4 text-xs leading-5 text-[color:var(--muted)]">
-              [development note: county data is sample/estimated. Replace with
-              FCC BDC + Census ACS merged data for production accuracy.]
+              Source: U.S. Census Bureau, ACS 2023 5-Year Estimates (Table B28002).
+              Measures broadband adoption; actual availability gaps may be larger.
             </p>
           </div>
         </div>

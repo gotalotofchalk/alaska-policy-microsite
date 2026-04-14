@@ -27,7 +27,7 @@ import { useEffect, useMemo } from "react";
 
 import type { KYFacility } from "@/data/kentucky-config";
 import { FACILITY_TYPE_LABELS } from "@/data/kentucky-config";
-import { KY_COUNTY_DATA } from "@/data/kentucky-facilities";
+import { KY_COUNTY_BROADBAND, getCountyByFips } from "@/data/kentucky-broadband-data";
 import type { PlacedTerminal } from "@/app/kentucky/satellite-planner/page";
 
 // Import the county boundaries GeoJSON
@@ -138,8 +138,8 @@ export default function SatelliteMapComponent({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (feature: any) => {
         const geoid = feature?.properties?.GEOID;
-        const data = geoid ? getCountyData(geoid) : null;
-        const pct = data?.pctServed25_3 ?? 70;
+        const county = getCountyByFips(feature.properties.GEOID);
+	const pct = county ? county.pctServed : 50; // fallback if no match
         return {
           fillColor: getBroadbandColor(pct),
           fillOpacity: getBroadbandOpacity(pct),
