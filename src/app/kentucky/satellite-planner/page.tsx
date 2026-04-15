@@ -38,6 +38,7 @@ import {
   getKYBroadbandSummary,
   KY_COUNTY_BROADBAND,
 } from "@/data/kentucky-broadband-data";
+import { PricingDisclaimer } from "@/components/kentucky/pricing-disclaimer";
 
 /* ------------------------------------------------------------------ */
 /*  Lazy-load the Leaflet map (client-only, no SSR)                    */
@@ -463,6 +464,16 @@ export default function SatellitePlannerPage() {
               <div className="border-t border-[color:var(--line)] pt-2">
                 <CostLine label="Year-one total" value={totalYearOneCost} bold />
               </div>
+            </div>
+
+            {/* Pricing disclaimer — always visible */}
+            <div className="mt-4">
+              <PricingDisclaimer
+                discountPct={discountPct}
+                planName={defaultPlan.name}
+                retailHardware={defaultPlan.hardwareRetail}
+                retailMonthly={defaultPlan.monthlyRetail}
+              />
             </div>
 
             {/* RHTP context */}

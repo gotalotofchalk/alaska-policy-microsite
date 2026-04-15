@@ -7,6 +7,7 @@ import Link from "next/link";
 import { COVERAGE_MODEL, KY_CONTEXT, KY_RHTP, STARLINK_PRICING } from "@/data/kentucky-config";
 import { getKYFacilitySummary } from "@/data/kentucky-facilities";
 import { getKYBroadbandSummary } from "@/data/kentucky-broadband-data";
+import { PricingDisclaimer } from "@/components/kentucky/pricing-disclaimer";
 
 /* ------------------------------------------------------------------ */
 /*  Animation                                                          */
@@ -203,17 +204,13 @@ export default function KentuckyOverview() {
               total={facilityCommunityEquipCost}
               icon={<Radio className="h-4 w-4" />}
             />
-            <div className="rounded-xl border border-[color:var(--line)] bg-white/60 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">
-                Pricing assumption
-              </p>
-              <p className="mt-1 text-xs leading-5 text-[color:var(--muted)]">
-                {costs.planName} plan with {costs.discountPct}% bulk discount.
-                Hardware: ${costs.hardwarePerUnit}/unit.
-                Monthly: ${costs.monthlyPerUnit}/unit.
-                [Editable in kentucky-config.ts]
-              </p>
-            </div>
+            <PricingDisclaimer
+              discountPct={costs.discountPct}
+              planName={costs.planName}
+              retailHardware={costs.retailHardware}
+              retailMonthly={costs.retailMonthly}
+              compact
+            />
           </div>
         </div>
       </motion.section>
