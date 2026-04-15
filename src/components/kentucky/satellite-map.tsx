@@ -202,6 +202,68 @@ function CountyChoropleth({ dataView }: { dataView: BroadbandDataView }) {
   );
 }
 
+
+/* ------------------------------------------------------------------ */
+/*  Adaptive Color Legend                                               */
+/* ------------------------------------------------------------------ */
+
+function ColorLegend({ dataView }: { dataView: BroadbandDataView }) {
+  const stops = [
+    { color: "#0f7c86", label: "80%+" },
+    { color: "#3a9ca5", label: "70-80%" },
+    { color: "#7ebfc5", label: "60-70%" },
+    { color: "#c9a54e", label: "50-60%" },
+    { color: "#c46128", label: "40-50%" },
+    { color: "#9e3a1a", label: "<40%" },
+  ];
+
+  const title = dataView === "adoption"
+    ? "Broadband Adoption"
+    : "Broadband Availability";
+  const subtitle = dataView === "adoption"
+    ? "% households subscribing (ACS 2024)"
+    : "% locations served at 100/20 Mbps (FCC BDC)";
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 16,
+        right: 16,
+        zIndex: 1000,
+        background: "rgba(255,255,255,0.95)",
+        backdropFilter: "blur(8px)",
+        borderRadius: 12,
+        padding: "10px 12px",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.12)",
+        minWidth: 150,
+      }}
+    >
+      <p style={{ fontSize: 11, fontWeight: 600, margin: 0, color: "#1a1a1a" }}>
+        {title}
+      </p>
+      <p style={{ fontSize: 9, color: "#888", margin: "2px 0 8px", lineHeight: 1.3 }}>
+        {subtitle}
+      </p>
+      {stops.map((s) => (
+        <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+          <span
+            style={{
+              display: "inline-block",
+              width: 14,
+              height: 10,
+              borderRadius: 2,
+              background: s.color,
+              opacity: dataView === "availability" ? 0.7 : 0.6,
+            }}
+          />
+          <span style={{ fontSize: 10, color: "#555" }}>{s.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Main Map Component                                                 */
 /* ------------------------------------------------------------------ */
@@ -244,6 +306,7 @@ export default function SatelliteMapComponent({
   const radiusMeters = milesToMeters(coverageRadiusMiles);
 
   return (
+    <div className="relative h-full w-full">
     <MapContainer
       center={KY_CENTER}
       zoom={KY_ZOOM}
@@ -321,5 +384,7 @@ export default function SatelliteMapComponent({
         </span>
       ))}
     </MapContainer>
+    <ColorLegend dataView={dataView} />
+    </div>
   );
 }
