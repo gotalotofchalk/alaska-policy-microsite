@@ -19,6 +19,7 @@ import { useEffect, useMemo } from "react";
 import type { KYFacility } from "@/data/kentucky-config";
 import { FACILITY_TYPE_COLORS, FACILITY_TYPE_LABELS } from "@/data/kentucky-config";
 import { KY_COUNTY_BROADBAND, getCountyByFips } from "@/data/kentucky-broadband-data";
+import { KY_COUNTY_BDC } from "@/data/kentucky-broadband-availability";
 import type { PlacedTerminal } from "@/app/kentucky/satellite-planner/page";
 
 /* ------------------------------------------------------------------ */
@@ -98,8 +99,12 @@ function getBroadbandColor(pct: number): string {
   return "#9e3a1a";
 }
 
-function getCountyData(geoid: string) {
+function getAdoptionData(geoid: string) {
   return KY_COUNTY_BROADBAND.find((c) => c.fips === geoid);
+}
+
+function getAvailabilityData(geoid: string) {
+  return KY_COUNTY_BDC.find((c) => c.fips === geoid);
 }
 
 /* ------------------------------------------------------------------ */
@@ -108,7 +113,7 @@ function getCountyData(geoid: string) {
 
 let countyGeoJson: GeoJSON.FeatureCollection | null = null;
 
-function CountyChoropleth() {
+function CountyChoropleth({ dataView }: { dataView: BroadbandDataView }) {
   useEffect(() => {
     if (!countyGeoJson) {
       import("@/data/kentucky-counties.json").then((mod) => {
@@ -121,10 +126,22 @@ function CountyChoropleth() {
 
   return (
     <GeoJSON
+      key={dataView}
       data={countyGeoJson}
       style={(feature) => {
         const geoid = feature?.properties?.GEOID || "";
-        const data = getCountyData(geoid);
+        if (dataView === "availability") {
+          const bdc = getAvailabilityData(geoid);
+          const pct = bdc?.pctServed ?? 70;
+          return {
+            fillColor: getBroadbandColor(pct),
+            fillOpacity: 0.25,
+            color: "#888",
+            weight: 1,
+            opacity: 0.4,
+          };
+        }
+        const data = getAdoptionData(geoid);
         const pct = data?.pctServed ?? 70;
         return {
           fillColor: getBroadbandColor(pct),
@@ -136,24 +153,49 @@ function CountyChoropleth() {
       }}
       onEachFeature={(feature, layer) => {
         const geoid = feature?.properties?.GEOID || "";
-        const data = getCountyData(geoid);
-        if (data) {
-          layer.bindPopup(`
-            <div style="min-width:160px">
-              <p style="font-weight:600;font-size:14px;margin:0">${data.name}</p>
-              <p style="font-size:12px;color:#666;margin:4px 0 0">
-                Pop: ~${(data.households * 2.45).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                &ensp;|&ensp;
-                HH: ${data.households.toLocaleString()}
-              </p>
-              <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(data.pctServed)}">
-                ${data.pctServed}% broadband coverage
-              </p>
-              <p style="font-size:11px;color:#999;margin:2px 0 0">
-                ${data.unservedHouseholds.toLocaleString()} unserved households
-              </p>
-            </div>
-          `);
+        if (dataView === "availability") {
+          const bdc = getAvailabilityData(geoid);
+          if (bdc) {
+            layer.bindPopup(`
+              <div style="min-width:180px">
+                <p style="font-weight:600;font-size:14px;margin:0">${bdc.name}</p>
+                <p style="font-size:11px;color:#888;margin:2px 0 4px;font-style:italic">FCC BDC availability (Dec 2024)</p>
+                <p style="font-size:12px;color:#666;margin:4px 0 0">
+                  ${bdc.totalBSLs.toLocaleString()} broadband serviceable locations
+                </p>
+                <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(bdc.pctServed)}">
+                  ${bdc.pctServed}% served (100/20+ Mbps)
+                </p>
+                <p style="font-size:11px;color:#999;margin:2px 0 0">
+                  ${bdc.underservedBSLs.toLocaleString()} underserved &ensp;|&ensp; ${bdc.unservedBSLs.toLocaleString()} unserved
+                </p>
+                <p style="font-size:11px;color:#c46128;margin:2px 0 0">
+                  ${bdc.pctBEADEligible}% BEAD-eligible
+                </p>
+              </div>
+            `);
+          }
+        } else {
+          const data = getAdoptionData(geoid);
+          if (data) {
+            layer.bindPopup(`
+              <div style="min-width:160px">
+                <p style="font-weight:600;font-size:14px;margin:0">${data.name}</p>
+                <p style="font-size:11px;color:#888;margin:2px 0 4px;font-style:italic">Census ACS adoption (2020-2024)</p>
+                <p style="font-size:12px;color:#666;margin:4px 0 0">
+                  Pop: ~${data.population.toLocaleString()}
+                  &ensp;|&ensp;
+                  HH: ${data.households.toLocaleString()}
+                </p>
+                <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(data.pctServed)}">
+                  ${data.pctServed}% broadband adoption
+                </p>
+                <p style="font-size:11px;color:#999;margin:2px 0 0">
+                  ${data.unservedHouseholds.toLocaleString()} unserved households
+                </p>
+              </div>
+            `);
+          }
         }
       }}
     />
@@ -164,11 +206,14 @@ function CountyChoropleth() {
 /*  Main Map Component                                                 */
 /* ------------------------------------------------------------------ */
 
+export type BroadbandDataView = "adoption" | "availability";
+
 interface SatelliteMapProps {
   facilities: KYFacility[];
   terminals: PlacedTerminal[];
   onMapClick: (lat: number, lng: number) => void;
   coverageRadiusMiles: number;
+  dataView?: BroadbandDataView;
 }
 
 /** Convert miles to meters for Leaflet Circle radius */
@@ -179,6 +224,7 @@ export default function SatelliteMapComponent({
   terminals,
   onMapClick,
   coverageRadiusMiles,
+  dataView = "adoption",
 }: SatelliteMapProps) {
   // Fix Leaflet default icon paths in Next.js/webpack
   useEffect(() => {
@@ -213,7 +259,7 @@ export default function SatelliteMapComponent({
       />
 
       {/* ── County choropleth ──────────────────────────────── */}
-      <CountyChoropleth />
+      <CountyChoropleth dataView={dataView} />
 
       {/* ── Click handler ──────────────────────────────────── */}
       <ClickHandler onClick={onMapClick} />

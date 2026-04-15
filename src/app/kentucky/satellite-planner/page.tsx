@@ -21,6 +21,7 @@ import {
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
 
+import type { BroadbandDataView } from "@/components/kentucky/satellite-map";
 import {
   COVERAGE_MODEL,
   FACILITY_TYPE_COLORS,
@@ -83,6 +84,7 @@ export default function SatellitePlannerPage() {
   });
   const [broadbandFilter, setBroadbandFilter] = useState<"all" | "served" | "unserved">("all");
   const [showFilters, setShowFilters] = useState<boolean>(true);
+  const [dataView, setDataView] = useState<BroadbandDataView>("adoption");
 
   const toggleType = (type: FacilityType) =>
     setTypeFilters((prev) => ({ ...prev, [type]: !prev[type] }));
@@ -230,6 +232,7 @@ export default function SatellitePlannerPage() {
             terminals={allTerminals}
             onMapClick={handleMapClick}
             coverageRadiusMiles={coverageRadius}
+            dataView={dataView}
           />
 
           {/* Map overlay controls */}
@@ -245,6 +248,23 @@ export default function SatellitePlannerPage() {
             >
               <Satellite className="h-3.5 w-3.5" />
               {autoConnectFacilities ? "Facility coverage ON" : "Show facility coverage"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDataView((p) => p === "adoption" ? "availability" : "adoption")}
+              className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-medium shadow-lg transition-all"
+            >
+              {dataView === "adoption" ? (
+                <>
+                  <Eye className="h-3.5 w-3.5 text-[color:var(--teal)]" />
+                  Adoption (ACS)
+                </>
+              ) : (
+                <>
+                  <Wifi className="h-3.5 w-3.5 text-[color:var(--accent)]" />
+                  Availability (FCC)
+                </>
+              )}
             </button>
             {manualTerminals.length > 0 && (
               <button
