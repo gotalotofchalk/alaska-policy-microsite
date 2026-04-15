@@ -177,6 +177,7 @@ export interface KYFacility {
   lng: number;
   beds?: number;
   hasBroadband: boolean;        // true = currently served at 25/3
+  usacSubsidy?: { totalCommitted: number; latestYear: number; entities: number };
   broadbandSource?: string;     // how we determined broadband status
 }
 
