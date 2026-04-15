@@ -26,7 +26,7 @@ const STATES: StateEntry[] = [
     status: "active",
     description: "Full assessment, portfolio builder, and investment calculator.",
     allocation: "$272M/yr",
-    highlight: "Pilot state",
+    highlight: "Full-Stack Demo",
   },
   {
     slug: "kentucky",
@@ -80,12 +80,10 @@ export default function LandingPage() {
           Rural Health Transformation Program
         </p>
         <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.15] text-[color:var(--foreground)] md:text-5xl lg:text-[3.4rem]">
-          A state decision framework for sequencing technology&#8209;enabled rural health investments.
+          Sequencing rural health investments, state by state.
         </h1>
-        <p className="mt-5 max-w-2xl text-base leading-7 text-[color:var(--muted)]">
-          RHT-NAV helps state administrators identify infrastructure gaps, sequence
-          technology deployments, and build CMS-compliant investment portfolios that
-          demonstrate measurable outcomes within 12 months.
+        <p className="mt-5 max-w-xl text-base leading-7 text-[color:var(--muted)]">
+          Identify gaps, prioritize infrastructure, and build CMS-compliant portfolios with measurable 12-month outcomes.
         </p>
         <div className="mt-6 flex items-center gap-4 text-sm text-[color:var(--muted)]">
           <span className="flex items-center gap-1.5">
@@ -115,7 +113,7 @@ export default function LandingPage() {
           {activeStates.map((state) => (
             <motion.div key={state.slug} variants={itemVariants}>
               <Link
-                href={state.slug === "alaska" ? "/alaska" : `/${state.slug}`}
+                href={state.slug === "alaska" ? "/assess" : `/${state.slug}`}
                 className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] border border-[color:var(--line)] bg-white/80 p-6 transition-all hover:border-[color:var(--foreground)] hover:shadow-[0_12px_40px_rgba(16,34,53,0.08)] md:p-8"
               >
                 <div>
@@ -186,30 +184,46 @@ export default function LandingPage() {
 
       {/* ── Framework Overview ────────────────────────────────── */}
       <motion.section
-        className="surface-card rounded-[2rem] p-6 md:p-8"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.6 }}
       >
-        <div className="grid gap-6 md:grid-cols-3">
-          <div>
-            <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">The RHT-NAV framework</p>
-            <h2 className="mt-2 font-display text-2xl text-[color:var(--foreground)]">
-              Infrastructure first. Interventions second.
-            </h2>
-            <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">
-              States receive RHTP funds and must deploy technology that produces
-              measurable outcomes within 12 months. RHT-NAV ensures foundational
-              infrastructure is in place before intervention spending begins.
-            </p>
-          </div>
-          <div className="space-y-4">
-            <FrameworkStep number="1" title="Map infrastructure gaps" desc="Identify which facilities and communities lack broadband, connectivity, and digital infrastructure." />
-            <FrameworkStep number="2" title="Model coverage solutions" desc="Calculate satellite or broadband deployment costs, coverage, and population impact." />
-          </div>
-          <div className="space-y-4">
-            <FrameworkStep number="3" title="Sequence interventions" desc="Once infrastructure is in place, layer telehealth, RPM, EHR integration, and clinical AI tools." />
-            <FrameworkStep number="4" title="Demonstrate outcomes" desc="Track CMS-required metrics within the 12-month accountability window." />
+        <div className="mb-6 text-center">
+          <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">The RHT-NAV framework</p>
+          <h2 className="mt-2 font-display text-2xl text-[color:var(--foreground)]">
+            Infrastructure first. Interventions second.
+          </h2>
+        </div>
+        
+        <div className="relative">
+          {/* Connection line */}
+          <div className="absolute top-12 left-[10%] right-[10%] hidden h-px bg-gradient-to-r from-transparent via-[color:var(--line)] to-transparent md:block" />
+          
+          <div className="grid gap-4 md:grid-cols-4">
+            <FrameworkStep 
+              number="1" 
+              title="Map Gaps" 
+              desc="Identify infrastructure deficits" 
+              accent="var(--teal)"
+            />
+            <FrameworkStep 
+              number="2" 
+              title="Model Solutions" 
+              desc="Calculate deployment costs" 
+              accent="var(--teal)"
+            />
+            <FrameworkStep 
+              number="3" 
+              title="Sequence" 
+              desc="Layer interventions strategically" 
+              accent="var(--accent)"
+            />
+            <FrameworkStep 
+              number="4" 
+              title="Demonstrate" 
+              desc="Track CMS metrics in 12 months" 
+              accent="var(--accent)"
+            />
           </div>
         </div>
       </motion.section>
@@ -241,15 +255,18 @@ export default function LandingPage() {
 /*  Sub-components                                                     */
 /* ------------------------------------------------------------------ */
 
-function FrameworkStep({ number, title, desc }: { number: string; title: string; desc: string }) {
+function FrameworkStep({ number, title, desc, accent }: { number: string; title: string; desc: string; accent: string }) {
   return (
-    <div className="flex gap-3">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[color:var(--foreground)]">
-        <span className="text-xs font-bold text-white">{number}</span>
+    <div className="group relative flex flex-col items-center text-center">
+      <div 
+        className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 bg-white transition-transform group-hover:scale-110"
+        style={{ borderColor: accent }}
+      >
+        <span className="text-sm font-bold" style={{ color: accent }}>{number}</span>
       </div>
-      <div>
-        <p className="text-sm font-medium text-[color:var(--foreground)]">{title}</p>
-        <p className="mt-0.5 text-xs leading-5 text-[color:var(--muted)]">{desc}</p>
+      <div className="mt-3">
+        <p className="text-sm font-semibold text-[color:var(--foreground)]">{title}</p>
+        <p className="mt-1 text-xs leading-relaxed text-[color:var(--muted)]">{desc}</p>
       </div>
     </div>
   );
