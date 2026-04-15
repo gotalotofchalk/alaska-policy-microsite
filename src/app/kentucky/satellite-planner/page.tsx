@@ -132,7 +132,7 @@ export default function SatellitePlannerPage() {
   );
 
   /* ── Cost parameters (all editable) ──────────────────────── */
-  const defaultPlan = STARLINK_PRICING.residential.plans[STARLINK_PRICING.defaultPlanIndex];
+  const defaultPlan = STARLINK_PRICING.residential.plans[0];
   const defaultDiscount = Math.round((1 - STARLINK_PRICING.bulkDiscountMultiplier) * 100);
 
   const [discountPct, setDiscountPct] = useState(defaultDiscount);
