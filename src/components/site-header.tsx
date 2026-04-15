@@ -17,7 +17,6 @@ const ALASKA_NAV = [
   { href: "/assess", label: "Assessment" },
   { href: "/map", label: "Map" },
   { href: "/portfolio-builder", label: "Portfolio Builder" },
-  { href: "/calculator", label: "Calculator" },
   { href: "/framework", label: "Framework" },
   { href: "/methods", label: "Methods" },
 ];
@@ -91,8 +90,9 @@ export function SiteHeader() {
           )}
           <Link href="/" className="min-w-0" onClick={() => setMenuOpen(false)}>
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[color:#102235]">
-                <span className="text-sm font-bold text-white">RN</span>
+              <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[color:#102235] to-[color:#1a3a52]">
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,124,134,0.3)_0%,transparent_50%)]" />
+                <span className="relative text-sm font-bold tracking-tight text-white">RN</span>
               </div>
               <div>
                 <p className="text-[0.68rem] uppercase tracking-[0.34em] text-[color:var(--muted)]">
