@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Menu, X } from "lucide-react";
+import { ChevronLeft, Menu, X, Lock } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 /* ------------------------------------------------------------------ */
 
 const ALASKA_NAV = [
-  { href: "/alaska", label: "Overview" },
   { href: "/assess", label: "Assessment" },
   { href: "/map", label: "Map" },
   { href: "/portfolio-builder", label: "Portfolio Builder" },
@@ -22,7 +21,6 @@ const ALASKA_NAV = [
 ];
 
 const KENTUCKY_NAV = [
-  { href: "/kentucky", label: "Overview" },
   { href: "/kentucky/satellite-planner", label: "Satellite Planner" },
 ];
 
@@ -64,6 +62,7 @@ const CONTEXT_COLORS: Record<NavContext, string> = {
 export function SiteHeader() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const context = getNavContext(pathname);
   const navItems = context === "alaska" ? ALASKA_NAV : context === "kentucky" ? KENTUCKY_NAV : [];
 
@@ -131,13 +130,13 @@ export function SiteHeader() {
 
         {/* ── Right side ────────────────────────────────────── */}
         <div className="flex shrink-0 items-center gap-2">
-          {context === "alaska" && (
-            <Link
-              href="/assumptions"
+          {(context === "alaska" || context === "kentucky") && (
+            <button
+              onClick={() => setAdminOpen(true)}
               className="hidden rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-strong)] lg:inline-flex"
             >
               Admin
-            </Link>
+            </button>
           )}
 
           {context !== "landing" && (
@@ -194,17 +193,54 @@ export function SiteHeader() {
                   </Link>
                 );
               })}
-              {context === "alaska" && (
-                <Link
-                  href="/assumptions"
-                  onClick={() => setMenuOpen(false)}
-                  className="mt-2 rounded-xl border border-[color:var(--line)] px-4 py-3 text-sm text-[color:var(--foreground)]"
+              {(context === "alaska" || context === "kentucky") && (
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setAdminOpen(true);
+                  }}
+                  className="mt-2 w-full rounded-xl border border-[color:var(--line)] px-4 py-3 text-left text-sm text-[color:var(--foreground)] hover:bg-white"
                 >
                   Admin
-                </Link>
+                </button>
               )}
             </nav>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Admin Modal ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {adminOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40"
+              onClick={() => setAdminOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative z-10 rounded-2xl bg-white p-8 shadow-2xl max-w-md w-full"
+            >
+              <div className="flex items-center justify-center h-12 w-12 mx-auto bg-[color:rgba(196,97,42,0.1)] rounded-full">
+                <Lock className="h-6 w-6 text-[color:var(--accent)]" />
+              </div>
+              <h2 className="mt-4 text-center font-display text-2xl text-[color:var(--foreground)]">Admin Access</h2>
+              <p className="mt-2 text-center text-sm text-[color:var(--muted)]">
+                Full-stack admin login and access coming soon for all states.
+              </p>
+              <button
+                onClick={() => setAdminOpen(false)}
+                className="mt-6 w-full rounded-full bg-[color:var(--foreground)] px-4 py-3 text-white transition-colors hover:bg-[color:#223a54]"
+              >
+                Close
+              </button>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </header>

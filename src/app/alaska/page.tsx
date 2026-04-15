@@ -187,41 +187,61 @@ export default function LandingPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.6 }}
+        className="rounded-[2.5rem] border border-[color:var(--line)] bg-gradient-to-br from-white via-white to-[color:#f9f5ee] p-8 md:p-12"
       >
-        <div className="mb-6 text-center">
+        <div className="mb-8 text-center">
           <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">The RHT-NAV framework</p>
-          <h2 className="mt-2 font-display text-2xl text-[color:var(--foreground)]">
-            Infrastructure first. Interventions second.
+          <h2 className="mt-2 font-display text-3xl leading-tight text-[color:var(--foreground)]">
+            Four steps to infrastructure-first health transformation
           </h2>
+          <p className="mt-3 mx-auto max-w-2xl text-sm text-[color:var(--muted)]">
+            A proven sequence for deploying technology: map the gap, model solutions, layer interventions strategically, and demonstrate measurable outcomes.
+          </p>
         </div>
         
         <div className="relative">
-          {/* Connection line */}
-          <div className="absolute top-12 left-[10%] right-[10%] hidden h-px bg-gradient-to-r from-transparent via-[color:var(--line)] to-transparent md:block" />
+          {/* Flowing connection path */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: "visible" }}>
+            <defs>
+              <linearGradient id="pathGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+                <stop offset="0%" stopColor="var(--teal)" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="var(--teal)" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.3" />
+              </linearGradient>
+            </defs>
+            <polyline
+              points="12.5%,48px 37.5%,48px 62.5%,48px 87.5%,48px"
+              fill="none"
+              stroke="url(#pathGradient)"
+              strokeWidth="2"
+              strokeDasharray="none"
+              className="hidden md:block"
+            />
+          </svg>
           
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-4">
             <FrameworkStep 
               number="1" 
-              title="Map Gaps" 
-              desc="Identify infrastructure deficits" 
+              title="Map the Gap" 
+              desc="Identify infrastructure deficits across regions and facilities" 
               accent="var(--teal)"
             />
             <FrameworkStep 
               number="2" 
               title="Model Solutions" 
-              desc="Calculate deployment costs" 
+              desc="Calculate deployment costs and coverage impact" 
               accent="var(--teal)"
             />
             <FrameworkStep 
               number="3" 
-              title="Sequence" 
-              desc="Layer interventions strategically" 
+              title="Sequence Interventions" 
+              desc="Layer telehealth, RPM, and clinical tools strategically" 
               accent="var(--accent)"
             />
             <FrameworkStep 
               number="4" 
-              title="Demonstrate" 
-              desc="Track CMS metrics in 12 months" 
+              title="Demonstrate Outcomes" 
+              desc="Track CMS metrics and prove 12-month ROI" 
               accent="var(--accent)"
             />
           </div>
@@ -257,16 +277,22 @@ export default function LandingPage() {
 
 function FrameworkStep({ number, title, desc, accent }: { number: string; title: string; desc: string; accent: string }) {
   return (
-    <div className="group relative flex flex-col items-center text-center">
-      <div 
-        className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 bg-white transition-transform group-hover:scale-110"
-        style={{ borderColor: accent }}
-      >
-        <span className="text-sm font-bold" style={{ color: accent }}>{number}</span>
-      </div>
-      <div className="mt-3">
-        <p className="text-sm font-semibold text-[color:var(--foreground)]">{title}</p>
-        <p className="mt-1 text-xs leading-relaxed text-[color:var(--muted)]">{desc}</p>
+    <div className="group relative flex flex-col">
+      {/* Card background */}
+      <div className="absolute -inset-2 rounded-2xl bg-gradient-to-br from-white/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100 -z-10" />
+      
+      {/* Content */}
+      <div className="flex flex-col items-start gap-3">
+        <div 
+          className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 bg-white shadow-sm transition-transform group-hover:scale-110"
+          style={{ borderColor: accent }}
+        >
+          <span className="text-lg font-bold" style={{ color: accent }}>{number}</span>
+        </div>
+        <div>
+          <p className="font-display text-lg font-semibold text-[color:var(--foreground)] leading-snug">{title}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-[color:var(--muted)]">{desc}</p>
+        </div>
       </div>
     </div>
   );
