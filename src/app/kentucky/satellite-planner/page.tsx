@@ -142,10 +142,10 @@ export default function SatellitePlannerPage() {
   const [monthlyCost, setMonthlyCost] = useState(
     Math.round(defaultPlan.monthlyRetail * STARLINK_PRICING.bulkDiscountMultiplier * 100) / 100,
   );
-  const [localEquipCost, setLocalEquipCost] = useState(
+  const [localEquipCost, setLocalEquipCost] = useState<number>(
     COVERAGE_MODEL.communityDistributionModel.localDistributionCostPerSite,
   );
-  const [coverageRadius, setCoverageRadius] = useState(
+  const [coverageRadius, setCoverageRadius] = useState<number>(
     COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles,
   );
   const [showSettings, setShowSettings] = useState(false);
