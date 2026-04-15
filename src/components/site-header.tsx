@@ -22,12 +22,9 @@ const ALASKA_NAV = [
 ];
 
 const KENTUCKY_NAV = [
-<<<<<<< Updated upstream
   { href: "/kentucky", label: "Home" },
   { href: "/kentucky/satellite-planner", label: "Satellite Planner" },
-=======
-  { href: "/kentucky/satellite-planner", label: "Satellite Planner" , }, { href: "/kentucky/data", label: "Data" },
->>>>>>> Stashed changes
+  { href: "/kentucky/data", label: "Data" },
 ];
 
 type NavContext = "landing" | "alaska" | "kentucky";
