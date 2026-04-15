@@ -74,7 +74,7 @@ export default function LandingPage() {
         className="flex flex-col items-center text-center"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] as const }}
       >
         <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[color:var(--muted)]">
           Rural Health Transformation Program
