@@ -74,6 +74,7 @@ export function SiteHeader() {
   };
 
   return (
+    <>
     <header className="sticky top-0 z-40 border-b border-[color:var(--line)] bg-[color:rgba(247,243,235,0.78)] backdrop-blur-2xl">
       <div className="mx-auto flex max-w-[98rem] items-center justify-between gap-4 px-4 py-4 md:px-8 lg:px-12">
 
@@ -214,6 +215,7 @@ export function SiteHeader() {
 
     {/* ── Admin Modal (portaled to body so fixed positioning is viewport-relative) */}
     <AdminModal open={adminOpen} onClose={() => setAdminOpen(false)} />
+  </>
   );
 }
 
