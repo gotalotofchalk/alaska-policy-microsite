@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Mail } from "lucide-react";
 
 export function SiteFooter() {
   const pathname = usePathname();
   const isKentucky = pathname.startsWith("/kentucky");
-  const isLanding = pathname === "/";
 
   return (
     <footer className="border-t border-[color:var(--line)] bg-[color:#102235] text-white">
       <div className="mx-auto grid max-w-[100rem] gap-8 px-4 py-10 md:grid-cols-[1.3fr_1fr_1fr] md:px-8 lg:px-12">
+
+        {/* Brand */}
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
@@ -29,25 +31,23 @@ export function SiteFooter() {
             Stanford University in collaboration with the RHT Collaborative.
           </p>
           <p className="text-xs text-white/35">
-            Prepared for academic purposes. Not an official policy document of CMS,
-            Microsoft, or the RHT Collaborative.
+            &copy; 2026 Joshua Gottschalk. All rights reserved.
           </p>
         </div>
 
+        {/* Navigate */}
         <div className="space-y-3">
           <p className="text-xs uppercase tracking-[0.28em] text-white/45">Navigate</p>
           <div className="flex flex-wrap gap-2 text-sm text-white/70">
             <Link href="/" className="rounded-full border border-white/12 px-3 py-1 hover:bg-white/8">
               All States
             </Link>
-            {(isLanding || !isKentucky) && (
-              <>
-                <Link href="/alaska" className="rounded-full border border-white/12 px-3 py-1 hover:bg-white/8">Alaska</Link>
-                <Link href="/assess" className="rounded-full border border-white/12 px-3 py-1 hover:bg-white/8">Assessment</Link>
-                <Link href="/portfolio-builder" className="rounded-full border border-white/12 px-3 py-1 hover:bg-white/8">Portfolio Builder</Link>
-              </>
-            )}
-            <Link href="/kentucky" className="rounded-full border border-white/12 px-3 py-1 hover:bg-white/8">Kentucky</Link>
+            <Link href="/alaska" className="rounded-full border border-white/12 px-3 py-1 hover:bg-white/8">
+              Alaska
+            </Link>
+            <Link href="/kentucky" className="rounded-full border border-white/12 px-3 py-1 hover:bg-white/8">
+              Kentucky
+            </Link>
             {isKentucky && (
               <Link href="/kentucky/satellite-planner" className="rounded-full border border-white/12 px-3 py-1 hover:bg-white/8">
                 Satellite Planner
@@ -56,28 +56,23 @@ export function SiteFooter() {
           </div>
         </div>
 
+        {/* Contact */}
         <div className="space-y-3">
-          <p className="text-xs uppercase tracking-[0.28em] text-white/45">
-            {isKentucky ? "Kentucky context" : "Framework"}
-          </p>
-          {isKentucky ? (
-            <ul className="space-y-2 text-sm text-white/60">
-              <li>RHTP allocation: $212.9M/year</li>
-              <li>BEAD allocation: $1.1B (25% LEO satellite)</li>
-              <li>120 counties, 41.6% rural population</li>
-              <li>40 maternity desert counties</li>
-              <li>Infrastructure-first sequencing</li>
-            </ul>
-          ) : (
-            <ul className="space-y-2 text-sm text-white/60">
-              <li>Need / Capacity / Readiness scoring</li>
-              <li>Green (fast-start) / Red (build-first) tiering</li>
-              <li>CMS compliance gate with 3+ category minimum</li>
-              <li>Synergy analysis across intervention bundles</li>
-              <li>12-month time-to-signal feasibility filter</li>
-            </ul>
-          )}
+          <p className="text-xs uppercase tracking-[0.28em] text-white/45">Contact</p>
+          <div className="space-y-2">
+            <a
+              href="mailto:joshgott@stanford.edu"
+              className="flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-white"
+            >
+              <Mail className="h-4 w-4 shrink-0 text-white/40" />
+              joshgott@stanford.edu
+            </a>
+            <p className="text-xs leading-relaxed text-white/35">
+              Questions about methodology, state applicability, or partnership opportunities.
+            </p>
+          </div>
         </div>
+
       </div>
     </footer>
   );
