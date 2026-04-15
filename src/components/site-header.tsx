@@ -22,6 +22,7 @@ const ALASKA_NAV = [
 ];
 
 const KENTUCKY_NAV = [
+  { href: "/kentucky", label: "Home" },
   { href: "/kentucky/satellite-planner", label: "Satellite Planner" },
 ];
 
@@ -45,13 +46,13 @@ function getNavContext(pathname: string): NavContext {
 }
 
 const CONTEXT_LABELS: Record<NavContext, string> = {
-  landing: "",
+  landing: "All States",
   alaska: "Alaska Pilot",
   kentucky: "Kentucky Demo",
 };
 
 const CONTEXT_COLORS: Record<NavContext, string> = {
-  landing: "",
+  landing: "bg-[color:rgba(16,34,53,0.08)] text-[color:var(--foreground)]",
   alaska: "bg-[color:rgba(15,124,134,0.12)] text-[color:var(--teal)]",
   kentucky: "bg-[color:rgba(196,97,42,0.12)] text-[color:var(--accent)]",
 };
@@ -132,43 +133,37 @@ export function SiteHeader() {
 
         {/* ── Right side ────────────────────────────────────── */}
         <div className="flex shrink-0 items-center gap-2">
-          {(context === "alaska" || context === "kentucky") && (
-            <button
-              onClick={() => setAdminOpen(true)}
-              className="hidden rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-strong)] lg:inline-flex"
-            >
-              Admin
-            </button>
-          )}
+          <button
+            onClick={() => setAdminOpen(true)}
+            className="hidden rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-strong)] lg:inline-flex"
+          >
+            Admin
+          </button>
 
-          {context !== "landing" && (
-            <div
-              className={cn(
-                "hidden rounded-full px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider lg:block",
-                CONTEXT_COLORS[context],
-              )}
-            >
-              {CONTEXT_LABELS[context]}
-            </div>
-          )}
+          <div
+            className={cn(
+              "hidden rounded-full px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider lg:block",
+              CONTEXT_COLORS[context],
+            )}
+          >
+            {CONTEXT_LABELS[context]}
+          </div>
 
-          {/* Mobile toggle */}
-          {navItems.length > 0 && (
-            <button
-              type="button"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((c) => !c)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] text-[color:var(--foreground)] lg:hidden"
-            >
-              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          )}
+          {/* Mobile toggle — always visible so Admin is reachable on all pages */}
+          <button
+            type="button"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((c) => !c)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] text-[color:var(--foreground)] lg:hidden"
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
       </div>
 
       {/* ── Mobile Menu ─────────────────────────────────────── */}
       <AnimatePresence>
-        {menuOpen && navItems.length > 0 && (
+        {menuOpen && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -195,17 +190,15 @@ export function SiteHeader() {
                   </Link>
                 );
               })}
-              {(context === "alaska" || context === "kentucky") && (
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setAdminOpen(true);
-                  }}
-                  className="mt-2 w-full rounded-xl border border-[color:var(--line)] px-4 py-3 text-left text-sm text-[color:var(--foreground)] hover:bg-white"
-                >
-                  Admin
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  setAdminOpen(true);
+                }}
+                className="mt-2 w-full rounded-xl border border-[color:var(--line)] px-4 py-3 text-left text-sm text-[color:var(--foreground)] hover:bg-white"
+              >
+                Admin
+              </button>
             </nav>
           </motion.div>
         )}
