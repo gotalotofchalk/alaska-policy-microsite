@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, Menu, X, Lock } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/utils";
 
@@ -73,6 +74,7 @@ export function SiteHeader() {
   };
 
   return (
+    <>
     <header className="sticky top-0 z-40 border-b border-[color:var(--line)] bg-[color:rgba(247,243,235,0.78)] backdrop-blur-2xl">
       <div className="mx-auto flex max-w-[98rem] items-center justify-between gap-4 px-4 py-4 md:px-8 lg:px-12">
 
@@ -209,40 +211,58 @@ export function SiteHeader() {
         )}
       </AnimatePresence>
 
-      {/* ── Admin Modal ─────────────────────────────────────── */}
-      <AnimatePresence>
-        {adminOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/40"
-              onClick={() => setAdminOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative z-10 rounded-2xl bg-white p-8 shadow-2xl max-w-md w-full"
-            >
-              <div className="flex items-center justify-center h-12 w-12 mx-auto bg-[color:rgba(196,97,42,0.1)] rounded-full">
-                <Lock className="h-6 w-6 text-[color:var(--accent)]" />
-              </div>
-              <h2 className="mt-4 text-center font-display text-2xl text-[color:var(--foreground)]">Admin Access</h2>
-              <p className="mt-2 text-center text-sm text-[color:var(--muted)]">
-                Full-stack admin login and access coming soon for all states.
-              </p>
-              <button
-                onClick={() => setAdminOpen(false)}
-                className="mt-6 w-full rounded-full bg-[color:var(--foreground)] px-4 py-3 text-white transition-colors hover:bg-[color:#223a54]"
-              >
-                Close
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </header>
+
+    {/* ── Admin Modal (portaled to body so fixed positioning is viewport-relative) */}
+    <AdminModal open={adminOpen} onClose={() => setAdminOpen(false)} />
+  </>
+  );
+}
+
+function AdminModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/40"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 8 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="relative z-10 rounded-2xl bg-white p-8 shadow-2xl max-w-md w-full"
+          >
+            <div className="flex items-center justify-center h-12 w-12 mx-auto bg-[color:rgba(196,97,42,0.1)] rounded-full">
+              <Lock className="h-6 w-6 text-[color:var(--accent)]" />
+            </div>
+            <h2 className="mt-4 text-center font-display text-2xl text-[color:var(--foreground)]">Admin Access</h2>
+            <p className="mt-2 text-center text-sm text-[color:var(--muted)]">
+              Full-stack admin login and access coming soon for all states.
+            </p>
+            <button
+              onClick={onClose}
+              className="mt-6 w-full rounded-full bg-[color:var(--foreground)] px-4 py-3 text-white transition-colors hover:bg-[color:#223a54]"
+            >
+              Close
+            </button>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>,
+    document.body
   );
 }
