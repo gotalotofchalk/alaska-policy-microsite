@@ -2,13 +2,18 @@
 
 import { motion } from "framer-motion";
 import {
+  ChevronDown,
+  ChevronUp,
   DollarSign,
   Download,
+  Eye,
+  EyeOff,
   Minus,
   Plus,
   RotateCcw,
   Satellite,
   Settings2,
+  Sliders,
   Users,
   Wifi,
   WifiOff,
@@ -18,9 +23,11 @@ import { useCallback, useMemo, useState } from "react";
 
 import {
   COVERAGE_MODEL,
-  KY_CONTEXT,
+  FACILITY_TYPE_COLORS,
+  FACILITY_TYPE_LABELS,
   KY_RHTP,
   STARLINK_PRICING,
+  type FacilityType,
   type KYFacility,
 } from "@/data/kentucky-config";
 import {
@@ -54,9 +61,7 @@ export interface PlacedTerminal {
   lat: number;
   lng: number;
   label: string;
-  /** Estimated households reached by this terminal's distribution radius */
   householdsReached: number;
-  /** Facilities within range */
   facilitiesConnected: string[];
 }
 
@@ -68,25 +73,71 @@ export default function SatellitePlannerPage() {
   const fSummary = getKYFacilitySummary();
   const bSummary = getKYBroadbandSummary();
 
-  /* ── Pricing config (editable in sidebar) ────────────────── */
-  const [discountPct, setDiscountPct] = useState(
-    Math.round((1 - STARLINK_PRICING.bulkDiscountMultiplier) * 100),
+  /* ── Facility filters ────────────────────────────────────── */
+  const [typeFilters, setTypeFilters] = useState<Record<FacilityType, boolean>>({
+    hospital: true,
+    cah: true,
+    fqhc: false, // off by default (663 sites can overwhelm)
+    rhc: true,
+  });
+  const [broadbandFilter, setBroadbandFilter] = useState<"all" | "served" | "unserved">("all");
+  const [showFilters, setShowFilters] = useState<boolean>(true);
+
+  const toggleType = (type: FacilityType) =>
+    setTypeFilters((prev) => ({ ...prev, [type]: !prev[type] }));
+
+  const filteredFacilities = useMemo(
+    () =>
+      KY_FACILITIES.filter(
+        (f) =>
+          typeFilters[f.type] &&
+          (broadbandFilter === "all" ||
+            (broadbandFilter === "served" && f.hasBroadband) ||
+            (broadbandFilter === "unserved" && !f.hasBroadband)),
+      ),
+    [typeFilters, broadbandFilter],
   );
-  const [showSettings, setShowSettings] = useState(false);
 
-  const discountMult = 1 - discountPct / 100;
-  const plan = STARLINK_PRICING.business.plans[STARLINK_PRICING.defaultBusinessPlanIndex];
-  const effectiveHardware = Math.round(plan.hardwareRetail * discountMult * 100) / 100;
-  const effectiveMonthly = Math.round(plan.monthlyRetail * discountMult * 100) / 100;
-  const yearOnePerUnit = effectiveHardware + effectiveMonthly * 12;
-  const localEquipCost = COVERAGE_MODEL.communityDistributionModel.localDistributionCostPerSite;
+  const filteredUnserved = useMemo(
+    () => filteredFacilities.filter((f) => !f.hasBroadband),
+    [filteredFacilities],
+  );
 
-  /* ── Auto-connect mode: pre-populate with all unserved facilities ── */
-  const [autoConnectFacilities, setAutoConnectFacilities] = useState(true);
+  /* ── Cost parameters (all editable) ──────────────────────── */
+  const defaultPlan = STARLINK_PRICING.residential.plans[1];
+  const defaultDiscount = Math.round((1 - STARLINK_PRICING.bulkDiscountMultiplier) * 100);
+
+  const [discountPct, setDiscountPct] = useState<number>(defaultDiscount);
+  const [hardwareCost, setHardwareCost] = useState<number>(
+    Math.round(defaultPlan.hardwareRetail * STARLINK_PRICING.bulkDiscountMultiplier * 100) / 100,
+  );
+  const [monthlyCost, setMonthlyCost] = useState<number>(
+    Math.round(defaultPlan.monthlyRetail * STARLINK_PRICING.bulkDiscountMultiplier * 100) / 100,
+  );
+  const [localEquipCost, setLocalEquipCost] = useState<number>(
+    COVERAGE_MODEL.communityDistributionModel.localDistributionCostPerSite,
+  );
+  const [coverageRadius, setCoverageRadius] = useState<number>(
+    COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles,
+  );
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+
+  // When discount slider changes, recalculate hardware + monthly from retail
+  const handleDiscountChange = (newPct: number) => {
+    setDiscountPct(newPct);
+    const mult = 1 - newPct / 100;
+    setHardwareCost(Math.round(defaultPlan.hardwareRetail * mult * 100) / 100);
+    setMonthlyCost(Math.round(defaultPlan.monthlyRetail * mult * 100) / 100);
+  };
+
+  const yearOnePerUnit = hardwareCost + monthlyCost * 12;
+
+  /* ── Auto-connect: terminals at all filtered unserved facilities ── */
+  const [autoConnectFacilities, setAutoConnectFacilities] = useState<boolean>(true);
 
   const autoTerminals: PlacedTerminal[] = useMemo(() => {
     if (!autoConnectFacilities) return [];
-    return KY_FACILITIES.filter((f) => !f.hasBroadband).map((f) => ({
+    return filteredUnserved.map((f) => ({
       id: `auto-${f.id}`,
       lat: f.lat,
       lng: f.lng,
@@ -94,7 +145,7 @@ export default function SatellitePlannerPage() {
       householdsReached: estimateHouseholdsNear(f),
       facilitiesConnected: [f.id],
     }));
-  }, [autoConnectFacilities]);
+  }, [autoConnectFacilities, filteredUnserved]);
 
   /* ── Manual placements ──────────────────────────────────── */
   const [manualTerminals, setManualTerminals] = useState<PlacedTerminal[]>([]);
@@ -108,67 +159,64 @@ export default function SatellitePlannerPage() {
       const nearby = KY_FACILITIES.filter(
         (f) =>
           !f.hasBroadband &&
-          haversineDistMiles(lat, lng, f.lat, f.lng) <=
-            COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles,
+          haversineDistMiles(lat, lng, f.lat, f.lng) <= coverageRadius,
       );
-      const hh = estimateHouseholdsAtPoint(lat, lng);
+      const hh = estimateHouseholdsNearCoords(lat, lng, coverageRadius);
       setManualTerminals((prev) => [
         ...prev,
         {
           id,
           lat,
           lng,
-          label: `Manual terminal #${prev.length + 1}`,
+          label: nearby.length > 0 ? `Near ${nearby[0].name}` : `Manual (${lat.toFixed(3)}, ${lng.toFixed(3)})`,
           householdsReached: hh,
           facilitiesConnected: nearby.map((f) => f.id),
         },
       ]);
     },
-    [],
+    [coverageRadius],
   );
 
-  const removeManualTerminal = (id: string) => {
+  const removeManualTerminal = (id: string) =>
     setManualTerminals((prev) => prev.filter((t) => t.id !== id));
-  };
-
   const resetManual = () => setManualTerminals([]);
 
-  /* ── Cost calculations ──────────────────────────────────── */
-  const totalHardwareCost = totalTerminals * effectiveHardware;
-  const totalMonthlyCost = totalTerminals * effectiveMonthly;
-  const totalAnnualService = totalTerminals * effectiveMonthly * 12;
+  /* ── Cost totals ──────────────────────────────────────────── */
+  const totalHardwareCost = totalTerminals * hardwareCost;
+  const totalAnnualService = totalTerminals * monthlyCost * 12;
   const totalLocalEquip = totalTerminals * localEquipCost;
-  const totalYearOneCost = totalTerminals * yearOnePerUnit + totalLocalEquip;
-  const pctOfRhtp = ((totalYearOneCost / KY_RHTP.annualAllocation) * 100).toFixed(2);
+  const totalYearOneCost = totalHardwareCost + totalAnnualService + totalLocalEquip;
 
-  /* ── Coverage calculations ──────────────────────────────── */
-  const facilitiesConnected =
-    fSummary.served +
-    new Set(allTerminals.flatMap((t) => t.facilitiesConnected)).size;
+  const facilitiesConnected = allTerminals.reduce(
+    (s, t) => s + t.facilitiesConnected.length,
+    0,
+  );
   const householdsReached = allTerminals.reduce(
     (s, t) => s + t.householdsReached,
     0,
   );
+  const pctOfRhtp = ((totalYearOneCost / KY_RHTP.annualAllocation) * 100).toFixed(2);
+
+  /* ── Animation ──────────────────────────────────────────── */
+  const fadeUp = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
+  };
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ── Header ──────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      {/* Hero */}
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
         <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[color:var(--muted)]">
-          Kentucky Satellite Deployment Planner
+          Kentucky Satellite Infrastructure Planner
         </p>
-        <h1 className="mt-2 max-w-2xl font-display text-3xl text-[color:var(--foreground)] md:text-4xl">
-          Model broadband coverage. Calculate costs.
+        <h1 className="mt-3 max-w-3xl font-display text-3xl leading-[1.15] text-[color:var(--foreground)] md:text-4xl">
+          Place terminals. See coverage. Calculate costs.
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-7 text-[color:var(--muted)]">
           Click on the map to place Starlink terminals. Each terminal provides
           broadband to the installation site and, with local distribution
-          equipment, extends Wi-Fi coverage to a{" "}
-          {COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles}-mile radius.
+          equipment, extends Wi-Fi coverage to a {coverageRadius}-mile radius.
         </p>
       </motion.div>
 
@@ -177,10 +225,10 @@ export default function SatellitePlannerPage() {
         {/* Map */}
         <div className="relative h-[520px] overflow-hidden rounded-[1.8rem] border border-[color:var(--line)] md:h-[620px]">
           <SatelliteMap
-            facilities={KY_FACILITIES}
+            facilities={filteredFacilities}
             terminals={allTerminals}
             onMapClick={handleMapClick}
-            coverageRadiusMiles={COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles}
+            coverageRadiusMiles={coverageRadius}
           />
 
           {/* Map overlay controls */}
@@ -209,30 +257,108 @@ export default function SatellitePlannerPage() {
             )}
           </div>
 
-          {/* Legend */}
-          <div className="absolute bottom-4 left-4 z-[1000] rounded-xl bg-white/90 px-3 py-2 text-[10px] shadow-lg backdrop-blur-sm">
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-[color:var(--teal)]" />
-                Broadband served
+          {/* ── Toggleable Legend / Filters ─────────────────── */}
+          <div className="absolute bottom-4 left-4 z-[1000] max-w-[320px] rounded-xl bg-white/95 shadow-lg backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={() => setShowFilters((p) => !p)}
+              className="flex w-full items-center justify-between px-3 py-2 text-[10px] font-medium uppercase tracking-wider text-[color:var(--foreground)]"
+            >
+              <span className="flex items-center gap-1.5">
+                <Sliders className="h-3 w-3" />
+                Map Filters
+                <span className="font-normal normal-case tracking-normal text-[color:var(--muted)]">
+                  ({filteredFacilities.length} visible)
+                </span>
               </span>
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-[color:var(--accent)]" />
-                No broadband
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-[color:#6b5a8a]" />
-                Placed terminal
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-[color:#6b5a8a] bg-[color:rgba(107,90,138,0.15)]" />
-                Coverage radius
-              </span>
-            </div>
+              {showFilters ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+            </button>
+
+            {showFilters && (
+              <div className="border-t border-[color:var(--line)] px-3 pb-3 pt-2">
+                {/* Facility type toggles */}
+                <p className="mb-1.5 text-[9px] uppercase tracking-widest text-[color:var(--muted)]">
+                  Facility types
+                </p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {(["hospital", "cah", "fqhc", "rhc"] as FacilityType[]).map((type) => {
+                    const count = KY_FACILITIES.filter((f) => f.type === type).length;
+                    const active = typeFilters[type];
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => toggleType(type)}
+                        className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[10px] transition-all ${
+                          active
+                            ? "bg-[color:var(--surface-soft)] text-[color:var(--foreground)]"
+                            : "bg-transparent text-[color:var(--muted)] opacity-50"
+                        }`}
+                      >
+                        <span
+                          className="inline-block h-2.5 w-2.5 rounded-full border border-white"
+                          style={{
+                            background: active ? FACILITY_TYPE_COLORS[type] : "#ccc",
+                            boxShadow: active ? "0 0 0 1px rgba(0,0,0,0.1)" : "none",
+                          }}
+                        />
+                        <span className="truncate">{FACILITY_TYPE_LABELS[type]}</span>
+                        <span className="ml-auto text-[9px] text-[color:var(--muted)]">{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Broadband status filter */}
+                <p className="mb-1.5 mt-3 text-[9px] uppercase tracking-widest text-[color:var(--muted)]">
+                  Broadband status
+                </p>
+                <div className="flex gap-1">
+                  {([
+                    { key: "all", label: "All" },
+                    { key: "unserved", label: "Unserved" },
+                    { key: "served", label: "Served" },
+                  ] as const).map(({ key, label }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setBroadbandFilter(key)}
+                      className={`flex-1 rounded-lg px-2 py-1.5 text-[10px] transition-all ${
+                        broadbandFilter === key
+                          ? key === "unserved"
+                            ? "bg-[color:var(--accent)] text-white"
+                            : key === "served"
+                              ? "bg-[color:var(--teal)] text-white"
+                              : "bg-[color:var(--foreground)] text-white"
+                          : "bg-[color:var(--surface-soft)] text-[color:var(--muted)]"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Terminal + coverage legend */}
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-[color:var(--line)] pt-2">
+                  <span className="flex items-center gap-1 text-[10px] text-[color:var(--muted)]">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[color:#6b5a8a]" />
+                    Terminal
+                  </span>
+                  <span className="flex items-center gap-1 text-[10px] text-[color:var(--muted)]">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-[color:#6b5a8a] bg-[color:rgba(107,90,138,0.15)]" />
+                    Coverage
+                  </span>
+                  <span className="flex items-center gap-1 text-[10px] text-[color:var(--muted)]">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-red-400 bg-[color:var(--foreground)]" />
+                    No broadband
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Sidebar */}
+        {/* ── Sidebar ──────────────────────────────────────── */}
         <div className="flex flex-col gap-4">
           {/* Coverage Stats */}
           <div className="surface-card rounded-[1.6rem] border p-5">
@@ -248,7 +374,7 @@ export default function SatellitePlannerPage() {
               <SidebarStat
                 icon={<Wifi className="h-4 w-4" />}
                 label="Facilities connected"
-                value={`${facilitiesConnected} / ${fSummary.total}`}
+                value={`${facilitiesConnected} / ${filteredFacilities.length}`}
               />
               <SidebarStat
                 icon={<Users className="h-4 w-4" />}
@@ -258,7 +384,7 @@ export default function SatellitePlannerPage() {
             </div>
           </div>
 
-          {/* Cost Summary */}
+          {/* Cost Calculator */}
           <div className="surface-card rounded-[1.6rem] border p-5">
             <div className="flex items-center justify-between">
               <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
@@ -267,63 +393,79 @@ export default function SatellitePlannerPage() {
               <button
                 type="button"
                 onClick={() => setShowSettings((p) => !p)}
-                className="rounded-lg p-1 text-[color:var(--muted)] hover:bg-white hover:text-[color:var(--foreground)]"
-                title="Adjust pricing"
+                className={`rounded-full p-1.5 transition-colors ${
+                  showSettings
+                    ? "bg-[color:var(--foreground)] text-white"
+                    : "bg-[color:var(--surface-soft)] text-[color:var(--muted)]"
+                }`}
               >
-                <Settings2 className="h-4 w-4" />
+                <Settings2 className="h-3.5 w-3.5" />
               </button>
             </div>
 
+            {/* ── Expanded Settings Panel ────────────────────── */}
             {showSettings && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                className="mt-3 space-y-2 rounded-xl border border-[color:var(--line)] bg-white/60 p-3"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 space-y-4 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-3"
               >
-                <label className="block text-xs text-[color:var(--muted)]">
-                  Bulk discount: {discountPct}%
+                {/* Bulk discount slider */}
+                <label className="block">
+                  <span className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">
+                    Bulk discount: {discountPct}%
+                  </span>
                   <div className="mt-1 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setDiscountPct((p) => Math.max(0, p - 5))}
-                      className="rounded bg-[color:var(--surface-soft)] p-1"
-                    >
+                    <button type="button" onClick={() => handleDiscountChange(Math.max(0, discountPct - 5))} className="rounded bg-white p-1">
                       <Minus className="h-3 w-3" />
                     </button>
                     <input
-                      type="range"
-                      min={0}
-                      max={95}
-                      step={5}
-                      value={discountPct}
-                      onChange={(e) => setDiscountPct(Number(e.target.value))}
+                      type="range" min={0} max={95} step={5} value={discountPct}
+                      onChange={(e) => handleDiscountChange(Number(e.target.value))}
                       className="flex-1"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setDiscountPct((p) => Math.min(95, p + 5))}
-                      className="rounded bg-[color:var(--surface-soft)] p-1"
-                    >
+                    <button type="button" onClick={() => handleDiscountChange(Math.min(95, discountPct + 5))} className="rounded bg-white p-1">
                       <Plus className="h-3 w-3" />
                     </button>
                   </div>
                 </label>
-                <p className="text-[10px] text-[color:var(--muted)]">
-                  Hardware: ${effectiveHardware}/unit
-                  &ensp;|&ensp; Monthly: ${effectiveMonthly}/unit
-                </p>
+
+                {/* Editable cost inputs */}
+                <div className="grid grid-cols-2 gap-2">
+                  <CostInput label="Hardware / unit" value={hardwareCost} onChange={setHardwareCost} prefix="$" />
+                  <CostInput label="Monthly / unit" value={monthlyCost} onChange={setMonthlyCost} prefix="$" />
+                  <CostInput label="Distribution equip" value={localEquipCost} onChange={setLocalEquipCost} prefix="$" />
+                  <CostInput label="Coverage radius" value={coverageRadius} onChange={setCoverageRadius} suffix="mi" />
+                </div>
+
+                {/* Reset to defaults */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleDiscountChange(defaultDiscount);
+                    setLocalEquipCost(COVERAGE_MODEL.communityDistributionModel.localDistributionCostPerSite);
+                    setCoverageRadius(COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles);
+                  }}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-[10px] text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Reset to defaults
+                </button>
               </motion.div>
             )}
 
+            {/* Cost breakdown */}
             <div className="mt-4 space-y-2">
-              <CostLine label="Hardware" value={totalHardwareCost} />
-              <CostLine label="Annual service" value={totalAnnualService} />
-              <CostLine label="Distribution equipment" value={totalLocalEquip} />
+              <CostLine label="Hardware" value={totalHardwareCost} detail={`${totalTerminals} × $${hardwareCost.toLocaleString()}`} />
+              <CostLine label="Annual service" value={totalAnnualService} detail={`${totalTerminals} × $${monthlyCost}/mo × 12`} />
+              <CostLine label="Distribution equip" value={totalLocalEquip} detail={`${totalTerminals} × $${localEquipCost.toLocaleString()}`} />
               <div className="border-t border-[color:var(--line)] pt-2">
                 <CostLine label="Year-one total" value={totalYearOneCost} bold />
               </div>
             </div>
 
+            {/* RHTP context */}
             <div className="mt-4 rounded-xl bg-[color:rgba(15,124,134,0.08)] p-3">
               <p className="text-xs text-[color:var(--teal)]">
                 {pctOfRhtp}% of Kentucky&apos;s annual RHTP allocation
@@ -367,10 +509,67 @@ export default function SatellitePlannerPage() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Sub-components                                                     */
+/* ------------------------------------------------------------------ */
+
+function SidebarStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[color:var(--surface-soft)] text-[color:var(--muted)]">
+        {icon}
+      </div>
+      <div>
+        <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">{label}</p>
+        <p className="font-display text-lg font-semibold text-[color:var(--foreground)]">{typeof value === "number" ? value.toLocaleString() : value}</p>
+      </div>
+    </div>
+  );
+}
+
+function CostLine({ label, value, detail, bold }: { label: string; value: number; detail?: string; bold?: boolean }) {
+  return (
+    <div className={`flex items-baseline justify-between text-xs ${bold ? "font-semibold text-[color:var(--foreground)]" : "text-[color:var(--muted)]"}`}>
+      <span>
+        {label}
+        {detail && <span className="ml-1 text-[10px] opacity-60">({detail})</span>}
+      </span>
+      <span className={bold ? "font-display text-base" : ""}>${value.toLocaleString()}</span>
+    </div>
+  );
+}
+
+function CostInput({
+  label, value, onChange, prefix, suffix,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  prefix?: string;
+  suffix?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="text-[9px] uppercase tracking-wider text-[color:var(--muted)]">{label}</span>
+      <div className="mt-0.5 flex items-center gap-0.5 rounded-lg border border-[color:var(--line)] bg-white px-2 py-1">
+        {prefix && <span className="text-[10px] text-[color:var(--muted)]">{prefix}</span>}
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value) || 0)}
+          className="w-full bg-transparent text-xs text-[color:var(--foreground)] outline-none"
+          step={prefix === "$" ? 10 : 0.5}
+          min={0}
+        />
+        {suffix && <span className="text-[10px] text-[color:var(--muted)]">{suffix}</span>}
+      </div>
+    </label>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-/** Haversine distance in miles between two lat/lng points */
 function haversineDistMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 3959;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -383,76 +582,16 @@ function haversineDistMiles(lat1: number, lng1: number, lat2: number, lng2: numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-/**
- * Rough estimate of households near a facility,
- * based on the facility's county broadband data.
- * [development note: replace with actual population density grid]
- */
-function estimateHouseholdsNear(facility: KYFacility): number {
-  const county = KY_COUNTY_BROADBAND.find((c) => c.fips === facility.countyFips);
-  if (!county) return 50;
+function estimateHouseholdsNear(f: KYFacility): number {
+  const county = KY_COUNTY_BROADBAND.find((c) => c.fips === f.countyFips);
+  if (!county) return 200;
   const unservedDensity = county.unservedHouseholds / (county.households || 1);
-  const radiusSq =
-    COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles ** 2 * Math.PI;
-  // Very rough: assume county is ~400 sq mi average, distribute unserved proportionally
-  const countyAreaSqMi = 400;
-  return Math.round((radiusSq / countyAreaSqMi) * county.unservedHouseholds * unservedDensity);
+  return Math.round(unservedDensity * 500);
 }
 
-/** Estimate households near an arbitrary map point */
-function estimateHouseholdsAtPoint(lat: number, lng: number): number {
-  // Find nearest county by checking facilities
-  let nearest = KY_COUNTY_BROADBAND[0];
-  let minDist = Infinity;
-  for (const county of KY_COUNTY_BROADBAND) {
-    const f = KY_FACILITIES.find((fac) => fac.countyFips === county.fips);
-    if (f) {
-      const d = haversineDistMiles(lat, lng, f.lat, f.lng);
-      if (d < minDist) {
-        minDist = d;
-        nearest = county;
-      }
-    }
-  }
-  const radiusSq = COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles ** 2 * Math.PI;
-  return Math.round((radiusSq / 400) * nearest.unservedHouseholds);
-}
-
-/* ------------------------------------------------------------------ */
-/*  Sub-components                                                     */
-/* ------------------------------------------------------------------ */
-
-function SidebarStat({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[color:var(--foreground)] text-white">
-        {icon}
-      </div>
-      <div>
-        <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">{label}</p>
-        <p className="font-display text-lg text-[color:var(--foreground)]">{String(value)}</p>
-      </div>
-    </div>
-  );
-}
-
-function CostLine({ label, value, bold }: { label: string; value: number; bold?: boolean }) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className={bold ? "font-medium text-[color:var(--foreground)]" : "text-[color:var(--muted)]"}>
-        {label}
-      </span>
-      <span className={bold ? "font-display text-lg text-[color:var(--foreground)]" : "text-[color:var(--foreground)]"}>
-        ${Math.round(value).toLocaleString()}
-      </span>
-    </div>
-  );
+function estimateHouseholdsNearCoords(lat: number, lng: number, radiusMiles: number): number {
+  const nearbyCounties = KY_COUNTY_BROADBAND.filter(() => true); // simplified
+  if (nearbyCounties.length === 0) return 200;
+  const avgUnserved = nearbyCounties.reduce((s, c) => s + c.unservedHouseholds, 0) / nearbyCounties.length;
+  return Math.round(avgUnserved * 0.02 * radiusMiles);
 }

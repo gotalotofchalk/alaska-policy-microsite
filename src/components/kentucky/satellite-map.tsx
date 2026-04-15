@@ -3,83 +3,77 @@
  *
  * Features:
  * - County boundary choropleth (colored by broadband coverage %)
- * - Healthcare facility markers (color-coded by broadband status)
+ * - Healthcare facility markers (color-coded by TYPE + broadband status)
  * - Placed terminal markers with coverage radius circles
  * - Click-to-place interaction for manual terminals
  * - County hover popups with population and broadband data
- *
- * REQUIRES: npm install leaflet react-leaflet @types/leaflet
+ * - Filter support: facilities filtered before rendering
  */
 
 "use client";
 
-import {
-  Circle,
-  GeoJSON,
-  MapContainer,
-  Marker,
-  Popup,
-  TileLayer,
-  useMapEvents,
-} from "react-leaflet";
+import { Circle, GeoJSON, MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { useEffect, useMemo } from "react";
 
 import type { KYFacility } from "@/data/kentucky-config";
-import { FACILITY_TYPE_LABELS } from "@/data/kentucky-config";
+import { FACILITY_TYPE_COLORS, FACILITY_TYPE_LABELS } from "@/data/kentucky-config";
 import { KY_COUNTY_BROADBAND, getCountyByFips } from "@/data/kentucky-broadband-data";
 import type { PlacedTerminal } from "@/app/kentucky/satellite-planner/page";
 
-// Import the county boundaries GeoJSON
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const countyGeo = require("@/data/kentucky-counties.json");
-
 /* ------------------------------------------------------------------ */
-/*  Custom marker icons                                                */
+/*  Custom marker icons — per facility type + broadband status         */
 /* ------------------------------------------------------------------ */
 
-function createCircleIcon(color: string, size: number = 12, border?: string): L.DivIcon {
+function createFacilityIcon(
+  fillColor: string,
+  served: boolean,
+  size: number = 12,
+): L.DivIcon {
+  const borderColor = served ? "white" : "#ef4444";
+  const actualSize = served ? size : size + 2;
+  const shadow = served
+    ? "0 1px 4px rgba(0,0,0,0.2)"
+    : "0 0 0 2px rgba(239,68,68,0.3), 0 2px 6px rgba(0,0,0,0.25)";
+
   return L.divIcon({
     className: "",
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    iconSize: [actualSize, actualSize],
+    iconAnchor: [actualSize / 2, actualSize / 2],
     html: `<div style="
-      width: ${size}px;
-      height: ${size}px;
+      width: ${actualSize}px;
+      height: ${actualSize}px;
       border-radius: 50%;
-      background: ${color};
-      border: 2px solid ${border || "white"};
-      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      background: ${fillColor};
+      border: 2px solid ${borderColor};
+      box-shadow: ${shadow};
     "></div>`,
   });
 }
 
-const SERVED_ICON = createCircleIcon("#0f7c86", 10);
-const UNSERVED_ICON = createCircleIcon("#c46128", 12);
-const TERMINAL_ICON = createCircleIcon("#6b5a8a", 16, "#ffffff");
+const TERMINAL_ICON = L.divIcon({
+  className: "",
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+  html: `<div style="
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #6b5a8a; border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  "></div>`,
+});
 
-/* ------------------------------------------------------------------ */
-/*  Choropleth color scale                                             */
-/* ------------------------------------------------------------------ */
-
-function getBroadbandColor(pct: number): string {
-  if (pct >= 90) return "#0f7c86";
-  if (pct >= 75) return "#3a9da5";
-  if (pct >= 60) return "#7ebfc4";
-  if (pct >= 45) return "#e8c78a";
-  if (pct >= 30) return "#d4945a";
-  return "#c46128";
-}
-
-function getBroadbandOpacity(pct: number): number {
-  if (pct >= 80) return 0.15;
-  if (pct >= 60) return 0.25;
-  if (pct >= 40) return 0.4;
-  return 0.55;
+// Cache icons per type+status to avoid recreating on every render
+const iconCache = new Map<string, L.DivIcon>();
+function getFacilityIcon(type: KYFacility["type"], served: boolean): L.DivIcon {
+  const key = `${type}-${served}`;
+  if (!iconCache.has(key)) {
+    iconCache.set(key, createFacilityIcon(FACILITY_TYPE_COLORS[type], served));
+  }
+  return iconCache.get(key)!;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Map click handler                                                  */
+/*  Map click handler (child of MapContainer)                          */
 /* ------------------------------------------------------------------ */
 
 function ClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void }) {
@@ -92,11 +86,78 @@ function ClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void
 }
 
 /* ------------------------------------------------------------------ */
-/*  Lookup helper                                                      */
+/*  Choropleth helpers                                                 */
 /* ------------------------------------------------------------------ */
+
+function getBroadbandColor(pct: number): string {
+  if (pct >= 80) return "#0f7c86";
+  if (pct >= 70) return "#3a9ca5";
+  if (pct >= 60) return "#7ebfc5";
+  if (pct >= 50) return "#c9a54e";
+  if (pct >= 40) return "#c46128";
+  return "#9e3a1a";
+}
 
 function getCountyData(geoid: string) {
   return KY_COUNTY_BROADBAND.find((c) => c.fips === geoid);
+}
+
+/* ------------------------------------------------------------------ */
+/*  County GeoJSON layer                                               */
+/* ------------------------------------------------------------------ */
+
+let countyGeoJson: GeoJSON.FeatureCollection | null = null;
+
+function CountyChoropleth() {
+  useEffect(() => {
+    if (!countyGeoJson) {
+      import("@/data/kentucky-counties.json").then((mod) => {
+        countyGeoJson = mod.default as unknown as GeoJSON.FeatureCollection;
+      });
+    }
+  }, []);
+
+  if (!countyGeoJson) return null;
+
+  return (
+    <GeoJSON
+      data={countyGeoJson}
+      style={(feature) => {
+        const geoid = feature?.properties?.GEOID || "";
+        const data = getCountyData(geoid);
+        const pct = data?.pctServed ?? 70;
+        return {
+          fillColor: getBroadbandColor(pct),
+          fillOpacity: 0.2,
+          color: "#888",
+          weight: 1,
+          opacity: 0.4,
+        };
+      }}
+      onEachFeature={(feature, layer) => {
+        const geoid = feature?.properties?.GEOID || "";
+        const data = getCountyData(geoid);
+        if (data) {
+          layer.bindPopup(`
+            <div style="min-width:160px">
+              <p style="font-weight:600;font-size:14px;margin:0">${data.name}</p>
+              <p style="font-size:12px;color:#666;margin:4px 0 0">
+                Pop: ~${(data.households * 2.45).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                &ensp;|&ensp;
+                HH: ${data.households.toLocaleString()}
+              </p>
+              <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(data.pctServed)}">
+                ${data.pctServed}% broadband coverage
+              </p>
+              <p style="font-size:11px;color:#999;margin:2px 0 0">
+                ${data.unservedHouseholds.toLocaleString()} unserved households
+              </p>
+            </div>
+          `);
+        }
+      }}
+    />
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -110,6 +171,7 @@ interface SatelliteMapProps {
   coverageRadiusMiles: number;
 }
 
+/** Convert miles to meters for Leaflet Circle radius */
 const milesToMeters = (miles: number) => miles * 1609.34;
 
 export default function SatelliteMapComponent({
@@ -118,6 +180,7 @@ export default function SatelliteMapComponent({
   onMapClick,
   coverageRadiusMiles,
 }: SatelliteMapProps) {
+  // Fix Leaflet default icon paths in Next.js/webpack
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -128,75 +191,11 @@ export default function SatelliteMapComponent({
     });
   }, []);
 
+  /** Kentucky center coordinates */
   const KY_CENTER: [number, number] = [37.84, -84.27];
   const KY_ZOOM = 7;
+
   const radiusMeters = milesToMeters(coverageRadiusMiles);
-
-  /* County choropleth style */
-  const countyStyle = useMemo(
-    () =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (feature: any) => {
-        const geoid = feature?.properties?.GEOID;
-        const county = getCountyByFips(feature.properties.GEOID);
-	const pct = county ? county.pctServed : 50; // fallback if no match
-        return {
-          fillColor: getBroadbandColor(pct),
-          fillOpacity: getBroadbandOpacity(pct),
-          color: "#8a7e6e",
-          weight: 1,
-          opacity: 0.5,
-        };
-      },
-    [],
-  );
-
-  /* County hover + popup */
-  const onEachCounty = useMemo(
-    () =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (feature: any, layer: L.Layer) => {
-        const geoid = feature?.properties?.GEOID;
-        const name = feature?.properties?.NAME;
-        const data = geoid ? getCountyData(geoid) : null;
-
-        if (data) {
-          (layer as L.Path).bindPopup(
-            `<div style="min-width:180px;font-family:system-ui,sans-serif">
-              <p style="font-weight:600;margin:0 0 4px;font-size:14px">${name} County</p>
-              <p style="font-size:11px;color:#666;margin:0">
-                Pop: ${data.population.toLocaleString()} &middot; 
-                HH: ${data.households.toLocaleString()}
-              </p>
-              <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(data.pctServed)}">
-                ${data.pctServed}% broadband coverage
-              </p>
-              <p style="font-size:11px;color:#999;margin:2px 0 0">
-                ${data.unservedHouseholds.toLocaleString()} unserved households
-              </p>
-            </div>`,
-          );
-        }
-
-        (layer as L.Path).on({
-          mouseover: (e) => {
-            const l = e.target as L.Path;
-            l.setStyle({ weight: 2.5, opacity: 0.9, fillOpacity: 0.65 });
-            l.bringToFront();
-          },
-          mouseout: (e) => {
-            const l = e.target as L.Path;
-            const pct = data?.pctServed ?? 70;
-            l.setStyle({
-              weight: 1,
-              opacity: 0.5,
-              fillOpacity: getBroadbandOpacity(pct),
-            });
-          },
-        });
-      },
-    [],
-  );
 
   return (
     <MapContainer
@@ -207,60 +206,41 @@ export default function SatelliteMapComponent({
       scrollWheelZoom={true}
       style={{ background: "#e8e4dc" }}
     >
-      {/* Base tiles (no labels so choropleth reads clearly) */}
+      {/* ── Base tile layer ─────────────────────────────────── */}
       <TileLayer
         attribution='&copy; <a href="https://carto.com">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
-      {/* County boundary choropleth */}
-      <GeoJSON
-        data={countyGeo}
-        style={countyStyle}
-        onEachFeature={onEachCounty}
-      />
+      {/* ── County choropleth ──────────────────────────────── */}
+      <CountyChoropleth />
 
-      {/* Labels on top of choropleth */}
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
-        pane="tooltipPane"
-      />
-
-      {/* Click handler for placing terminals */}
+      {/* ── Click handler ──────────────────────────────────── */}
       <ClickHandler onClick={onMapClick} />
 
-      {/* Facility markers */}
+      {/* ── Facility markers (already filtered by parent) ──── */}
       {facilities.map((f) => (
         <Marker
           key={f.id}
           position={[f.lat, f.lng]}
-          icon={f.hasBroadband ? SERVED_ICON : UNSERVED_ICON}
+          icon={getFacilityIcon(f.type, f.hasBroadband)}
         >
           <Popup>
-            <div style={{ minWidth: 180, fontFamily: "system-ui, sans-serif" }}>
-              <p style={{ fontWeight: 600, margin: "0 0 4px" }}>{f.name}</p>
-              <p style={{ fontSize: 12, color: "#666", margin: 0 }}>
-                {FACILITY_TYPE_LABELS[f.type]} &middot; {f.county} Co.
+            <div className="min-w-[180px]">
+              <p className="font-semibold">{f.name}</p>
+              <p className="text-xs text-gray-500">
+                {FACILITY_TYPE_LABELS[f.type]} &middot; {f.county} County
               </p>
-              {f.beds && (
-                <p style={{ fontSize: 12, color: "#666", margin: 0 }}>{f.beds} beds</p>
-              )}
-              <p
-                style={{
-                  fontSize: 12,
-                  fontWeight: 500,
-                  margin: "4px 0 0",
-                  color: f.hasBroadband ? "#0f7c86" : "#c46128",
-                }}
-              >
-                {f.hasBroadband ? "\u2713 Broadband" : "\u2717 No broadband"}
+              {f.beds && <p className="text-xs text-gray-500">{f.beds} beds</p>}
+              <p className={`mt-1 text-xs font-medium ${f.hasBroadband ? "text-[#0f7c86]" : "text-[#c46128]"}`}>
+                {f.hasBroadband ? "✓ Broadband available" : "✗ No broadband"}
               </p>
             </div>
           </Popup>
         </Marker>
       ))}
 
-      {/* Terminal markers + coverage circles */}
+      {/* ── Terminal markers + coverage circles ────────────── */}
       {terminals.map((t) => (
         <span key={t.id}>
           <Circle
@@ -276,17 +256,17 @@ export default function SatelliteMapComponent({
           />
           <Marker position={[t.lat, t.lng]} icon={TERMINAL_ICON}>
             <Popup>
-              <div style={{ minWidth: 160, fontFamily: "system-ui, sans-serif" }}>
-                <p style={{ fontWeight: 600, margin: "0 0 4px" }}>{t.label}</p>
-                <p style={{ fontSize: 12, color: "#666", margin: 0 }}>
-                  {coverageRadiusMiles}-mi radius
+              <div className="min-w-[160px]">
+                <p className="font-semibold">{t.label}</p>
+                <p className="text-xs text-gray-500">
+                  Coverage: {coverageRadiusMiles}-mile radius
                 </p>
-                <p style={{ fontSize: 12, color: "#666", margin: 0 }}>
-                  ~{t.householdsReached} households
+                <p className="text-xs text-gray-500">
+                  Est. {t.householdsReached} households reached
                 </p>
                 {t.facilitiesConnected.length > 0 && (
-                  <p style={{ fontSize: 12, color: "#666", margin: 0 }}>
-                    {t.facilitiesConnected.length} facilities
+                  <p className="text-xs text-gray-500">
+                    {t.facilitiesConnected.length} facilities connected
                   </p>
                 )}
               </div>
