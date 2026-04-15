@@ -19,7 +19,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { BroadbandDataView } from "@/components/kentucky/satellite-map";
 import {
@@ -39,6 +39,13 @@ import {
   getKYBroadbandSummary,
   KY_COUNTY_BROADBAND,
 } from "@/data/kentucky-broadband-data";
+import {
+  loadBSLGrid,
+  countBSLsInRadius,
+  countCumulativeCoverage,
+  getGridSummary,
+  isBSLGridLoaded,
+} from "@/lib/bsl-lookup";
 import { PricingDisclaimer } from "@/components/kentucky/pricing-disclaimer";
 
 /* ------------------------------------------------------------------ */
@@ -74,6 +81,12 @@ export interface PlacedTerminal {
 export default function SatellitePlannerPage() {
   const fSummary = getKYFacilitySummary();
   const bSummary = getKYBroadbandSummary();
+
+  /* ── BSL grid (loaded async for spatial coverage queries) ── */
+  const [bslGridLoaded, setBslGridLoaded] = useState(false);
+  useEffect(() => {
+    loadBSLGrid().then(() => setBslGridLoaded(true));
+  }, []);
 
   /* ── Facility filters ────────────────────────────────────── */
   const [typeFilters, setTypeFilters] = useState<Record<FacilityType, boolean>>({
@@ -145,10 +158,12 @@ export default function SatellitePlannerPage() {
       lat: f.lat,
       lng: f.lng,
       label: f.name,
-      householdsReached: estimateHouseholdsNear(f),
+      householdsReached: bslGridLoaded
+        ? countBSLsInRadius(f.lat, f.lng, coverageRadius).unservedBSLs
+        : 0,
       facilitiesConnected: [f.id],
     }));
-  }, [autoConnectFacilities, filteredUnserved]);
+  }, [autoConnectFacilities, filteredUnserved, bslGridLoaded, coverageRadius]);
 
   /* ── Manual placements ──────────────────────────────────── */
   const [manualTerminals, setManualTerminals] = useState<PlacedTerminal[]>([]);
@@ -164,7 +179,9 @@ export default function SatellitePlannerPage() {
           !f.hasBroadband &&
           haversineDistMiles(lat, lng, f.lat, f.lng) <= coverageRadius,
       );
-      const hh = estimateHouseholdsNearCoords(lat, lng, coverageRadius);
+      const hh = bslGridLoaded
+        ? countBSLsInRadius(lat, lng, coverageRadius).unservedBSLs
+        : 0;
       setManualTerminals((prev) => [
         ...prev,
         {
@@ -194,10 +211,15 @@ export default function SatellitePlannerPage() {
     (s, t) => s + t.facilitiesConnected.length,
     0,
   );
-  const householdsReached = allTerminals.reduce(
-    (s, t) => s + t.householdsReached,
-    0,
+  const cumulativeCoverage = useMemo(
+    () =>
+      bslGridLoaded && allTerminals.length > 0
+        ? countCumulativeCoverage(allTerminals, coverageRadius)
+        : { unservedBSLs: 0, underservedBSLs: 0, servedBSLs: 0, totalBSLs: 0, hexesInRange: 0 },
+    [allTerminals, coverageRadius, bslGridLoaded],
   );
+  const householdsReached = cumulativeCoverage.unservedBSLs;
+  const gridSummary = getGridSummary();
   const pctOfRhtp = ((totalYearOneCost / KY_RHTP.annualAllocation) * 100).toFixed(2);
 
   /* ── Animation ──────────────────────────────────────────── */
@@ -399,8 +421,12 @@ export default function SatellitePlannerPage() {
               />
               <SidebarStat
                 icon={<Users className="h-4 w-4" />}
-                label="Est. households reached"
-                value={householdsReached.toLocaleString()}
+                label={bslGridLoaded ? "Unserved BSLs covered" : "Loading BSL data…"}
+                value={
+                  bslGridLoaded && gridSummary
+                    ? `${householdsReached.toLocaleString()} / ${gridSummary.unservedBSLs.toLocaleString()}`
+                    : "—"
+                }
               />
             </div>
           </div>
@@ -613,16 +639,6 @@ function haversineDistMiles(lat1: number, lng1: number, lat2: number, lng2: numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function estimateHouseholdsNear(f: KYFacility): number {
-  const county = KY_COUNTY_BROADBAND.find((c) => c.fips === f.countyFips);
-  if (!county) return 200;
-  const unservedDensity = county.unservedHouseholds / (county.households || 1);
-  return Math.round(unservedDensity * 500);
-}
-
-function estimateHouseholdsNearCoords(lat: number, lng: number, radiusMiles: number): number {
-  const nearbyCounties = KY_COUNTY_BROADBAND.filter(() => true); // simplified
-  if (nearbyCounties.length === 0) return 200;
-  const avgUnserved = nearbyCounties.reduce((s, c) => s + c.unservedHouseholds, 0) / nearbyCounties.length;
-  return Math.round(avgUnserved * 0.02 * radiusMiles);
-}
+/* Old county-level estimation functions removed.
+   BSL spatial lookup (src/lib/bsl-lookup.ts) provides real counts
+   from FCC BDC December 2024 H3 Resolution-8 hexagon data. */
