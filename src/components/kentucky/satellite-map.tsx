@@ -1,9 +1,10 @@
 /**
- * Kentucky Satellite Coverage Map (Enhanced)
+ * Kentucky Satellite Coverage Map (Enhanced — Three-Tier Broadband)
  *
  * Features:
  * - County boundary choropleth (colored by broadband coverage %)
- * - Healthcare facility markers (color-coded by TYPE + broadband status)
+ * - Healthcare facility markers with THREE broadband statuses:
+ *     Served (white border), Underserved (amber border+glow), Unserved (red border+glow)
  * - Placed terminal markers with coverage radius circles
  * - Click-to-place interaction for manual terminals
  * - County hover popups with population and broadband data
@@ -16,26 +17,38 @@ import { Circle, GeoJSON, MapContainer, Marker, Popup, TileLayer, useMapEvents }
 import L from "leaflet";
 import { useEffect, useMemo } from "react";
 
-import type { KYFacility } from "@/data/kentucky-config";
+import type { KYFacility, BroadbandStatus } from "@/data/kentucky-config";
 import { FACILITY_TYPE_COLORS, FACILITY_TYPE_LABELS } from "@/data/kentucky-config";
 import { KY_COUNTY_BROADBAND, getCountyByFips } from "@/data/kentucky-broadband-data";
-import { KY_COUNTY_BDC } from "@/data/kentucky-broadband-availability";
 import type { PlacedTerminal } from "@/app/kentucky/satellite-planner/page";
 
 /* ------------------------------------------------------------------ */
 /*  Custom marker icons — per facility type + broadband status         */
 /* ------------------------------------------------------------------ */
 
+const BROADBAND_BORDER_COLORS: Record<BroadbandStatus, string> = {
+  served: "white",
+  underserved: "#c49a2e",
+  unserved: "#ef4444",
+};
+
 function createFacilityIcon(
   fillColor: string,
-  served: boolean,
+  broadbandStatus: BroadbandStatus,
   size: number = 12,
 ): L.DivIcon {
-  const borderColor = served ? "white" : "#ef4444";
-  const actualSize = served ? size : size + 2;
-  const shadow = served
-    ? "0 1px 4px rgba(0,0,0,0.2)"
-    : "0 0 0 2px rgba(239,68,68,0.3), 0 2px 6px rgba(0,0,0,0.25)";
+  const borderColor = BROADBAND_BORDER_COLORS[broadbandStatus];
+  const isServed = broadbandStatus === "served";
+  const actualSize = isServed ? size : size + 2;
+
+  let shadow: string;
+  if (broadbandStatus === "unserved") {
+    shadow = "0 0 0 2px rgba(239,68,68,0.3), 0 2px 6px rgba(0,0,0,0.25)";
+  } else if (broadbandStatus === "underserved") {
+    shadow = "0 0 0 2px rgba(196,154,46,0.3), 0 2px 6px rgba(0,0,0,0.25)";
+  } else {
+    shadow = "0 1px 4px rgba(0,0,0,0.2)";
+  }
 
   return L.divIcon({
     className: "",
@@ -65,10 +78,10 @@ const TERMINAL_ICON = L.divIcon({
 
 // Cache icons per type+status to avoid recreating on every render
 const iconCache = new Map<string, L.DivIcon>();
-function getFacilityIcon(type: KYFacility["type"], served: boolean): L.DivIcon {
-  const key = `${type}-${served}`;
+function getFacilityIcon(type: KYFacility["type"], broadbandStatus: BroadbandStatus): L.DivIcon {
+  const key = `${type}-${broadbandStatus}`;
   if (!iconCache.has(key)) {
-    iconCache.set(key, createFacilityIcon(FACILITY_TYPE_COLORS[type], served));
+    iconCache.set(key, createFacilityIcon(FACILITY_TYPE_COLORS[type], broadbandStatus));
   }
   return iconCache.get(key)!;
 }
@@ -99,13 +112,19 @@ function getBroadbandColor(pct: number): string {
   return "#9e3a1a";
 }
 
-function getAdoptionData(geoid: string) {
+function getCountyData(geoid: string) {
   return KY_COUNTY_BROADBAND.find((c) => c.fips === geoid);
 }
 
-function getAvailabilityData(geoid: string) {
-  return KY_COUNTY_BDC.find((c) => c.fips === geoid);
-}
+/* ------------------------------------------------------------------ */
+/*  Broadband status label + color for popups                          */
+/* ------------------------------------------------------------------ */
+
+const POPUP_STATUS: Record<BroadbandStatus, { label: string; color: string }> = {
+  served: { label: "✓ Broadband served", color: "#0f7c86" },
+  underserved: { label: "⚠ Underserved", color: "#c49a2e" },
+  unserved: { label: "✗ Unserved", color: "#c46128" },
+};
 
 /* ------------------------------------------------------------------ */
 /*  County GeoJSON layer                                               */
@@ -113,7 +132,7 @@ function getAvailabilityData(geoid: string) {
 
 let countyGeoJson: GeoJSON.FeatureCollection | null = null;
 
-function CountyChoropleth({ dataView }: { dataView: BroadbandDataView }) {
+function CountyChoropleth() {
   useEffect(() => {
     if (!countyGeoJson) {
       import("@/data/kentucky-counties.json").then((mod) => {
@@ -126,22 +145,10 @@ function CountyChoropleth({ dataView }: { dataView: BroadbandDataView }) {
 
   return (
     <GeoJSON
-      key={dataView}
       data={countyGeoJson}
       style={(feature) => {
         const geoid = feature?.properties?.GEOID || "";
-        if (dataView === "availability") {
-          const bdc = getAvailabilityData(geoid);
-          const pct = bdc?.pctServed ?? 70;
-          return {
-            fillColor: getBroadbandColor(pct),
-            fillOpacity: 0.25,
-            color: "#888",
-            weight: 1,
-            opacity: 0.4,
-          };
-        }
-        const data = getAdoptionData(geoid);
+        const data = getCountyData(geoid);
         const pct = data?.pctServed ?? 70;
         return {
           fillColor: getBroadbandColor(pct),
@@ -153,114 +160,27 @@ function CountyChoropleth({ dataView }: { dataView: BroadbandDataView }) {
       }}
       onEachFeature={(feature, layer) => {
         const geoid = feature?.properties?.GEOID || "";
-        if (dataView === "availability") {
-          const bdc = getAvailabilityData(geoid);
-          if (bdc) {
-            layer.bindPopup(`
-              <div style="min-width:180px">
-                <p style="font-weight:600;font-size:14px;margin:0">${bdc.name}</p>
-                <p style="font-size:11px;color:#888;margin:2px 0 4px;font-style:italic">FCC BDC availability (Dec 2024)</p>
-                <p style="font-size:12px;color:#666;margin:4px 0 0">
-                  ${bdc.totalBSLs.toLocaleString()} broadband serviceable locations
-                </p>
-                <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(bdc.pctServed)}">
-                  ${bdc.pctServed}% served (100/20+ Mbps)
-                </p>
-                <p style="font-size:11px;color:#999;margin:2px 0 0">
-                  ${bdc.underservedBSLs.toLocaleString()} underserved &ensp;|&ensp; ${bdc.unservedBSLs.toLocaleString()} unserved
-                </p>
-                <p style="font-size:11px;color:#c46128;margin:2px 0 0">
-                  ${bdc.pctBEADEligible}% BEAD-eligible
-                </p>
-              </div>
-            `);
-          }
-        } else {
-          const data = getAdoptionData(geoid);
-          if (data) {
-            layer.bindPopup(`
-              <div style="min-width:160px">
-                <p style="font-weight:600;font-size:14px;margin:0">${data.name}</p>
-                <p style="font-size:11px;color:#888;margin:2px 0 4px;font-style:italic">Census ACS adoption (2020-2024)</p>
-                <p style="font-size:12px;color:#666;margin:4px 0 0">
-                  Pop: ~${data.population.toLocaleString()}
-                  &ensp;|&ensp;
-                  HH: ${data.households.toLocaleString()}
-                </p>
-                <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(data.pctServed)}">
-                  ${data.pctServed}% broadband adoption
-                </p>
-                <p style="font-size:11px;color:#999;margin:2px 0 0">
-                  ${data.unservedHouseholds.toLocaleString()} unserved households
-                </p>
-              </div>
-            `);
-          }
+        const data = getCountyData(geoid);
+        if (data) {
+          layer.bindPopup(`
+            <div style="min-width:160px">
+              <p style="font-weight:600;font-size:14px;margin:0">${data.name}</p>
+              <p style="font-size:12px;color:#666;margin:4px 0 0">
+                Pop: ~${(data.households * 2.45).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                &ensp;|&ensp;
+                HH: ${data.households.toLocaleString()}
+              </p>
+              <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(data.pctServed)}">
+                ${data.pctServed}% broadband coverage
+              </p>
+              <p style="font-size:11px;color:#999;margin:2px 0 0">
+                ${data.unservedHouseholds.toLocaleString()} unserved households
+              </p>
+            </div>
+          `);
         }
       }}
     />
-  );
-}
-
-
-/* ------------------------------------------------------------------ */
-/*  Adaptive Color Legend                                               */
-/* ------------------------------------------------------------------ */
-
-function ColorLegend({ dataView }: { dataView: BroadbandDataView }) {
-  const stops = [
-    { color: "#0f7c86", label: "80%+" },
-    { color: "#3a9ca5", label: "70-80%" },
-    { color: "#7ebfc5", label: "60-70%" },
-    { color: "#c9a54e", label: "50-60%" },
-    { color: "#c46128", label: "40-50%" },
-    { color: "#9e3a1a", label: "<40%" },
-  ];
-
-  const title = dataView === "adoption"
-    ? "Broadband Adoption"
-    : "Broadband Availability";
-  const subtitle = dataView === "adoption"
-    ? "% households subscribing (ACS 2024)"
-    : "% locations served at 100/20 Mbps (FCC BDC)";
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: 16,
-        right: 16,
-        zIndex: 1000,
-        background: "rgba(255,255,255,0.95)",
-        backdropFilter: "blur(8px)",
-        borderRadius: 12,
-        padding: "10px 12px",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.12)",
-        minWidth: 150,
-      }}
-    >
-      <p style={{ fontSize: 11, fontWeight: 600, margin: 0, color: "#1a1a1a" }}>
-        {title}
-      </p>
-      <p style={{ fontSize: 9, color: "#888", margin: "2px 0 8px", lineHeight: 1.3 }}>
-        {subtitle}
-      </p>
-      {stops.map((s) => (
-        <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-          <span
-            style={{
-              display: "inline-block",
-              width: 14,
-              height: 10,
-              borderRadius: 2,
-              background: s.color,
-              opacity: dataView === "availability" ? 0.7 : 0.6,
-            }}
-          />
-          <span style={{ fontSize: 10, color: "#555" }}>{s.label}</span>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -268,14 +188,11 @@ function ColorLegend({ dataView }: { dataView: BroadbandDataView }) {
 /*  Main Map Component                                                 */
 /* ------------------------------------------------------------------ */
 
-export type BroadbandDataView = "adoption" | "availability";
-
 interface SatelliteMapProps {
   facilities: KYFacility[];
   terminals: PlacedTerminal[];
   onMapClick: (lat: number, lng: number) => void;
   coverageRadiusMiles: number;
-  dataView?: BroadbandDataView;
 }
 
 /** Convert miles to meters for Leaflet Circle radius */
@@ -286,7 +203,6 @@ export default function SatelliteMapComponent({
   terminals,
   onMapClick,
   coverageRadiusMiles,
-  dataView = "adoption",
 }: SatelliteMapProps) {
   // Fix Leaflet default icon paths in Next.js/webpack
   useEffect(() => {
@@ -306,7 +222,6 @@ export default function SatelliteMapComponent({
   const radiusMeters = milesToMeters(coverageRadiusMiles);
 
   return (
-    <div className="relative h-full w-full">
     <MapContainer
       center={KY_CENTER}
       zoom={KY_ZOOM}
@@ -322,32 +237,35 @@ export default function SatelliteMapComponent({
       />
 
       {/* ── County choropleth ──────────────────────────────── */}
-      <CountyChoropleth dataView={dataView} />
+      <CountyChoropleth />
 
       {/* ── Click handler ──────────────────────────────────── */}
       <ClickHandler onClick={onMapClick} />
 
       {/* ── Facility markers (already filtered by parent) ──── */}
-      {facilities.map((f) => (
-        <Marker
-          key={f.id}
-          position={[f.lat, f.lng]}
-          icon={getFacilityIcon(f.type, f.hasBroadband)}
-        >
-          <Popup>
-            <div className="min-w-[180px]">
-              <p className="font-semibold">{f.name}</p>
-              <p className="text-xs text-gray-500">
-                {FACILITY_TYPE_LABELS[f.type]} &middot; {f.county} County
-              </p>
-              {f.beds && <p className="text-xs text-gray-500">{f.beds} beds</p>}
-              <p className={`mt-1 text-xs font-medium ${f.hasBroadband ? "text-[#0f7c86]" : "text-[#c46128]"}`}>
-                {f.hasBroadband ? "✓ Broadband available" : "✗ No broadband"}
-              </p>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+      {facilities.map((f) => {
+        const status = POPUP_STATUS[f.broadbandStatus];
+        return (
+          <Marker
+            key={f.id}
+            position={[f.lat, f.lng]}
+            icon={getFacilityIcon(f.type, f.broadbandStatus)}
+          >
+            <Popup>
+              <div className="min-w-[180px]">
+                <p className="font-semibold">{f.name}</p>
+                <p className="text-xs text-gray-500">
+                  {FACILITY_TYPE_LABELS[f.type]} &middot; {f.county} County
+                </p>
+                {f.beds && <p className="text-xs text-gray-500">{f.beds} beds</p>}
+                <p className="mt-1 text-xs font-medium" style={{ color: status.color }}>
+                  {status.label}
+                </p>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
 
       {/* ── Terminal markers + coverage circles ────────────── */}
       {terminals.map((t) => (
@@ -384,7 +302,5 @@ export default function SatelliteMapComponent({
         </span>
       ))}
     </MapContainer>
-    <ColorLegend dataView={dataView} />
-    </div>
   );
 }

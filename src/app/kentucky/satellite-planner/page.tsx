@@ -19,15 +19,15 @@ import {
   WifiOff,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
-import type { BroadbandDataView } from "@/components/kentucky/satellite-map";
 import {
   COVERAGE_MODEL,
   FACILITY_TYPE_COLORS,
   FACILITY_TYPE_LABELS,
   KY_RHTP,
   STARLINK_PRICING,
+  type BroadbandStatus,
   type FacilityType,
   type KYFacility,
 } from "@/data/kentucky-config";
@@ -39,14 +39,6 @@ import {
   getKYBroadbandSummary,
   KY_COUNTY_BROADBAND,
 } from "@/data/kentucky-broadband-data";
-import {
-  loadBSLGrid,
-  countBSLsInRadius,
-  countCumulativeCoverage,
-  getGridSummary,
-  isBSLGridLoaded,
-} from "@/lib/bsl-lookup";
-import { PricingDisclaimer } from "@/components/kentucky/pricing-disclaimer";
 
 /* ------------------------------------------------------------------ */
 /*  Lazy-load the Leaflet map (client-only, no SSR)                    */
@@ -75,18 +67,28 @@ export interface PlacedTerminal {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Constants                                                          */
+/* ------------------------------------------------------------------ */
+
+const BROADBAND_STATUS_COLORS: Record<BroadbandStatus, string> = {
+  served: "#0f7c86",
+  underserved: "#c49a2e",
+  unserved: "#c46128",
+};
+
+const BROADBAND_STATUS_LABELS: Record<BroadbandStatus, string> = {
+  served: "Served",
+  underserved: "Underserved",
+  unserved: "Unserved",
+};
+
+/* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
 export default function SatellitePlannerPage() {
   const fSummary = getKYFacilitySummary();
   const bSummary = getKYBroadbandSummary();
-
-  /* ── BSL grid (loaded async for spatial coverage queries) ── */
-  const [bslGridLoaded, setBslGridLoaded] = useState(false);
-  useEffect(() => {
-    loadBSLGrid().then(() => setBslGridLoaded(true));
-  }, []);
 
   /* ── Facility filters ────────────────────────────────────── */
   const [typeFilters, setTypeFilters] = useState<Record<FacilityType, boolean>>({
@@ -95,9 +97,8 @@ export default function SatellitePlannerPage() {
     fqhc: false, // off by default (663 sites can overwhelm)
     rhc: true,
   });
-  const [broadbandFilter, setBroadbandFilter] = useState<"all" | "served" | "unserved">("all");
-  const [showFilters, setShowFilters] = useState<boolean>(true);
-  const [dataView, setDataView] = useState<BroadbandDataView>("adoption");
+  const [broadbandFilter, setBroadbandFilter] = useState<"all" | BroadbandStatus | "needs-coverage">("all");
+  const [showFilters, setShowFilters] = useState(true);
 
   const toggleType = (type: FacilityType) =>
     setTypeFilters((prev) => ({ ...prev, [type]: !prev[type] }));
@@ -108,35 +109,46 @@ export default function SatellitePlannerPage() {
         (f) =>
           typeFilters[f.type] &&
           (broadbandFilter === "all" ||
-            (broadbandFilter === "served" && f.hasBroadband) ||
-            (broadbandFilter === "unserved" && !f.hasBroadband)),
+            (broadbandFilter === "needs-coverage" && f.broadbandStatus !== "served") ||
+            broadbandFilter === f.broadbandStatus),
       ),
     [typeFilters, broadbandFilter],
   );
 
+  /** Facilities that need satellite coverage: underserved + unserved */
+  const filteredNeedsCoverage = useMemo(
+    () => filteredFacilities.filter((f) => f.broadbandStatus !== "served"),
+    [filteredFacilities],
+  );
+
   const filteredUnserved = useMemo(
-    () => filteredFacilities.filter((f) => !f.hasBroadband),
+    () => filteredFacilities.filter((f) => f.broadbandStatus === "unserved"),
+    [filteredFacilities],
+  );
+
+  const filteredUnderserved = useMemo(
+    () => filteredFacilities.filter((f) => f.broadbandStatus === "underserved"),
     [filteredFacilities],
   );
 
   /* ── Cost parameters (all editable) ──────────────────────── */
-  const defaultPlan = STARLINK_PRICING.residential.plans[1];
+  const defaultPlan = STARLINK_PRICING.residential.plans[STARLINK_PRICING.defaultPlanIndex];
   const defaultDiscount = Math.round((1 - STARLINK_PRICING.bulkDiscountMultiplier) * 100);
 
-  const [discountPct, setDiscountPct] = useState<number>(defaultDiscount);
-  const [hardwareCost, setHardwareCost] = useState<number>(
+  const [discountPct, setDiscountPct] = useState(defaultDiscount);
+  const [hardwareCost, setHardwareCost] = useState(
     Math.round(defaultPlan.hardwareRetail * STARLINK_PRICING.bulkDiscountMultiplier * 100) / 100,
   );
-  const [monthlyCost, setMonthlyCost] = useState<number>(
+  const [monthlyCost, setMonthlyCost] = useState(
     Math.round(defaultPlan.monthlyRetail * STARLINK_PRICING.bulkDiscountMultiplier * 100) / 100,
   );
-  const [localEquipCost, setLocalEquipCost] = useState<number>(
+  const [localEquipCost, setLocalEquipCost] = useState(
     COVERAGE_MODEL.communityDistributionModel.localDistributionCostPerSite,
   );
-  const [coverageRadius, setCoverageRadius] = useState<number>(
+  const [coverageRadius, setCoverageRadius] = useState(
     COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles,
   );
-  const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   // When discount slider changes, recalculate hardware + monthly from retail
   const handleDiscountChange = (newPct: number) => {
@@ -148,22 +160,20 @@ export default function SatellitePlannerPage() {
 
   const yearOnePerUnit = hardwareCost + monthlyCost * 12;
 
-  /* ── Auto-connect: terminals at all filtered unserved facilities ── */
-  const [autoConnectFacilities, setAutoConnectFacilities] = useState<boolean>(true);
+  /* ── Auto-connect: terminals at all filtered needs-coverage facilities ── */
+  const [autoConnectFacilities, setAutoConnectFacilities] = useState(true);
 
   const autoTerminals: PlacedTerminal[] = useMemo(() => {
     if (!autoConnectFacilities) return [];
-    return filteredUnserved.map((f) => ({
+    return filteredNeedsCoverage.map((f) => ({
       id: `auto-${f.id}`,
       lat: f.lat,
       lng: f.lng,
       label: f.name,
-      householdsReached: bslGridLoaded
-        ? countBSLsInRadius(f.lat, f.lng, coverageRadius).unservedBSLs
-        : 0,
+      householdsReached: estimateHouseholdsNear(f),
       facilitiesConnected: [f.id],
     }));
-  }, [autoConnectFacilities, filteredUnserved, bslGridLoaded, coverageRadius]);
+  }, [autoConnectFacilities, filteredNeedsCoverage]);
 
   /* ── Manual placements ──────────────────────────────────── */
   const [manualTerminals, setManualTerminals] = useState<PlacedTerminal[]>([]);
@@ -176,12 +186,10 @@ export default function SatellitePlannerPage() {
       const id = `manual-${Date.now()}`;
       const nearby = KY_FACILITIES.filter(
         (f) =>
-          !f.hasBroadband &&
+          f.broadbandStatus !== "served" &&
           haversineDistMiles(lat, lng, f.lat, f.lng) <= coverageRadius,
       );
-      const hh = bslGridLoaded
-        ? countBSLsInRadius(lat, lng, coverageRadius).unservedBSLs
-        : 0;
+      const hh = estimateHouseholdsNearCoords(lat, lng, coverageRadius);
       setManualTerminals((prev) => [
         ...prev,
         {
@@ -211,15 +219,10 @@ export default function SatellitePlannerPage() {
     (s, t) => s + t.facilitiesConnected.length,
     0,
   );
-  const cumulativeCoverage = useMemo(
-    () =>
-      bslGridLoaded && allTerminals.length > 0
-        ? countCumulativeCoverage(allTerminals, coverageRadius)
-        : { unservedBSLs: 0, underservedBSLs: 0, servedBSLs: 0, totalBSLs: 0, hexesInRange: 0 },
-    [allTerminals, coverageRadius, bslGridLoaded],
+  const householdsReached = allTerminals.reduce(
+    (s, t) => s + t.householdsReached,
+    0,
   );
-  const householdsReached = cumulativeCoverage.unservedBSLs;
-  const gridSummary = getGridSummary();
   const pctOfRhtp = ((totalYearOneCost / KY_RHTP.annualAllocation) * 100).toFixed(2);
 
   /* ── Animation ──────────────────────────────────────────── */
@@ -242,6 +245,7 @@ export default function SatellitePlannerPage() {
           Click on the map to place Starlink terminals. Each terminal provides
           broadband to the installation site and, with local distribution
           equipment, extends Wi-Fi coverage to a {coverageRadius}-mile radius.
+          Terminals are auto-placed at underserved and unserved facilities.
         </p>
       </motion.div>
 
@@ -254,7 +258,6 @@ export default function SatellitePlannerPage() {
             terminals={allTerminals}
             onMapClick={handleMapClick}
             coverageRadiusMiles={coverageRadius}
-            dataView={dataView}
           />
 
           {/* Map overlay controls */}
@@ -269,24 +272,7 @@ export default function SatellitePlannerPage() {
               }`}
             >
               <Satellite className="h-3.5 w-3.5" />
-              {autoConnectFacilities ? "Facility coverage ON" : "Show facility coverage"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setDataView((p) => p === "adoption" ? "availability" : "adoption")}
-              className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-medium shadow-lg transition-all"
-            >
-              {dataView === "adoption" ? (
-                <>
-                  <Eye className="h-3.5 w-3.5 text-[color:var(--teal)]" />
-                  Adoption (ACS)
-                </>
-              ) : (
-                <>
-                  <Wifi className="h-3.5 w-3.5 text-[color:var(--accent)]" />
-                  Availability (FCC)
-                </>
-              )}
+              {autoConnectFacilities ? "Auto-coverage ON" : "Show auto-coverage"}
             </button>
             {manualTerminals.length > 0 && (
               <button
@@ -301,7 +287,7 @@ export default function SatellitePlannerPage() {
           </div>
 
           {/* ── Toggleable Legend / Filters ─────────────────── */}
-          <div className="absolute bottom-4 left-4 z-[1000] max-w-[320px] rounded-xl bg-white/95 shadow-lg backdrop-blur-sm">
+          <div className="absolute bottom-4 left-4 z-[1000] max-w-[340px] rounded-xl bg-white/95 shadow-lg backdrop-blur-sm">
             <button
               type="button"
               onClick={() => setShowFilters((p) => !p)}
@@ -352,29 +338,28 @@ export default function SatellitePlannerPage() {
                   })}
                 </div>
 
-                {/* Broadband status filter */}
+                {/* Broadband status filter — three-tier */}
                 <p className="mb-1.5 mt-3 text-[9px] uppercase tracking-widest text-[color:var(--muted)]">
                   Broadband status
                 </p>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1">
                   {([
-                    { key: "all", label: "All" },
-                    { key: "unserved", label: "Unserved" },
-                    { key: "served", label: "Served" },
-                  ] as const).map(({ key, label }) => (
+                    { key: "all" as const, label: "All", color: "var(--foreground)" },
+                    { key: "needs-coverage" as const, label: "Needs coverage", color: "#c46128" },
+                    { key: "served" as const, label: "Served", color: "#0f7c86" },
+                    { key: "underserved" as const, label: "Underserved", color: "#c49a2e" },
+                    { key: "unserved" as const, label: "Unserved", color: "#c46128" },
+                  ]).map(({ key, label, color }) => (
                     <button
                       key={key}
                       type="button"
                       onClick={() => setBroadbandFilter(key)}
-                      className={`flex-1 rounded-lg px-2 py-1.5 text-[10px] transition-all ${
+                      className={`rounded-lg px-2 py-1.5 text-[10px] transition-all ${
                         broadbandFilter === key
-                          ? key === "unserved"
-                            ? "bg-[color:var(--accent)] text-white"
-                            : key === "served"
-                              ? "bg-[color:var(--teal)] text-white"
-                              : "bg-[color:var(--foreground)] text-white"
+                          ? "text-white"
                           : "bg-[color:var(--surface-soft)] text-[color:var(--muted)]"
                       }`}
+                      style={broadbandFilter === key ? { background: color } : undefined}
                     >
                       {label}
                     </button>
@@ -392,8 +377,12 @@ export default function SatellitePlannerPage() {
                     Coverage
                   </span>
                   <span className="flex items-center gap-1 text-[10px] text-[color:var(--muted)]">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-red-400 bg-[color:var(--foreground)]" />
-                    No broadband
+                    <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-[#c46128] bg-[color:var(--foreground)]" />
+                    Unserved
+                  </span>
+                  <span className="flex items-center gap-1 text-[10px] text-[color:var(--muted)]">
+                    <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-[#c49a2e] bg-[color:var(--foreground)]" />
+                    Underserved
                   </span>
                 </div>
               </div>
@@ -417,16 +406,37 @@ export default function SatellitePlannerPage() {
               <SidebarStat
                 icon={<Wifi className="h-4 w-4" />}
                 label="Facilities connected"
-                value={`${facilitiesConnected} / ${filteredFacilities.length}`}
+                value={`${facilitiesConnected} / ${filteredNeedsCoverage.length} need coverage`}
               />
               <SidebarStat
                 icon={<Users className="h-4 w-4" />}
-                label={bslGridLoaded ? "Unserved BSLs covered" : "Loading BSL data…"}
-                value={
-                  bslGridLoaded && gridSummary
-                    ? `${householdsReached.toLocaleString()} / ${gridSummary.unservedBSLs.toLocaleString()}`
-                    : "—"
-                }
+                label="Est. households reached"
+                value={householdsReached.toLocaleString()}
+              />
+            </div>
+
+            {/* Three-tier breakdown */}
+            <div className="mt-4 space-y-1.5 rounded-xl bg-[color:var(--surface-soft)] p-3">
+              <p className="text-[9px] uppercase tracking-widest text-[color:var(--muted)]">
+                Facility broadband status
+              </p>
+              <StatusBar
+                label="Served"
+                count={fSummary.served}
+                total={fSummary.total}
+                color="#0f7c86"
+              />
+              <StatusBar
+                label="Underserved"
+                count={fSummary.underserved}
+                total={fSummary.total}
+                color="#c49a2e"
+              />
+              <StatusBar
+                label="Unserved"
+                count={fSummary.unserved}
+                total={fSummary.total}
+                color="#c46128"
               />
             </div>
           </div>
@@ -512,16 +522,6 @@ export default function SatellitePlannerPage() {
               </div>
             </div>
 
-            {/* Pricing disclaimer — always visible */}
-            <div className="mt-4">
-              <PricingDisclaimer
-                discountPct={discountPct}
-                planName={defaultPlan.name}
-                retailHardware={defaultPlan.hardwareRetail}
-                retailMonthly={defaultPlan.monthlyRetail}
-              />
-            </div>
-
             {/* RHTP context */}
             <div className="mt-4 rounded-xl bg-[color:rgba(15,124,134,0.08)] p-3">
               <p className="text-xs text-[color:var(--teal)]">
@@ -583,6 +583,26 @@ function SidebarStat({ icon, label, value }: { icon: React.ReactNode; label: str
   );
 }
 
+function StatusBar({ label, count, total, color }: { label: string; count: number; total: number; color: string }) {
+  const pct = Math.round((count / total) * 100);
+  return (
+    <div className="flex items-center gap-2">
+      <span
+        className="inline-block h-2 w-2 rounded-full"
+        style={{ background: color }}
+      />
+      <span className="w-20 text-[10px] text-[color:var(--muted)]">{label}</span>
+      <div className="flex-1 overflow-hidden rounded-full bg-white/60" style={{ height: 6 }}>
+        <div
+          className="h-full rounded-full transition-all duration-300"
+          style={{ width: `${pct}%`, background: color }}
+        />
+      </div>
+      <span className="w-8 text-right text-[10px] font-medium text-[color:var(--foreground)]">{count}</span>
+    </div>
+  );
+}
+
 function CostLine({ label, value, detail, bold }: { label: string; value: number; detail?: string; bold?: boolean }) {
   return (
     <div className={`flex items-baseline justify-between text-xs ${bold ? "font-semibold text-[color:var(--foreground)]" : "text-[color:var(--muted)]"}`}>
@@ -639,6 +659,16 @@ function haversineDistMiles(lat1: number, lng1: number, lat2: number, lng2: numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-/* Old county-level estimation functions removed.
-   BSL spatial lookup (src/lib/bsl-lookup.ts) provides real counts
-   from FCC BDC December 2024 H3 Resolution-8 hexagon data. */
+function estimateHouseholdsNear(f: KYFacility): number {
+  const county = KY_COUNTY_BROADBAND.find((c) => c.fips === f.countyFips);
+  if (!county) return 200;
+  const unservedDensity = county.unservedHouseholds / (county.households || 1);
+  return Math.round(unservedDensity * 500);
+}
+
+function estimateHouseholdsNearCoords(lat: number, lng: number, radiusMiles: number): number {
+  const nearbyCounties = KY_COUNTY_BROADBAND.filter(() => true); // simplified
+  if (nearbyCounties.length === 0) return 200;
+  const avgUnserved = nearbyCounties.reduce((s, c) => s + c.unservedHouseholds, 0) / nearbyCounties.length;
+  return Math.round(avgUnserved * 0.02 * radiusMiles);
+}

@@ -165,6 +165,8 @@ export const KY_CONTEXT = {
 /*  Facility Type Definitions                                          */
 /* ------------------------------------------------------------------ */
 
+export type BroadbandStatus = "served" | "underserved" | "unserved";
+
 export type FacilityType = "hospital" | "cah" | "fqhc" | "rhc";
 
 export interface KYFacility {
@@ -176,7 +178,7 @@ export interface KYFacility {
   lat: number;
   lng: number;
   beds?: number;
-  hasBroadband: boolean;        // true = currently served at 25/3
+  broadbandStatus: BroadbandStatus;  // "served" | "underserved" | "unserved"
   usacSubsidy?: { totalCommitted: number; latestYear: number; entities: number };
   broadbandSource?: string;     // how we determined broadband status
 }
