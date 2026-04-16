@@ -24,7 +24,7 @@ export default function AssessPage() {
                       <span className="text-xs font-medium uppercase tracking-wider text-[color:var(--muted)]">{tierLabel}</span>
                     </div>
                     <h2 className="mt-2 font-display text-3xl text-[color:var(--foreground)]">{region.name}</h2>
-                    <p className="mt-1 text-sm text-[color:var(--muted)]">Population: {region.population.toLocaleString()} &middot; Signal: {region.expectedTimeToSignalMonths} months</p>
+                    <p className="mt-1 text-sm text-[color:var(--muted)]">Population: {region.population.toLocaleString("en-US")} &middot; Signal: {region.expectedTimeToSignalMonths} months</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">Severity / Readiness</p>

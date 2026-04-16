@@ -16,7 +16,7 @@ interface AnimatedNumberProps {
   className?: string;
 }
 
-const defaultFormat = (n: number) => Math.round(n).toLocaleString();
+const defaultFormat = (n: number) => Math.round(n).toLocaleString("en-US");
 
 export function AnimatedNumber({
   value,

@@ -16,6 +16,11 @@ export function formatNumber(value: number, maximumFractionDigits = 0) {
   }).format(value);
 }
 
+/** US-locale number: 1,234,567.89 — drop-in for .toLocaleString() */
+export function usNum(value: number, maximumFractionDigits = 0) {
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits }).format(value);
+}
+
 export function formatPercent(
   value: number,
   maximumFractionDigits = 1,

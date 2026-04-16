@@ -154,18 +154,18 @@ function getCountyPopupHtml(geoid: string, mode: ChoroplethMode): string | null 
     if (!d) return null;
     return `<div style="min-width:160px">
       <p style="font-weight:600;font-size:14px;margin:0">${d.name.replace(", Kentucky", "")}</p>
-      <p style="font-size:12px;color:#666;margin:4px 0 0">HH: ${d.households.toLocaleString()}</p>
+      <p style="font-size:12px;color:#666;margin:4px 0 0">HH: ${d.households.toLocaleString("en-US")}</p>
       <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(d.pctServed)}">${d.pctServed}% adoption</p>
-      <p style="font-size:11px;color:#999;margin:2px 0 0">${d.unservedHouseholds.toLocaleString()} without broadband</p>
+      <p style="font-size:11px;color:#999;margin:2px 0 0">${d.unservedHouseholds.toLocaleString("en-US")} without broadband</p>
     </div>`;
   }
   const d = KY_COUNTY_BDC.find((c) => c.fips === geoid);
   if (!d) return null;
   return `<div style="min-width:160px">
     <p style="font-weight:600;font-size:14px;margin:0">${d.name}</p>
-    <p style="font-size:12px;color:#666;margin:4px 0 0">BSLs: ${d.totalBSLs.toLocaleString()}</p>
+    <p style="font-size:12px;color:#666;margin:4px 0 0">BSLs: ${d.totalBSLs.toLocaleString("en-US")}</p>
     <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(d.pctServed)}">${d.pctServed}% served (100/20)</p>
-    <p style="font-size:11px;color:#999;margin:2px 0 0">${d.unservedBSLs.toLocaleString()} unserved · ${d.underservedBSLs.toLocaleString()} underserved</p>
+    <p style="font-size:11px;color:#999;margin:2px 0 0">${d.unservedBSLs.toLocaleString("en-US")} unserved · ${d.underservedBSLs.toLocaleString("en-US")} underserved</p>
   </div>`;
 }
 

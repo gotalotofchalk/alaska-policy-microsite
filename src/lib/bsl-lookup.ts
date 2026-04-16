@@ -71,8 +71,8 @@ export async function loadBSLGrid(): Promise<BSLGridData> {
     .then((data: BSLGridData) => {
       gridData = data;
       console.log(
-        `[BSL Grid] Loaded ${data.grid.length.toLocaleString()} hexes, ` +
-        `${data.summary.unservedBSLs.toLocaleString()} unserved BSLs`
+        `[BSL Grid] Loaded ${data.grid.length.toLocaleString("en-US")} hexes, ` +
+        `${data.summary.unservedBSLs.toLocaleString("en-US")} unserved BSLs`
       );
       return data;
     });

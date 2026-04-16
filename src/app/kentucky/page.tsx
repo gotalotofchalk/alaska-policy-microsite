@@ -7,7 +7,6 @@ import Link from "next/link";
 import { PyramidTabs } from "@/components/pyramid-tabs";
 import { KENTUCKY_PYRAMID } from "@/data/kentucky-pyramid-config";
 import { KY_CONTEXT, KY_RHTP } from "@/data/kentucky-config";
-import { getKYFacilitySummary } from "@/data/kentucky-facilities";
 
 /* ------------------------------------------------------------------ */
 /*  Animation                                                          */
@@ -28,12 +27,9 @@ const stagger = {
 /* ------------------------------------------------------------------ */
 
 export default function KentuckyPage() {
-  const fSummary = getKYFacilitySummary();
-
   const statPills = [
     { label: "RHTP / year", value: `$${Math.round(KY_RHTP.annualAllocation / 1e6)}M` },
     { label: "Counties", value: String(KY_CONTEXT.totalCounties) },
-    { label: "Facilities tracked", value: String(fSummary.total) },
   ];
 
   return (
@@ -62,7 +58,7 @@ export default function KentuckyPage() {
         </div>
 
         <p className="mt-3 max-w-2xl text-sm text-[color:var(--muted)]">
-          Infrastructure-first assessment and planning for Kentucky&apos;s RHTP investment.
+          State hub for Rural Health Transformation — infrastructure, ecosystem, and solutions planning under RHTP&nbsp;/&nbsp;MRHRP.
         </p>
       </motion.div>
 

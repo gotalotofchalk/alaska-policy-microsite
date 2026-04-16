@@ -48,6 +48,7 @@ import {
   getCapabilitiesAtSpeed,
   maxSimultaneousSessions,
 } from "@/data/connectivity-budget";
+import { usNum } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
 /*  Lazy-load the Leaflet map (client-only, no SSR)                    */
@@ -504,7 +505,7 @@ export default function SatellitePlannerPage() {
               <SidebarStat
                 icon={<Users className="h-5 w-5" />}
                 label="Households reached"
-                value={householdsReached.toLocaleString()}
+                value={householdsReached.toLocaleString("en-US")}
               />
             </div>
 
@@ -611,9 +612,9 @@ export default function SatellitePlannerPage() {
 
             {/* Cost breakdown */}
             <div className="mt-4 space-y-2">
-              <CostLine label="Hardware" value={totalHardwareCost} detail={`${totalTerminals} × $${hardwareCost.toLocaleString()}`} />
+              <CostLine label="Hardware" value={totalHardwareCost} detail={`${totalTerminals} × $${hardwareCost.toLocaleString("en-US")}`} />
               <CostLine label="Annual service" value={totalAnnualService} detail={`${totalTerminals} × $${monthlyCost}/mo × 12`} />
-              <CostLine label="Distribution equip" value={totalLocalEquip} detail={`${totalTerminals} × $${localEquipCost.toLocaleString()}`} />
+              <CostLine label="Distribution equip" value={totalLocalEquip} detail={`${totalTerminals} × $${localEquipCost.toLocaleString("en-US")}`} />
               <div className="border-t border-[color:var(--line)] pt-2">
                 <CostLine label="Year-one total" value={totalYearOneCost} bold />
               </div>
@@ -736,7 +737,7 @@ export default function SatellitePlannerPage() {
                   <span className="font-display text-lg font-semibold text-[color:var(--foreground)]">{totalTerminals}</span> terminals
                 </span>
                 <span className="text-[color:var(--muted)]">
-                  <span className="font-display text-lg font-semibold text-[color:var(--foreground)]">${totalYearOneCost.toLocaleString()}</span> year-one
+                  <span className="font-display text-lg font-semibold text-[color:var(--foreground)]">${totalYearOneCost.toLocaleString("en-US")}</span> year-one
                 </span>
                 <span className="text-xs" style={{ color: parseFloat(pctOfRhtp) > 50 ? "#c46128" : "#0f7c86" }}>
                   {pctOfRhtp}% of allocation
@@ -833,13 +834,13 @@ function StatewideCalculator({
       <div className="mt-4 grid grid-cols-2 gap-3 text-center">
         <div>
           <p className="font-display text-2xl font-semibold text-[color:var(--accent)]">
-            {targetBSLs.toLocaleString()}
+            {targetBSLs.toLocaleString("en-US")}
           </p>
           <p className="text-[10px] text-[color:var(--muted)]">{targetLabel} locations</p>
         </div>
         <div>
           <p className="font-display text-2xl font-semibold text-[color:var(--foreground)]">
-            {terminalsNeeded.toLocaleString()}
+            {terminalsNeeded.toLocaleString("en-US")}
           </p>
           <p className="text-[10px] text-[color:var(--muted)]">Terminals needed</p>
         </div>
@@ -850,11 +851,11 @@ function StatewideCalculator({
         <div className="flex items-baseline justify-between">
           <span className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">Est. year-one cost</span>
           <span className="font-display text-lg font-semibold text-[color:var(--foreground)]">
-            ${totalCost.toLocaleString()}
+            ${totalCost.toLocaleString("en-US")}
           </span>
         </div>
         <p className="mt-1 text-[10px] text-[color:var(--muted)]">
-          {terminalsNeeded.toLocaleString()} terminals × ${(yearOnePerUnit + localEquipCost).toLocaleString()}/unit · {coverageRadius}-mi radius
+          {terminalsNeeded.toLocaleString("en-US")} terminals × ${(yearOnePerUnit + localEquipCost).toLocaleString("en-US")}/unit · {coverageRadius}-mi radius
         </p>
       </div>
     </div>
@@ -983,7 +984,7 @@ function ImpactRow({ icon, value, label, color, sub }: { icon: React.ReactNode; 
       </div>
       <div>
         <p className="text-xs text-[color:var(--foreground)]">
-          <span className="font-display text-sm font-semibold">{value.toLocaleString()}</span>{" "}
+          <span className="font-display text-sm font-semibold">{value.toLocaleString("en-US")}</span>{" "}
           {label}
         </p>
         {sub && <p className="text-[10px] text-[color:var(--muted)]">{sub}</p>}
@@ -1000,7 +1001,7 @@ function SidebarStat({ icon, label, value, sub }: { icon: React.ReactNode; label
       </div>
       <div>
         <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">{label}</p>
-        <p className="font-display text-2xl font-semibold leading-tight text-[color:var(--foreground)]">{typeof value === "number" ? value.toLocaleString() : value}</p>
+        <p className="font-display text-2xl font-semibold leading-tight text-[color:var(--foreground)]">{typeof value === "number" ? value.toLocaleString("en-US") : value}</p>
         {sub && <p className="text-[10px] text-[color:var(--muted)]">{sub}</p>}
       </div>
     </div>
@@ -1034,7 +1035,7 @@ function CostLine({ label, value, detail, bold }: { label: string; value: number
         {label}
         {detail && <span className="ml-1 text-[10px] opacity-60">({detail})</span>}
       </span>
-      <span className={bold ? "font-display text-base" : ""}>${value.toLocaleString()}</span>
+      <span className={bold ? "font-display text-base" : ""}>${value.toLocaleString("en-US")}</span>
     </div>
   );
 }

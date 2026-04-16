@@ -9,26 +9,20 @@ import {
   Cloud,
   ArrowRight,
   Lock,
-  Monitor,
   Activity,
   Heart,
   Zap,
   Users,
   Lightbulb,
   Satellite,
-  Eye,
-  Stethoscope,
-  Pill,
-  Brain,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 import { getKYBDCSummary } from "@/data/kentucky-broadband-availability";
 import { getKYFacilitySummary } from "@/data/kentucky-facilities";
-import { cn } from "@/lib/utils";
+import { cn, usNum } from "@/lib/utils";
 import type {
-  EcosystemSection,
   InfraSection,
   SolutionSection,
   StatePyramidConfig,
@@ -73,78 +67,7 @@ const SOLUTION_ICONS: Record<number, React.ElementType> = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Featured Partner Data                                              */
-/* ------------------------------------------------------------------ */
-
-interface FeaturedPartner {
-  name: string;
-  tagline: string;
-  icon: React.ElementType;
-  color: string;
-  bgGradient: string;
-  capabilities: string[];
-  active: boolean;
-}
-
-const FEATURED_PARTNERS: FeaturedPartner[] = [
-  {
-    name: "Microsoft",
-    tagline: "Cloud, AI & Cybersecurity",
-    icon: Cloud,
-    color: "#0078d4",
-    bgGradient: "from-[#0078d4]/10 to-[#0078d4]/5",
-    capabilities: ["Azure Cloud Infrastructure", "AI/ML Health Analytics", "Cybersecurity for 700+ Rural Hospitals", "Teams Telehealth Integration"],
-    active: true,
-  },
-  {
-    name: "BioIntelliSense",
-    tagline: "Remote Patient Monitoring",
-    icon: Activity,
-    color: "#00b4d8",
-    bgGradient: "from-[#00b4d8]/10 to-[#00b4d8]/5",
-    capabilities: ["BioButton Wearable Sensors", "Continuous Vital Sign Monitoring", "AI-Powered Early Warning", "Clinical Dashboard Integration"],
-    active: true,
-  },
-  {
-    name: "Starlink",
-    tagline: "Satellite Broadband",
-    icon: Satellite,
-    color: "#1a1a2e",
-    bgGradient: "from-[#1a1a2e]/10 to-[#1a1a2e]/5",
-    capabilities: ["LEO Satellite Internet", "100+ Mbps Rural Coverage", "Telehealth-Grade Connectivity", "Rapid Deployment for Facilities"],
-    active: true,
-  },
-  {
-    name: "Viz.ai",
-    tagline: "AI Diagnostic Detection",
-    icon: Eye,
-    color: "#6366f1",
-    bgGradient: "from-[#6366f1]/10 to-[#6366f1]/5",
-    capabilities: ["AI Stroke Detection", "Real-Time CT Analysis", "Care Coordination Alerts"],
-    active: false,
-  },
-  {
-    name: "Avel eCare",
-    tagline: "Telehealth Services",
-    icon: Monitor,
-    color: "#059669",
-    bgGradient: "from-[#059669]/10 to-[#059669]/5",
-    capabilities: ["24/7 Virtual Specialty Care", "Emergency Telehealth", "Behavioral Health Support"],
-    active: false,
-  },
-  {
-    name: "eClinicalWorks",
-    tagline: "Electronic Health Records",
-    icon: Stethoscope,
-    color: "#e11d48",
-    bgGradient: "from-[#e11d48]/10 to-[#e11d48]/5",
-    capabilities: ["Cloud-Based EHR Platform", "Patient Portal", "Interoperability Suite"],
-    active: false,
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Module Card (Infrastructure & Solutions)                           */
+/*  Module Card                                                        */
 /* ------------------------------------------------------------------ */
 
 function ModuleCard({
@@ -252,97 +175,6 @@ function ModuleCard({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Partner Card                                                       */
-/* ------------------------------------------------------------------ */
-
-function PartnerCard({ partner }: { partner: FeaturedPartner }) {
-  const [hovered, setHovered] = useState(false);
-  const Icon = partner.icon;
-
-  return (
-    <motion.div
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-      whileHover={partner.active ? { scale: 1.02, y: -2 } : { scale: 1 }}
-      whileTap={partner.active ? { scale: 0.98 } : {}}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className={cn(
-        "relative flex flex-col overflow-hidden rounded-2xl border p-5 transition-all duration-300",
-        partner.active
-          ? "border-[color:var(--line)] bg-white/90 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-lift)] hover:border-transparent"
-          : "border-[color:var(--line)] bg-white/50",
-      )}
-      style={partner.active && hovered ? { borderColor: `${partner.color}40` } : {}}
-    >
-      {/* Background gradient on hover */}
-      <div
-        className={cn(
-          "absolute inset-0 bg-gradient-to-br transition-opacity duration-300",
-          partner.bgGradient,
-          partner.active && hovered ? "opacity-100" : "opacity-0",
-        )}
-      />
-
-      {/* Content */}
-      <div className="relative z-10">
-        {/* Icon + Name */}
-        <div className="flex items-start gap-3">
-          <div
-            className={cn(
-              "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all duration-300",
-              partner.active ? "" : "grayscale opacity-50",
-            )}
-            style={{
-              backgroundColor: `${partner.color}12`,
-              color: partner.active ? partner.color : "var(--muted)",
-            }}
-          >
-            <Icon className="h-6 w-6" />
-          </div>
-          <div>
-            <h3 className={cn(
-              "text-sm font-semibold",
-              partner.active ? "text-[color:var(--foreground)]" : "text-[color:var(--muted)]",
-            )}>
-              {partner.name}
-            </h3>
-            <p className="text-[11px] text-[color:var(--muted)]">{partner.tagline}</p>
-          </div>
-        </div>
-
-        {/* Capabilities */}
-        {partner.active && (
-          <div className="mt-4 space-y-1.5">
-            {partner.capabilities.map((cap) => (
-              <div key={cap} className="flex items-center gap-2">
-                <div
-                  className="h-1.5 w-1.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: partner.color }}
-                />
-                <span className="text-[11px] text-[color:var(--foreground)]">{cap}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Coming Soon overlay for inactive */}
-      {!partner.active && (
-        <div className={cn(
-          "absolute inset-0 flex items-center justify-center rounded-2xl bg-white/60 backdrop-blur-[1px] transition-all duration-300",
-          hovered ? "opacity-100" : "opacity-0",
-        )}>
-          <div className="flex items-center gap-2 rounded-full bg-[color:var(--foreground)]/80 px-4 py-2">
-            <Lock className="h-3.5 w-3.5 text-white/80" />
-            <span className="text-xs font-medium text-white">Coming Soon</span>
-          </div>
-        </div>
-      )}
-    </motion.div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  Infrastructure Grid                                                */
 /* ------------------------------------------------------------------ */
 
@@ -390,8 +222,20 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
                     <p className="text-[9px] text-[color:var(--muted)]">Unserved</p>
                   </div>
                 </div>
+                {/* Partner attribution */}
+                <div className="flex items-center gap-3 text-[10px] text-[color:var(--muted)]">
+                  <div className="flex items-center gap-1">
+                    <Satellite className="h-3 w-3" />
+                    <span>Starlink LEO</span>
+                  </div>
+                  <span className="text-[color:var(--line)]">·</span>
+                  <div className="flex items-center gap-1">
+                    <Cloud className="h-3 w-3" />
+                    <span>Microsoft Azure</span>
+                  </div>
+                </div>
                 <p className="text-[10px] text-[color:var(--muted)]">
-                  {fSummary.total} facilities · {bdcSummary.totalBSLs.toLocaleString()} BSLs tracked
+                  {usNum(fSummary.total)} facilities · {usNum(bdcSummary.totalBSLs)} BSLs tracked
                 </p>
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-3 py-1.5 text-[11px] font-medium text-white">
                   Open Broadband Map <ArrowRight className="h-3 w-3" />
@@ -407,7 +251,7 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
                     <p className="text-[9px] text-[color:var(--muted)]">Assessed</p>
                   </div>
                   <div className="flex-1 rounded-lg bg-[color:rgba(43,122,184,0.08)] px-2.5 py-2 text-center">
-                    <p className="font-display text-lg font-semibold text-[color:#2b7ab8]">{fSummary.total}</p>
+                    <p className="font-display text-lg font-semibold text-[color:#2b7ab8]">{usNum(fSummary.total)}</p>
                     <p className="text-[9px] text-[color:var(--muted)]">Total Facilities</p>
                   </div>
                 </div>
@@ -434,76 +278,114 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Ecosystem Grid                                                     */
+/*  Ecosystem Grid — mostly coming-soon                                */
 /* ------------------------------------------------------------------ */
+
+interface EcoModule {
+  name: string;
+  tagline: string;
+  icon: React.ElementType;
+  color: string;
+  active: boolean;
+}
+
+const ECO_MODULES: EcoModule[] = [
+  { name: "Microsoft", tagline: "Cloud, AI & cybersecurity platform", icon: Cloud, color: "#0078d4", active: true },
+  { name: "BioIntelliSense", tagline: "Remote patient monitoring wearables", icon: Activity, color: "#00b4d8", active: false },
+  { name: "Accenture", tagline: "System integration & advisory", icon: Users, color: "#a100ff", active: false },
+  { name: "eClinicalWorks", tagline: "Electronic health records", icon: FileText, color: "#e11d48", active: false },
+  { name: "Avel eCare", tagline: "Telehealth services", icon: Heart, color: "#059669", active: false },
+  { name: "KPMG / PwC", tagline: "Advisory services", icon: Users, color: "#6b7280", active: false },
+];
 
 function EcoGrid() {
   return (
-    <div className="space-y-6">
-      {/* Featured Partners */}
+    <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {FEATURED_PARTNERS.map((partner) => (
-          <PartnerCard key={partner.name} partner={partner} />
-        ))}
+        {ECO_MODULES.map((mod) => {
+          const Icon = mod.icon;
+          return (
+            <ModuleCard
+              key={mod.name}
+              title={mod.name}
+              subtitle={mod.tagline}
+              icon={Icon}
+              accentColor={mod.color}
+              active={mod.active}
+            >
+              {mod.active && mod.name === "Microsoft" && (
+                <div className="space-y-1.5">
+                  {["Azure Cloud Infrastructure", "AI/ML Health Analytics", "Cybersecurity for 700+ Rural Hospitals", "Teams Telehealth Integration"].map((cap) => (
+                    <div key={cap} className="flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#0078d4]" />
+                      <span className="text-[11px] text-[color:var(--foreground)]">{cap}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ModuleCard>
+          );
+        })}
       </div>
-      {/* Advisory footer */}
-      <div className="flex items-center gap-3 rounded-xl border border-dashed border-[color:var(--line)] bg-white/40 px-4 py-3">
-        <Users className="h-4 w-4 text-[color:var(--muted)]" />
-        <p className="text-[11px] text-[color:var(--muted)]">
-          Additional partners including Accenture, KPMG, PwC, CVS Health, American Heart Association, and others support the RHT ecosystem through advisory, clinical, and integration services.
-        </p>
-      </div>
+      <p className="text-[10px] text-[color:var(--muted)]">
+        Partner profiles will be populated as engagement agreements are finalized. Technology partners enabling infrastructure (e.g. Starlink) appear within their respective infrastructure modules.
+      </p>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Solutions Grid                                                     */
+/*  Solutions Grid — mostly coming-soon                                */
 /* ------------------------------------------------------------------ */
 
 function SolutionsGrid({ sections }: { sections: SolutionSection[] }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {sections.map((section) => {
-        const Icon = SOLUTION_ICONS[section.goalNumber] ?? Heart;
-        const hasAvailableItems = section.interventions?.some((i) => i.status === "available");
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {sections.map((section) => {
+          const Icon = SOLUTION_ICONS[section.goalNumber] ?? Heart;
+          const hasAvailableItems = section.interventions?.some((i) => i.status === "available");
 
-        return (
-          <ModuleCard
-            key={section.goal}
-            title={`${section.goalNumber}. ${section.label}`}
-            subtitle={section.statusSummary}
-            icon={Icon}
-            accentColor={hasAvailableItems ? "var(--accent)" : "#8899a6"}
-            active={!!hasAvailableItems}
-          >
-            {hasAvailableItems && section.interventions && (
-              <div className="space-y-1.5">
-                {section.interventions.map((intervention) => {
-                  const statusColors: Record<string, string> = {
-                    available: "text-[color:var(--teal)] bg-[color:rgba(15,124,134,0.08)]",
-                    planned: "text-[color:#c49a2e] bg-[color:rgba(196,161,42,0.08)]",
-                    future: "text-[color:var(--muted)] bg-[color:var(--surface-soft)]",
-                  };
-                  return (
-                    <div
-                      key={intervention.name}
-                      className="flex items-center justify-between gap-2 rounded-lg bg-white/60 px-2.5 py-1.5"
-                    >
-                      <span className="text-[11px] text-[color:var(--foreground)]">
-                        {intervention.name}
-                      </span>
-                      <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[9px] font-medium capitalize", statusColors[intervention.status])}>
-                        {intervention.status}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </ModuleCard>
-        );
-      })}
+          return (
+            <ModuleCard
+              key={section.goal}
+              title={`${section.goalNumber}. ${section.label}`}
+              subtitle={section.statusSummary}
+              icon={Icon}
+              accentColor={hasAvailableItems ? "var(--accent)" : "#8899a6"}
+              active={!!hasAvailableItems}
+            >
+              {hasAvailableItems && section.interventions && (
+                <div className="space-y-1.5">
+                  {section.interventions.map((intervention) => {
+                    const statusColors: Record<string, string> = {
+                      available: "text-[color:var(--teal)] bg-[color:rgba(15,124,134,0.08)]",
+                      planned: "text-[color:#c49a2e] bg-[color:rgba(196,161,42,0.08)]",
+                      future: "text-[color:var(--muted)] bg-[color:var(--surface-soft)]",
+                    };
+                    return (
+                      <div
+                        key={intervention.name}
+                        className="flex items-center justify-between gap-2 rounded-lg bg-white/60 px-2.5 py-1.5"
+                      >
+                        <span className="text-[11px] text-[color:var(--foreground)]">
+                          {intervention.name}
+                        </span>
+                        <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[9px] font-medium capitalize", statusColors[intervention.status])}>
+                          {intervention.status}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </ModuleCard>
+          );
+        })}
+      </div>
+      <p className="text-[10px] text-[color:var(--muted)]">
+        Solution modules map to the 5 CMS RHT goals. Active modules reflect interventions with available infrastructure tooling.
+      </p>
     </div>
   );
 }
