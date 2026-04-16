@@ -8,7 +8,7 @@ import {
   useMotionValue,
   useSpring,
 } from "framer-motion";
-import { ArrowRight, Info, Radio, Satellite, Wifi, WifiOff, Zap } from "lucide-react";
+import { ArrowRight, Info, Radio, Satellite, Shield, ShieldCheck, Wifi, WifiOff, Zap } from "lucide-react";
 import Link from "next/link";
 
 import { COVERAGE_MODEL, KY_CONTEXT, KY_RHTP, STARLINK_PRICING } from "@/data/kentucky-config";
@@ -132,6 +132,48 @@ export default function KentuckyOverview() {
               color="#c46128"
               delay={0.3}
             />
+          </div>
+        </div>
+      </ScrollReveal>
+
+      {/* ── Infrastructure Readiness ─────────────────────────── */}
+      <ScrollReveal>
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Broadband readiness */}
+          <div className="surface-card flex items-start gap-4 rounded-[1.6rem] border p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:rgba(15,124,134,0.1)]">
+              <Wifi className="h-5 w-5 text-[color:var(--teal)]" />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">Broadband</p>
+              <p className="mt-1 font-display text-2xl font-semibold text-[color:var(--foreground)]">
+                {fSummary.servedPct}%
+                <span className="ml-1 text-sm font-normal text-[color:var(--muted)]">of facilities connected</span>
+              </p>
+              <p className="mt-1 text-[10px] text-[color:var(--muted)]">
+                {fSummary.served} served · {fSummary.underserved} underserved · {fSummary.unserved} unserved
+              </p>
+            </div>
+          </div>
+
+          {/* Cybersecurity readiness */}
+          <div className="surface-card flex items-start gap-4 rounded-[1.6rem] border p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:rgba(156,163,175,0.12)]">
+              <Shield className="h-5 w-5 text-[color:#9ca3af]" />
+            </div>
+            <div>
+              <p className="flex items-center gap-1.5 text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
+                Cybersecurity
+                <InfoTip text="Tracks facility enrollment in the Rural Health Resiliency Program — cybersecurity risk assessments, incident response planning, and compliance monitoring. Assessment enrollment is in progress." />
+              </p>
+              <p className="mt-1 font-display text-2xl font-semibold text-[color:var(--foreground)]">
+                {fSummary.cyber.assessed}
+                <span className="ml-1 text-sm font-normal text-[color:var(--muted)]">of {fSummary.total} assessed</span>
+              </p>
+              <p className="mt-1 text-[10px] text-[color:#c49a2e]">
+                Assessment enrollment in progress
+              </p>
+            </div>
           </div>
         </div>
       </ScrollReveal>

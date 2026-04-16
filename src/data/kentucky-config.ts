@@ -167,6 +167,8 @@ export const KY_CONTEXT = {
 
 export type BroadbandStatus = "served" | "underserved" | "unserved";
 
+export type CyberStatus = "assessed" | "enrolled" | "vulnerable" | "unknown";
+
 export type FacilityType = "hospital" | "cah" | "fqhc" | "rhc";
 
 export interface KYFacility {
@@ -178,10 +180,25 @@ export interface KYFacility {
   lat: number;
   lng: number;
   beds?: number;
-  broadbandStatus: BroadbandStatus;  // "served" | "underserved" | "unserved"
+  broadbandStatus: BroadbandStatus;
+  cyberStatus: CyberStatus;
   usacSubsidy?: { totalCommitted: number; latestYear: number; entities: number };
-  broadbandSource?: string;     // how we determined broadband status
+  broadbandSource?: string;
 }
+
+export const CYBER_STATUS_LABELS: Record<CyberStatus, string> = {
+  assessed: "Security assessed",
+  enrolled: "Enrolled in program",
+  vulnerable: "Vulnerable",
+  unknown: "Not yet assessed",
+};
+
+export const CYBER_STATUS_COLORS: Record<CyberStatus, string> = {
+  assessed: "#0f7c86",
+  enrolled: "#3a9ca5",
+  vulnerable: "#c46128",
+  unknown: "#9ca3af",
+};
 
 export const FACILITY_TYPE_LABELS: Record<FacilityType, string> = {
   hospital: "Hospital",

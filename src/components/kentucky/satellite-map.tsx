@@ -18,8 +18,8 @@ import L from "leaflet";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-import type { KYFacility, BroadbandStatus } from "@/data/kentucky-config";
-import { FACILITY_TYPE_COLORS, FACILITY_TYPE_LABELS } from "@/data/kentucky-config";
+import type { KYFacility, BroadbandStatus, CyberStatus } from "@/data/kentucky-config";
+import { FACILITY_TYPE_COLORS, FACILITY_TYPE_LABELS, CYBER_STATUS_LABELS, CYBER_STATUS_COLORS } from "@/data/kentucky-config";
 import { KY_COUNTY_BROADBAND } from "@/data/kentucky-broadband-data";
 import { KY_COUNTY_BDC } from "@/data/kentucky-broadband-availability";
 import type { PlacedTerminal } from "@/app/kentucky/satellite-planner/page";
@@ -39,6 +39,7 @@ const BROADBAND_BORDER_COLORS: Record<BroadbandStatus, string> = {
 function createFacilityIcon(
   fillColor: string,
   broadbandStatus: BroadbandStatus,
+  cyberStatus: CyberStatus = "unknown",
   size: number = 12,
 ): L.DivIcon {
   const borderColor = BROADBAND_BORDER_COLORS[broadbandStatus];
@@ -54,18 +55,33 @@ function createFacilityIcon(
     shadow = "0 1px 4px rgba(0,0,0,0.2)";
   }
 
+  const shieldColor = CYBER_STATUS_COLORS[cyberStatus];
+  // Small shield badge offset to bottom-right
+  const shieldBadge = `<div style="
+    position:absolute; bottom:-3px; right:-3px;
+    width:8px; height:8px;
+    background:${shieldColor};
+    border:1px solid white;
+    border-radius:2px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 65%, 50% 100%, 0% 65%, 0% 25%);
+  "></div>`;
+
   return L.divIcon({
     className: "",
-    iconSize: [actualSize, actualSize],
-    iconAnchor: [actualSize / 2, actualSize / 2],
-    html: `<div style="
-      width: ${actualSize}px;
-      height: ${actualSize}px;
-      border-radius: 50%;
-      background: ${fillColor};
-      border: 2px solid ${borderColor};
-      box-shadow: ${shadow};
-    "></div>`,
+    iconSize: [actualSize + 4, actualSize + 4],
+    iconAnchor: [(actualSize + 4) / 2, (actualSize + 4) / 2],
+    html: `<div style="position:relative; width:${actualSize + 4}px; height:${actualSize + 4}px;">
+      <div style="
+        position:absolute; top:2px; left:2px;
+        width: ${actualSize}px;
+        height: ${actualSize}px;
+        border-radius: 50%;
+        background: ${fillColor};
+        border: 2px solid ${borderColor};
+        box-shadow: ${shadow};
+      "></div>
+      ${shieldBadge}
+    </div>`,
   });
 }
 
@@ -80,12 +96,12 @@ const TERMINAL_ICON = L.divIcon({
   "></div>`,
 });
 
-// Cache icons per type+status to avoid recreating on every render
+// Cache icons per type+broadband+cyber to avoid recreating on every render
 const iconCache = new Map<string, L.DivIcon>();
-function getFacilityIcon(type: KYFacility["type"], broadbandStatus: BroadbandStatus): L.DivIcon {
-  const key = `${type}-${broadbandStatus}`;
+function getFacilityIcon(type: KYFacility["type"], broadbandStatus: BroadbandStatus, cyberStatus: CyberStatus = "unknown"): L.DivIcon {
+  const key = `${type}-${broadbandStatus}-${cyberStatus}`;
   if (!iconCache.has(key)) {
-    iconCache.set(key, createFacilityIcon(FACILITY_TYPE_COLORS[type], broadbandStatus));
+    iconCache.set(key, createFacilityIcon(FACILITY_TYPE_COLORS[type], broadbandStatus, cyberStatus));
   }
   return iconCache.get(key)!;
 }
@@ -268,11 +284,13 @@ export default function SatelliteMapComponent({
       {/* ── Facility markers (already filtered by parent) ──── */}
       {facilities.map((f) => {
         const status = POPUP_STATUS[f.broadbandStatus];
+        const cyberColor = CYBER_STATUS_COLORS[f.cyberStatus];
+        const cyberLabel = CYBER_STATUS_LABELS[f.cyberStatus];
         return (
           <Marker
             key={f.id}
             position={[f.lat, f.lng]}
-            icon={getFacilityIcon(f.type, f.broadbandStatus)}
+            icon={getFacilityIcon(f.type, f.broadbandStatus, f.cyberStatus)}
           >
             <Popup>
               <div className="min-w-[180px]">
@@ -283,6 +301,9 @@ export default function SatelliteMapComponent({
                 {f.beds && <p className="text-xs text-gray-500">{f.beds} beds</p>}
                 <p className="mt-1 text-xs font-medium" style={{ color: status.color }}>
                   {status.label}
+                </p>
+                <p className="text-xs" style={{ color: cyberColor }}>
+                  🛡 {cyberLabel}
                 </p>
               </div>
             </Popup>
