@@ -1,12 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Radio, Satellite, Wifi, WifiOff } from "lucide-react";
+import { ArrowRight, Info, Radio, Satellite, Wifi, WifiOff } from "lucide-react";
 import Link from "next/link";
 
 import { COVERAGE_MODEL, KY_CONTEXT, KY_RHTP, STARLINK_PRICING } from "@/data/kentucky-config";
 import { getKYFacilitySummary } from "@/data/kentucky-facilities";
-import { getKYBroadbandSummary } from "@/data/kentucky-broadband-data";
+import { getKYBDCSummary } from "@/data/kentucky-broadband-availability";
 import { PricingDisclaimer } from "@/components/kentucky/pricing-disclaimer";
 
 /* ------------------------------------------------------------------ */
@@ -29,7 +29,7 @@ const stagger = {
 
 export default function KentuckyOverview() {
   const fSummary = getKYFacilitySummary();
-  const bSummary = getKYBroadbandSummary();
+  const bdcSummary = getKYBDCSummary();
   const costs = STARLINK_PRICING.getEffectiveCosts();
 
   /* Phase 2: cost to connect all unserved facilities */
@@ -56,10 +56,11 @@ export default function KentuckyOverview() {
           <h1 className="mt-3 max-w-3xl font-display text-4xl leading-[1.15] text-[color:var(--foreground)] md:text-5xl">
             Before interventions work, infrastructure must exist.
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-[color:var(--muted)]">
-            Kentucky&apos;s $212.9M annual RHTP allocation funds telehealth, RPM,
-            and clinical AI tools. But none of these work without broadband.
-            This analysis maps the gap and models what it costs to close it.
+          <p className="mt-4 flex items-center gap-1.5 text-base text-[color:var(--muted)]">
+            Map the broadband gap. Model what it costs to close it.
+            <span title="Kentucky's $212.9M RHTP allocation funds telehealth, RPM, and clinical AI — none of which work without broadband." className="cursor-help text-[color:var(--muted)] hover:text-[color:var(--foreground)]">
+              <Info className="h-3.5 w-3.5" />
+            </span>
           </p>
         </motion.div>
 
@@ -102,14 +103,8 @@ export default function KentuckyOverview() {
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1fr]">
           {/* Facility breakdown */}
           <div className="space-y-4">
-            <p className="text-sm leading-7 text-[color:var(--muted)]">
-              Of {fSummary.total} tracked healthcare facilities in Kentucky,{" "}
-              <span className="font-medium text-[color:var(--accent)]">
-                {fSummary.unserved} ({fSummary.unservedPct}%)
-              </span>{" "}
-              lack adequate broadband at the {COVERAGE_MODEL.broadbandThreshold.label} threshold.
-              These facilities cannot support telehealth, remote patient monitoring,
-              or electronic health record integration.
+            <p className="text-sm text-[color:var(--muted)]">
+              <span className="font-medium text-[color:var(--accent)]">{fSummary.unserved}</span> of {fSummary.total} facilities lack broadband at {COVERAGE_MODEL.broadbandThreshold.label}.
             </p>
 
             <div className="space-y-2">
@@ -136,20 +131,18 @@ export default function KentuckyOverview() {
             </div>
           </div>
 
-          {/* County broadband summary */}
+          {/* County broadband summary (FCC BDC) */}
           <div className="rounded-[1.4rem] border border-[color:var(--line)] bg-white/75 p-5">
             <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
-              County-level broadband coverage
+              Broadband availability (FCC BDC)
             </p>
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <MiniStat label="Counties tracked" value={String(bSummary.countiesTracked)} />
-              <MiniStat label="Avg served rate" value={`${bSummary.avgServedPct}%`} />
-              <MiniStat label="Unserved households" value={bSummary.totalUnserved.toLocaleString()} />
-              <MiniStat label="Population affected" value={bSummary.totalPop.toLocaleString()} />
+            <div className="mt-4 space-y-2">
+              <BDCBar label="Served (100/20+)" count={bdcSummary.served} total={bdcSummary.totalBSLs} pct={bdcSummary.pctServed} color="#0f7c86" />
+              <BDCBar label="Underserved (25/3–100/20)" count={bdcSummary.underserved} total={bdcSummary.totalBSLs} pct={Math.round(((bdcSummary.underserved) / bdcSummary.totalBSLs) * 1000) / 10} color="#c49a2e" />
+              <BDCBar label="Unserved (<25/3)" count={bdcSummary.unserved} total={bdcSummary.totalBSLs} pct={Math.round(((bdcSummary.unserved) / bdcSummary.totalBSLs) * 1000) / 10} color="#c46128" />
             </div>
-            <p className="mt-4 text-xs leading-5 text-[color:var(--muted)]">
-              Source: U.S. Census Bureau, ACS 2023 5-Year Estimates (Table B28002).
-              Measures broadband adoption; actual availability gaps may be larger.
+            <p className="mt-3 text-[10px] text-[color:var(--muted)]">
+              {bdcSummary.totalBSLs.toLocaleString()} BSLs across {bdcSummary.totalCounties} counties. Source: FCC BDC Dec 2024.
             </p>
           </div>
         </div>
@@ -173,19 +166,15 @@ export default function KentuckyOverview() {
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div>
-            <p className="text-sm leading-7 text-[color:var(--muted)]">
-              Deploying Starlink terminals to all {fSummary.unserved} unserved
-              facilities provides immediate broadband access for telehealth and RPM.
-              When paired with local Wi-Fi distribution equipment, each facility
-              also extends coverage to surrounding households within a{" "}
-              {COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles}-mile radius.
+            <p className="text-sm text-[color:var(--muted)]">
+              Deploy Starlink to {fSummary.unserved} unserved facilities + {COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles}-mile local Wi-Fi distribution.
             </p>
-            <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">
-              Estimated year-one cost:{" "}
+            <p className="mt-3 text-sm text-[color:var(--muted)]">
+              Year-one cost:{" "}
               <span className="font-display text-lg font-semibold text-[color:var(--foreground)]">
                 ${Math.round(phase2TotalYearOne).toLocaleString()}
               </span>{" "}
-              ({phase2PctOfRhtp}% of Kentucky&apos;s annual RHTP allocation).
+              <span className="text-xs">({phase2PctOfRhtp}% of RHTP allocation)</span>
             </p>
           </div>
 
@@ -233,11 +222,8 @@ export default function KentuckyOverview() {
 
         <div className="mt-6">
           <p className="max-w-2xl text-sm leading-7 text-[color:var(--muted)]">
-            After connecting all healthcare facilities, an estimated{" "}
-            {bSummary.totalUnserved.toLocaleString()} households across{" "}
-            {bSummary.countiesTracked} counties remain without adequate broadband.
-            The interactive satellite planner lets you model additional terminal
-            placements to extend coverage to remaining population clusters.
+            {bdcSummary.beadEligible.toLocaleString()} BEAD-eligible BSLs remain across {bdcSummary.totalCounties} counties.
+            Model additional terminal placements in the satellite planner.
           </p>
 
           <Link
@@ -250,35 +236,6 @@ export default function KentuckyOverview() {
         </div>
       </motion.section>
 
-      {/* ── BEAD Context ──────────────────────────────────────── */}
-      <motion.section
-        className="grid gap-4 sm:grid-cols-3"
-        variants={stagger}
-        initial="hidden"
-        animate="show"
-      >
-        <motion.div variants={fadeUp}>
-          <ContextCard
-            label="BEAD allocation"
-            value="$1.1B"
-            note="Kentucky's federal broadband investment. 25% designated for LEO satellite covering ~21,600 locations."
-          />
-        </motion.div>
-        <motion.div variants={fadeUp}>
-          <ContextCard
-            label="Starlink pilot"
-            value="95%"
-            note="Satisfaction rating from 2022 Bell/Martin County pilot (60 households, 12 months free service)."
-          />
-        </motion.div>
-        <motion.div variants={fadeUp}>
-          <ContextCard
-            label="Maternity deserts"
-            value="40"
-            note="Kentucky counties without adequate maternity care. Telehealth requires broadband first."
-          />
-        </motion.div>
-      </motion.section>
     </>
   );
 }
@@ -365,12 +322,17 @@ function CostBreakdown({
   );
 }
 
-function ContextCard({ label, value, note }: { label: string; value: string; note: string }) {
+function BDCBar({ label, count, total, pct, color }: { label: string; count: number; total: number; pct: number; color: string }) {
   return (
-    <article className="surface-card rounded-[1.7rem] border p-5">
-      <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">{label}</p>
-      <p className="mt-3 font-display text-[2.2rem] leading-none text-[color:var(--foreground)]">{value}</p>
-      <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">{note}</p>
-    </article>
+    <div>
+      <div className="flex items-baseline justify-between text-xs">
+        <span className="text-[color:var(--foreground)]">{label}</span>
+        <span className="font-display text-sm font-semibold" style={{ color }}>{pct}%</span>
+      </div>
+      <div className="mt-1 flex h-2 overflow-hidden rounded-full bg-[color:#efe8db]">
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: color }} />
+      </div>
+      <p className="mt-0.5 text-[10px] text-[color:var(--muted)]">{count.toLocaleString()} BSLs</p>
+    </div>
   );
 }

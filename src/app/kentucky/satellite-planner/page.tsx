@@ -8,6 +8,7 @@ import {
   Download,
   Eye,
   EyeOff,
+  Info,
   Minus,
   Plus,
   RotateCcw,
@@ -234,19 +235,16 @@ export default function SatellitePlannerPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Hero */}
-      <motion.div variants={fadeUp} initial="hidden" animate="show">
-        <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[color:var(--muted)]">
-          Kentucky Satellite Infrastructure Planner
-        </p>
-        <h1 className="mt-3 max-w-3xl font-display text-3xl leading-[1.15] text-[color:var(--foreground)] md:text-4xl">
-          Place terminals. See coverage. Calculate costs.
+      <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex items-center gap-2">
+        <h1 className="font-display text-2xl text-[color:var(--foreground)] md:text-3xl">
+          Place terminals. Model coverage and cost.
         </h1>
-        <p className="mt-3 max-w-xl text-sm leading-7 text-[color:var(--muted)]">
-          Click on the map to place Starlink terminals. Each terminal provides
-          broadband to the installation site and, with local distribution
-          equipment, extends Wi-Fi coverage to a {coverageRadius}-mile radius.
-          Terminals are auto-placed at underserved and unserved facilities.
-        </p>
+        <span
+          title={`Click the map to place Starlink terminals. Each extends Wi-Fi to a ${coverageRadius}-mile radius. Terminals auto-placed at underserved/unserved facilities.`}
+          className="cursor-help text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
+        >
+          <Info className="h-4 w-4" />
+        </span>
       </motion.div>
 
       {/* ── Main Layout: Map + Sidebar ────────────────────── */}
@@ -667,8 +665,21 @@ function estimateHouseholdsNear(f: KYFacility): number {
 }
 
 function estimateHouseholdsNearCoords(lat: number, lng: number, radiusMiles: number): number {
-  const nearbyCounties = KY_COUNTY_BROADBAND.filter(() => true); // simplified
-  if (nearbyCounties.length === 0) return 200;
-  const avgUnserved = nearbyCounties.reduce((s, c) => s + c.unservedHouseholds, 0) / nearbyCounties.length;
-  return Math.round(avgUnserved * 0.02 * radiusMiles);
+  // Find the nearest facility to determine which county we're in
+  let nearest: KYFacility | null = null;
+  let minDist = Infinity;
+  for (const f of KY_FACILITIES) {
+    const d = haversineDistMiles(lat, lng, f.lat, f.lng);
+    if (d < minDist) { minDist = d; nearest = f; }
+  }
+  if (!nearest) return 0;
+  const county = KY_COUNTY_BROADBAND.find((c) => c.fips === nearest!.countyFips);
+  if (!county) return 0;
+  // Scale unserved households by coverage area relative to avg KY county (~340 sq mi)
+  const coverageAreaSqMi = Math.PI * radiusMiles * radiusMiles;
+  const fraction = coverageAreaSqMi / 340;
+  return Math.min(
+    Math.round(county.unservedHouseholds * fraction),
+    COVERAGE_MODEL.communityDistributionModel.maxHouseholdsPerHub,
+  );
 }

@@ -15,12 +15,15 @@
 
 import { Circle, GeoJSON, MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 
 import type { KYFacility, BroadbandStatus } from "@/data/kentucky-config";
 import { FACILITY_TYPE_COLORS, FACILITY_TYPE_LABELS } from "@/data/kentucky-config";
-import { KY_COUNTY_BROADBAND, getCountyByFips } from "@/data/kentucky-broadband-data";
+import { KY_COUNTY_BROADBAND } from "@/data/kentucky-broadband-data";
+import { KY_COUNTY_BDC } from "@/data/kentucky-broadband-availability";
 import type { PlacedTerminal } from "@/app/kentucky/satellite-planner/page";
+
+type ChoroplethMode = "availability" | "adoption";
 
 /* ------------------------------------------------------------------ */
 /*  Custom marker icons — per facility type + broadband status         */
@@ -103,17 +106,50 @@ function ClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void
 /*  Choropleth helpers                                                 */
 /* ------------------------------------------------------------------ */
 
+const COLOR_STOPS = [
+  { min: 80, color: "#0f7c86", label: "80%+" },
+  { min: 70, color: "#3a9ca5", label: "70–80%" },
+  { min: 60, color: "#7ebfc5", label: "60–70%" },
+  { min: 50, color: "#c9a54e", label: "50–60%" },
+  { min: 40, color: "#c46128", label: "40–50%" },
+  { min: 0,  color: "#9e3a1a", label: "<40%" },
+];
+
 function getBroadbandColor(pct: number): string {
-  if (pct >= 80) return "#0f7c86";
-  if (pct >= 70) return "#3a9ca5";
-  if (pct >= 60) return "#7ebfc5";
-  if (pct >= 50) return "#c9a54e";
-  if (pct >= 40) return "#c46128";
+  for (const stop of COLOR_STOPS) {
+    if (pct >= stop.min) return stop.color;
+  }
   return "#9e3a1a";
 }
 
-function getCountyData(geoid: string) {
-  return KY_COUNTY_BROADBAND.find((c) => c.fips === geoid);
+function getCountyPct(geoid: string, mode: ChoroplethMode): number | null {
+  if (mode === "adoption") {
+    const c = KY_COUNTY_BROADBAND.find((c) => c.fips === geoid);
+    return c ? c.pctServed : null;
+  }
+  const c = KY_COUNTY_BDC.find((c) => c.fips === geoid);
+  return c ? c.pctServed : null;
+}
+
+function getCountyPopupHtml(geoid: string, mode: ChoroplethMode): string | null {
+  if (mode === "adoption") {
+    const d = KY_COUNTY_BROADBAND.find((c) => c.fips === geoid);
+    if (!d) return null;
+    return `<div style="min-width:160px">
+      <p style="font-weight:600;font-size:14px;margin:0">${d.name.replace(", Kentucky", "")}</p>
+      <p style="font-size:12px;color:#666;margin:4px 0 0">HH: ${d.households.toLocaleString()}</p>
+      <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(d.pctServed)}">${d.pctServed}% adoption</p>
+      <p style="font-size:11px;color:#999;margin:2px 0 0">${d.unservedHouseholds.toLocaleString()} without broadband</p>
+    </div>`;
+  }
+  const d = KY_COUNTY_BDC.find((c) => c.fips === geoid);
+  if (!d) return null;
+  return `<div style="min-width:160px">
+    <p style="font-weight:600;font-size:14px;margin:0">${d.name}</p>
+    <p style="font-size:12px;color:#666;margin:4px 0 0">BSLs: ${d.totalBSLs.toLocaleString()}</p>
+    <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(d.pctServed)}">${d.pctServed}% served (100/20)</p>
+    <p style="font-size:11px;color:#999;margin:2px 0 0">${d.unservedBSLs.toLocaleString()} unserved · ${d.underservedBSLs.toLocaleString()} underserved</p>
+  </div>`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -132,7 +168,7 @@ const POPUP_STATUS: Record<BroadbandStatus, { label: string; color: string }> = 
 
 let countyGeoJson: GeoJSON.FeatureCollection | null = null;
 
-function CountyChoropleth() {
+function CountyChoropleth({ mode }: { mode: ChoroplethMode }) {
   useEffect(() => {
     if (!countyGeoJson) {
       import("@/data/kentucky-counties.json").then((mod) => {
@@ -145,11 +181,11 @@ function CountyChoropleth() {
 
   return (
     <GeoJSON
+      key={mode}
       data={countyGeoJson}
       style={(feature) => {
         const geoid = feature?.properties?.GEOID || "";
-        const data = getCountyData(geoid);
-        const pct = data?.pctServed ?? 70;
+        const pct = getCountyPct(geoid, mode) ?? 70;
         return {
           fillColor: getBroadbandColor(pct),
           fillOpacity: 0.2,
@@ -160,25 +196,8 @@ function CountyChoropleth() {
       }}
       onEachFeature={(feature, layer) => {
         const geoid = feature?.properties?.GEOID || "";
-        const data = getCountyData(geoid);
-        if (data) {
-          layer.bindPopup(`
-            <div style="min-width:160px">
-              <p style="font-weight:600;font-size:14px;margin:0">${data.name}</p>
-              <p style="font-size:12px;color:#666;margin:4px 0 0">
-                Pop: ~${(data.households * 2.45).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                &ensp;|&ensp;
-                HH: ${data.households.toLocaleString()}
-              </p>
-              <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(data.pctServed)}">
-                ${data.pctServed}% broadband coverage
-              </p>
-              <p style="font-size:11px;color:#999;margin:2px 0 0">
-                ${data.unservedHouseholds.toLocaleString()} unserved households
-              </p>
-            </div>
-          `);
-        }
+        const html = getCountyPopupHtml(geoid, mode);
+        if (html) layer.bindPopup(html);
       }}
     />
   );
@@ -204,6 +223,8 @@ export default function SatelliteMapComponent({
   onMapClick,
   coverageRadiusMiles,
 }: SatelliteMapProps) {
+  const [choroplethMode, setChoroplethMode] = useState<ChoroplethMode>("availability");
+
   // Fix Leaflet default icon paths in Next.js/webpack
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -222,6 +243,7 @@ export default function SatelliteMapComponent({
   const radiusMeters = milesToMeters(coverageRadiusMiles);
 
   return (
+    <div className="relative h-full w-full">
     <MapContainer
       center={KY_CENTER}
       zoom={KY_ZOOM}
@@ -237,7 +259,7 @@ export default function SatelliteMapComponent({
       />
 
       {/* ── County choropleth ──────────────────────────────── */}
-      <CountyChoropleth />
+      <CountyChoropleth mode={choroplethMode} />
 
       {/* ── Click handler ──────────────────────────────────── */}
       <ClickHandler onClick={onMapClick} />
@@ -302,5 +324,45 @@ export default function SatelliteMapComponent({
         </span>
       ))}
     </MapContainer>
+
+    {/* ── Bottom-right: Availability / Adoption toggle + legend ── */}
+    <div className="absolute bottom-3 right-3 z-[1000] flex flex-col items-end gap-2">
+      {/* Toggle */}
+      <div className="flex overflow-hidden rounded-lg bg-white/95 shadow-lg backdrop-blur-sm">
+        {(["availability", "adoption"] as ChoroplethMode[]).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setChoroplethMode(m)}
+            className={`px-3 py-1.5 text-[10px] font-medium transition-colors ${
+              choroplethMode === m
+                ? "bg-[color:var(--foreground)] text-white"
+                : "text-[color:var(--muted)] hover:bg-[color:var(--surface-soft)]"
+            }`}
+            title={m === "availability" ? "FCC BDC supply-side (100/20 Mbps)" : "Census ACS demand-side (subscriptions)"}
+          >
+            {m === "availability" ? "Availability" : "Adoption"}
+          </button>
+        ))}
+      </div>
+      {/* Gradient legend */}
+      <div className="rounded-lg bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+        <p className="mb-1 text-[9px] uppercase tracking-wider text-[color:var(--muted)]">
+          {choroplethMode === "availability" ? "FCC BDC served %" : "ACS adoption %"}
+        </p>
+        <div className="flex gap-0.5">
+          {COLOR_STOPS.map((stop) => (
+            <div key={stop.label} className="flex flex-col items-center">
+              <div
+                className="h-2 w-6 first:rounded-l last:rounded-r"
+                style={{ background: stop.color }}
+              />
+              <span className="mt-0.5 text-[8px] text-[color:var(--muted)]">{stop.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+    </div>
   );
 }

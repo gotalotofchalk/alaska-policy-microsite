@@ -117,12 +117,8 @@ export default function KentuckyDataPage() {
         <h1 className="mt-3 max-w-3xl font-display text-3xl leading-[1.15] text-[color:var(--foreground)] md:text-4xl">
           Where the numbers come from
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-[color:var(--muted)]">
-          Every dataset powering the Kentucky broadband and satellite planning
-          tool is documented here with its source, access URL, vintage date, and
-          any known limitations. State administrators presenting these figures to
-          legislators or federal partners can verify each number back to its
-          origin.
+        <p className="mt-3 max-w-2xl text-sm text-[color:var(--muted)]">
+          Source, access URL, vintage, and limitations for every dataset. Verify any figure back to its origin.
         </p>
       </motion.div>
 
@@ -134,9 +130,7 @@ export default function KentuckyDataPage() {
         title="Healthcare Facility Locations"
       >
         <p>
-          The map displays 800+ healthcare facilities across Kentucky, compiled
-          from three federal and state sources and cross-referenced against the
-          CMS Provider of Services file.
+          800+ facilities from three federal/state sources, cross-referenced against CMS Provider of Services.
         </p>
 
         <Divider />
@@ -231,9 +225,7 @@ export default function KentuckyDataPage() {
         title="Broadband Adoption Data"
       >
         <p>
-          County-level broadband subscription rates for all 120 Kentucky
-          counties. This measures whether households actually subscribe to
-          broadband, not whether service is available at their address.
+          County-level subscription rates for 120 counties. Measures adoption, not availability.
         </p>
 
         <Divider />
@@ -283,10 +275,7 @@ export default function KentuckyDataPage() {
         title="Broadband Availability Data"
       >
         <p>
-          County-level broadband availability from the FCC Broadband Data
-          Collection, measuring whether internet service at 100/20 Mbps or above
-          is offered at each broadband-serviceable location (BSL). This is the
-          supply-side complement to the Census adoption data above.
+          FCC BDC supply-side availability: whether 100/20+ Mbps service is offered at each BSL.
         </p>
 
         <Divider />
@@ -334,11 +323,7 @@ export default function KentuckyDataPage() {
         title="Sub-County BSL Grid"
       >
         <p>
-          A high-resolution spatial grid of 78,785 hexagonal cells covering
-          Kentucky, each approximately 0.74 km² (about 460 meters edge to
-          edge). This is what allows the satellite planner to estimate coverage
-          at the sub-county level when a terminal is placed on the map, rather
-          than relying on crude county-wide household averages.
+          78,785 H3 hexagonal cells (~0.74 km² each) for sub-county coverage estimation.
         </p>
 
         <Divider />
@@ -387,8 +372,7 @@ export default function KentuckyDataPage() {
         title="County Boundary Polygons"
       >
         <p>
-          Cartographic boundary shapes for all 120 Kentucky counties, used to
-          render the choropleth overlay on the interactive map.
+          120 Kentucky county boundaries for choropleth overlay rendering.
         </p>
 
         <Divider />
@@ -422,12 +406,7 @@ export default function KentuckyDataPage() {
         title="Starlink Pricing and Coverage Model"
       >
         <p>
-          Satellite backhaul pricing and the community distribution model that
-          underlies the cost calculator. Hardware and service pricing are drawn
-          from SpaceX public pricing as of January 2026. The coverage radius
-          model assumes local point-to-multipoint fixed wireless distribution
-          (Ubiquiti or Cambium-class equipment on unlicensed 5 GHz spectrum)
-          with Starlink as the backhaul link.
+          SpaceX public pricing (Jan–Apr 2026) + PtMP fixed wireless distribution model on 5 GHz.
         </p>
 
         <Divider />
@@ -472,9 +451,7 @@ export default function KentuckyDataPage() {
         title="Kentucky RHTP Allocation"
       >
         <p>
-          The Rural Health Transformation Program (RHTP) allocation that anchors
-          the &quot;percentage of allocation&quot; cost framing in the satellite
-          planner.
+          RHTP allocation anchoring the cost-as-percentage framing in the satellite planner.
         </p>
 
         <Divider />
