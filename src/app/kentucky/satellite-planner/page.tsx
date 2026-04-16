@@ -2,6 +2,8 @@
 
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import {
+  Activity,
+  Check,
   ChevronDown,
   ChevronUp,
   Globe,
@@ -34,6 +36,13 @@ import {
 } from "@/data/kentucky-facilities";
 import { KY_COUNTY_BROADBAND } from "@/data/kentucky-broadband-data";
 import { getBDCByFips, getKYBDCSummary, KY_COUNTY_BDC } from "@/data/kentucky-broadband-availability";
+import {
+  BANDWIDTH_TIERS as CB_TIERS,
+  CLINICAL_SERVICES,
+  CATEGORY_LABELS,
+  getCapabilitiesAtSpeed,
+  maxSimultaneousSessions,
+} from "@/data/connectivity-budget";
 
 /* ------------------------------------------------------------------ */
 /*  Lazy-load the Leaflet map (client-only, no SSR)                    */
@@ -512,6 +521,9 @@ export default function SatellitePlannerPage() {
             </div>
           </div>
 
+          {/* Connectivity Budget — what this speed enables */}
+          <ConnectivityBudgetPanel />
+
           {/* Cost Calculator */}
           <div ref={costCardRef} className="surface-card rounded-[1.6rem] border p-5">
             <div className="flex items-center justify-between">
@@ -803,6 +815,116 @@ function StatewideCalculator({
 /* ------------------------------------------------------------------ */
 /*  Sub-components                                                     */
 /* ------------------------------------------------------------------ */
+
+function ConnectivityBudgetPanel() {
+  const [expanded, setExpanded] = useState(false);
+  // Starlink residential delivers ~100 Mbps download
+  const speed = 100;
+  const { tier, services, unsupported } = getCapabilitiesAtSpeed(speed);
+  const sessions = maxSimultaneousSessions(speed);
+
+  // Group services by category
+  const grouped = services.reduce<Record<string, typeof services>>((acc, s) => {
+    (acc[s.category] ??= []).push(s);
+    return acc;
+  }, {});
+
+  return (
+    <div className="surface-card rounded-[1.6rem] border p-5">
+      <button
+        type="button"
+        onClick={() => setExpanded((p) => !p)}
+        className="flex w-full items-center gap-2 text-left"
+      >
+        <Activity className="h-4 w-4 text-[color:var(--muted)]" />
+        <div className="flex-1">
+          <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
+            What this enables
+          </p>
+        </div>
+        <span className="rounded-full px-2 py-0.5 text-[10px] font-medium" style={{ background: `${tier.color}20`, color: tier.color }}>
+          {tier.label}
+        </span>
+        {expanded ? <ChevronUp className="h-3 w-3 text-[color:var(--muted)]" /> : <ChevronDown className="h-3 w-3 text-[color:var(--muted)]" />}
+      </button>
+
+      {/* Quick stats — always visible */}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-lg bg-[color:var(--surface-soft)] p-2 text-center">
+          <p className="font-display text-lg font-semibold text-[color:var(--foreground)]">{sessions}</p>
+          <p className="text-[10px] text-[color:var(--muted)]">Simultaneous telehealth sessions</p>
+        </div>
+        <div className="rounded-lg bg-[color:var(--surface-soft)] p-2 text-center">
+          <p className="font-display text-lg font-semibold text-[color:var(--foreground)]">{services.length}</p>
+          <p className="text-[10px] text-[color:var(--muted)]">of {CLINICAL_SERVICES.length} services supported</p>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            key="budget-detail"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="mt-3 space-y-3">
+              <p className="text-[10px] text-[color:var(--muted)]">
+                At ~100 Mbps (Starlink residential), a facility can run:
+              </p>
+
+              {/* Supported services by category */}
+              {Object.entries(grouped).map(([cat, svcs]) => (
+                <div key={cat}>
+                  <p className="text-[9px] font-medium uppercase tracking-widest text-[color:var(--muted)]">
+                    {CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS]}
+                  </p>
+                  <div className="mt-1 space-y-1">
+                    {svcs.map((s) => (
+                      <div key={s.id} className="flex items-start gap-1.5 text-[11px]">
+                        <Check className="mt-0.5 h-3 w-3 shrink-0 text-[color:var(--teal)]" />
+                        <div>
+                          <span className="font-medium text-[color:var(--foreground)]">{s.name}</span>
+                          <span className="ml-1 text-[10px] text-[color:var(--muted)]">({s.recommendedMbps} Mbps)</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Bandwidth breakdown bar */}
+              <div>
+                <p className="text-[9px] font-medium uppercase tracking-widest text-[color:var(--muted)]">
+                  Bandwidth per service
+                </p>
+                <div className="mt-1.5 space-y-1">
+                  {CLINICAL_SERVICES.slice()
+                    .sort((a, b) => b.recommendedMbps - a.recommendedMbps)
+                    .slice(0, 6)
+                    .map((s) => (
+                      <div key={s.id} className="flex items-center gap-2">
+                        <span className="w-24 truncate text-[10px] text-[color:var(--muted)]">{s.name}</span>
+                        <div className="flex-1 overflow-hidden rounded-full bg-[color:#efe8db]" style={{ height: 4 }}>
+                          <div
+                            className="h-full rounded-full bg-[color:var(--teal)]"
+                            style={{ width: `${Math.min(100, (s.recommendedMbps / 25) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="w-10 text-right text-[10px] text-[color:var(--muted)]">{s.recommendedMbps}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function SidebarStat({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string | number; sub?: string }) {
   return (
