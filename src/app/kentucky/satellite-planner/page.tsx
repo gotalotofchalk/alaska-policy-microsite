@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
   ChevronDown,
   ChevronUp,
-  Info,
   Minus,
   Plus,
   RotateCcw,
@@ -254,19 +253,14 @@ export default function SatellitePlannerPage() {
       {/* Hero */}
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[color:var(--muted)]">
-          Kentucky Satellite Planner
+          Kentucky Broadband Infrastructure
         </p>
-        <div className="mt-2 flex items-center gap-2">
-          <h1 className="font-display text-3xl text-[color:var(--foreground)] md:text-4xl">
-            Place. Model. Budget.
-          </h1>
-          <span
-            title={`Click the map to place Starlink terminals. Each extends Wi-Fi to a ${coverageRadius}-mile radius. Terminals auto-placed at underserved/unserved facilities.`}
-            className="cursor-help text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-          >
-            <Info className="h-4.5 w-4.5" />
-          </span>
-        </div>
+        <h1 className="mt-2 font-display text-3xl text-[color:var(--foreground)] md:text-4xl">
+          Satellite Terminal Planner
+        </h1>
+        <p className="mt-2 text-sm text-[color:var(--muted)]">
+          Click the map to place terminals. Each extends Wi-Fi to a {coverageRadius}-mile radius. Auto-placed at underserved and unserved facilities.
+        </p>
       </motion.div>
 
       {/* ── Main Layout: Map + Sidebar ────────────────────── */}

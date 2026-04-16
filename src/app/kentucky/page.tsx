@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Info, Radio, Satellite, Wifi, WifiOff, Zap } from "lucide-react";
+import { ArrowRight, Radio, Satellite, Wifi, WifiOff, Zap } from "lucide-react";
 import Link from "next/link";
 
 import { COVERAGE_MODEL, KY_CONTEXT, KY_RHTP, STARLINK_PRICING } from "@/data/kentucky-config";
 import { getKYFacilitySummary } from "@/data/kentucky-facilities";
 import { getKYBDCSummary } from "@/data/kentucky-broadband-availability";
-import { PricingDisclaimer } from "@/components/kentucky/pricing-disclaimer";
 
 /* ------------------------------------------------------------------ */
 /*  Animation                                                          */
@@ -67,7 +66,7 @@ export default function KentuckyOverview() {
             Kentucky Broadband Infrastructure
           </p>
           <h1 className="mt-3 max-w-3xl font-display text-4xl leading-[1.1] text-[color:var(--foreground)] md:text-5xl">
-            Map the gap. Close it.
+            Kentucky Broadband &amp; Satellite Planning
           </h1>
         </motion.div>
 
@@ -83,7 +82,7 @@ export default function KentuckyOverview() {
             <StatCard label="Facilities tracked" value={String(fSummary.total)} />
           </motion.div>
           <motion.div variants={fadeUp}>
-            <StatCard label="Without broadband" value={String(fSummary.unserved)} accent />
+            <StatCard label="Need coverage" value={String(fSummary.needsCoverage)} accent />
           </motion.div>
           <motion.div variants={fadeUp}>
             <StatCard label="Rural population" value={`${(KY_CONTEXT.ruralPopulation / 1e6).toFixed(1)}M`} />
@@ -126,16 +125,22 @@ export default function KentuckyOverview() {
             label="Healthcare Facility Coverage"
             stat={
               <>
-                <span className="text-[color:var(--accent)]">{fSummary.unserved}</span>
-                <span className="text-[color:var(--muted)]"> of {fSummary.total} offline</span>
+                <span className="text-[color:var(--accent)]">{fSummary.needsCoverage}</span>
+                <span className="text-[color:var(--muted)]"> of {fSummary.total} need coverage</span>
               </>
             }
           >
-            <div className="mt-4 space-y-1.5">
-              <FacilityBar label="Hospitals" served={fSummary.byType.hospital.served} unserved={fSummary.byType.hospital.unserved} />
-              <FacilityBar label="CAHs" served={fSummary.byType.cah.served} unserved={fSummary.byType.cah.unserved} />
-              <FacilityBar label="FQHCs" served={fSummary.byType.fqhc.served} unserved={fSummary.byType.fqhc.unserved} />
-              <FacilityBar label="RHCs" served={fSummary.byType.rhc.served} unserved={fSummary.byType.rhc.unserved} />
+            {/* Three-tier summary */}
+            <div className="mt-3 flex gap-3 text-center text-[10px]">
+              <div><span className="font-display text-lg font-semibold text-[color:var(--teal)]">{fSummary.served}</span><p className="text-[color:var(--muted)]">Served</p></div>
+              <div><span className="font-display text-lg font-semibold text-[color:#c49a2e]">{fSummary.underserved}</span><p className="text-[color:var(--muted)]">Underserved</p></div>
+              <div><span className="font-display text-lg font-semibold text-[color:var(--accent)]">{fSummary.unserved}</span><p className="text-[color:var(--muted)]">Unserved</p></div>
+            </div>
+            <div className="mt-3 space-y-1.5">
+              <FacilityBar label="Hospitals" served={fSummary.byType.hospital.served} underserved={fSummary.byType.hospital.underserved} unserved={fSummary.byType.hospital.unserved} />
+              <FacilityBar label="CAHs" served={fSummary.byType.cah.served} underserved={fSummary.byType.cah.underserved} unserved={fSummary.byType.cah.unserved} />
+              <FacilityBar label="FQHCs" served={fSummary.byType.fqhc.served} underserved={fSummary.byType.fqhc.underserved} unserved={fSummary.byType.fqhc.unserved} />
+              <FacilityBar label="RHCs" served={fSummary.byType.rhc.served} underserved={fSummary.byType.rhc.underserved} unserved={fSummary.byType.rhc.unserved} />
             </div>
           </PhaseCard>
         </motion.div>
@@ -152,7 +157,7 @@ export default function KentuckyOverview() {
                 <span className="text-sm font-normal text-[color:var(--muted)]"> year-one</span>
               </>
             }
-            info={`Deploy Starlink to ${fSummary.unserved} facilities + local Wi-Fi. ${phase2PctOfRhtp}% of RHTP allocation.`}
+            sub={`${fSummary.unserved} facilities · ${phase2PctOfRhtp}% of RHTP allocation`}
           >
             <div className="mt-4 space-y-2">
               <CostBreakdown
@@ -168,13 +173,6 @@ export default function KentuckyOverview() {
                 perUnit={COVERAGE_MODEL.communityDistributionModel.localDistributionCostPerSite}
                 total={fSummary.unserved * COVERAGE_MODEL.communityDistributionModel.localDistributionCostPerSite}
                 icon={<Radio className="h-3.5 w-3.5" />}
-              />
-              <PricingDisclaimer
-                discountPct={costs.discountPct}
-                planName={costs.planName}
-                retailHardware={costs.retailHardware}
-                retailMonthly={costs.retailMonthly}
-                compact
               />
             </div>
           </PhaseCard>
@@ -236,13 +234,13 @@ function BigPct({ value, label, sub, color }: { value: number; label: string; su
 }
 
 function PhaseCard({
-  phase, color, label, stat, info, clickable, children,
+  phase, color, label, stat, sub, clickable, children,
 }: {
   phase: number;
   color: string;
   label: string;
   stat: React.ReactNode;
-  info?: string;
+  sub?: string;
   clickable?: boolean;
   children?: React.ReactNode;
 }) {
@@ -253,35 +251,32 @@ function PhaseCard({
           <span className="text-xs font-bold text-white">{phase}</span>
         </div>
         <p className="text-xs font-medium uppercase tracking-wider text-[color:var(--foreground)]">{label}</p>
-        {info && (
-          <span title={info} className="ml-auto cursor-help text-[color:var(--muted)] hover:text-[color:var(--foreground)]">
-            <Info className="h-3.5 w-3.5" />
-          </span>
-        )}
       </div>
       <p className="mt-3 font-display text-2xl font-semibold text-[color:var(--foreground)]">{stat}</p>
+      {sub && <p className="mt-0.5 text-[10px] text-[color:var(--muted)]">{sub}</p>}
       {children}
     </div>
   );
 }
 
-function FacilityBar({ label, served, unserved }: { label: string; served: number; unserved: number }) {
-  const total = served + unserved;
+function FacilityBar({ label, served, underserved, unserved }: { label: string; served: number; underserved: number; unserved: number }) {
+  const total = served + underserved + unserved;
   const servedPct = total > 0 ? (served / total) * 100 : 0;
+  const underservedPct = total > 0 ? (underserved / total) * 100 : 0;
+  const unservedPct = total > 0 ? (unserved / total) * 100 : 0;
 
   return (
     <div>
       <div className="flex items-center justify-between text-xs">
         <span className="text-[color:var(--foreground)]">{label}</span>
         <span className="text-[10px] text-[color:var(--muted)]">
-          <Wifi className="mr-0.5 inline h-3 w-3 text-[color:var(--teal)]" />{served}
-          <span className="mx-1 text-[color:var(--line)]">/</span>
-          <WifiOff className="mr-0.5 inline h-3 w-3 text-[color:var(--accent)]" />{unserved}
+          {served}<span className="mx-0.5 text-[color:var(--line)]">/</span>{underserved}<span className="mx-0.5 text-[color:var(--line)]">/</span>{unserved}
         </span>
       </div>
       <div className="mt-0.5 flex h-1.5 overflow-hidden rounded-full bg-[color:#efe8db]">
-        <div className="h-full rounded-full bg-[color:var(--teal)]" style={{ width: `${servedPct}%` }} />
-        <div className="h-full bg-[color:var(--accent)]" style={{ width: `${100 - servedPct}%` }} />
+        <div className="h-full rounded-l-full bg-[color:var(--teal)]" style={{ width: `${servedPct}%` }} />
+        <div className="h-full bg-[color:#c49a2e]" style={{ width: `${underservedPct}%` }} />
+        <div className="h-full rounded-r-full bg-[color:var(--accent)]" style={{ width: `${unservedPct}%` }} />
       </div>
     </div>
   );
