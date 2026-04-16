@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   ChevronDown,
   ChevronUp,
+  Globe,
   Minus,
   Plus,
   RotateCcw,
@@ -32,7 +33,7 @@ import {
   KY_FACILITIES,
 } from "@/data/kentucky-facilities";
 import { KY_COUNTY_BROADBAND } from "@/data/kentucky-broadband-data";
-import { getBDCByFips } from "@/data/kentucky-broadband-availability";
+import { getBDCByFips, getKYBDCSummary, KY_COUNTY_BDC } from "@/data/kentucky-broadband-availability";
 
 /* ------------------------------------------------------------------ */
 /*  Lazy-load the Leaflet map (client-only, no SSR)                    */
@@ -87,7 +88,7 @@ export default function SatellitePlannerPage() {
   const [typeFilters, setTypeFilters] = useState<Record<FacilityType, boolean>>({
     hospital: true,
     cah: true,
-    fqhc: false, // off by default (663 sites can overwhelm)
+    fqhc: true,
     rhc: true,
   });
   const [broadbandFilter, setBroadbandFilter] = useState<"all" | BroadbandStatus | "needs-coverage">("all");
@@ -564,6 +565,9 @@ export default function SatellitePlannerPage() {
             </div>
           </div>
 
+          {/* Statewide Coverage Calculator */}
+          <StatewideCalculator coverageRadius={coverageRadius} yearOnePerUnit={yearOnePerUnit} localEquipCost={localEquipCost} />
+
           {/* Manual Terminals List */}
           {manualTerminals.length > 0 && (
             <div className="surface-card max-h-48 space-y-1 overflow-y-auto rounded-[1.6rem] border p-4">
@@ -588,6 +592,110 @@ export default function SatellitePlannerPage() {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Statewide Coverage Calculator                                      */
+/* ------------------------------------------------------------------ */
+
+const AVG_KY_COUNTY_SQ_MI = 340;
+
+function StatewideCalculator({
+  coverageRadius,
+  yearOnePerUnit,
+  localEquipCost,
+}: {
+  coverageRadius: number;
+  yearOnePerUnit: number;
+  localEquipCost: number;
+}) {
+  const [mode, setMode] = useState<"unserved" | "all-bead">("unserved");
+  const bdcSummary = getKYBDCSummary();
+
+  const targetBSLs = mode === "unserved" ? bdcSummary.unserved : bdcSummary.beadEligible;
+  const targetLabel = mode === "unserved" ? "Unserved" : "BEAD-eligible";
+
+  // Calculate terminals needed per county based on local BSL density
+  const terminalsNeeded = useMemo(() => {
+    const coverageAreaSqMi = Math.PI * coverageRadius * coverageRadius;
+    let total = 0;
+    for (const county of KY_COUNTY_BDC) {
+      const countyBSLs = mode === "unserved" ? county.unservedBSLs : (county.underservedBSLs + county.unservedBSLs);
+      if (countyBSLs === 0) continue;
+      // BSLs per terminal: scale by coverage area / county area
+      const bslsPerTerminal = Math.max(1, Math.round(countyBSLs * (coverageAreaSqMi / AVG_KY_COUNTY_SQ_MI)));
+      total += Math.ceil(countyBSLs / bslsPerTerminal);
+    }
+    return total;
+  }, [mode, coverageRadius]);
+
+  const totalCost = terminalsNeeded * (yearOnePerUnit + localEquipCost);
+
+  return (
+    <div className="surface-card rounded-[1.6rem] border p-5">
+      <div className="flex items-center gap-2">
+        <Globe className="h-4 w-4 text-[color:var(--muted)]" />
+        <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
+          Statewide coverage
+        </p>
+      </div>
+
+      {/* Toggle: Unserved only vs All BEAD-eligible */}
+      <div className="mt-3 flex overflow-hidden rounded-lg border border-[color:var(--line)]">
+        <button
+          type="button"
+          onClick={() => setMode("unserved")}
+          className={`flex-1 px-2 py-1.5 text-[10px] font-medium transition-colors ${
+            mode === "unserved"
+              ? "bg-[color:var(--foreground)] text-white"
+              : "text-[color:var(--muted)]"
+          }`}
+        >
+          Unserved only
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("all-bead")}
+          className={`flex-1 px-2 py-1.5 text-[10px] font-medium transition-colors ${
+            mode === "all-bead"
+              ? "bg-[color:var(--foreground)] text-white"
+              : "text-[color:var(--muted)]"
+          }`}
+        >
+          All BEAD-eligible
+        </button>
+      </div>
+
+      {/* Big numbers */}
+      <div className="mt-4 grid grid-cols-2 gap-3 text-center">
+        <div>
+          <p className="font-display text-2xl font-semibold text-[color:var(--accent)]">
+            {targetBSLs.toLocaleString()}
+          </p>
+          <p className="text-[10px] text-[color:var(--muted)]">{targetLabel} BSLs</p>
+        </div>
+        <div>
+          <p className="font-display text-2xl font-semibold text-[color:var(--foreground)]">
+            {terminalsNeeded.toLocaleString()}
+          </p>
+          <p className="text-[10px] text-[color:var(--muted)]">Terminals needed</p>
+        </div>
+      </div>
+
+      {/* Cost estimate */}
+      <div className="mt-3 rounded-xl bg-[color:var(--surface-soft)] p-3">
+        <div className="flex items-baseline justify-between">
+          <span className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">Est. year-one cost</span>
+          <span className="font-display text-lg font-semibold text-[color:var(--foreground)]">
+            ${totalCost.toLocaleString()}
+          </span>
+        </div>
+        <p className="mt-1 text-[10px] text-[color:var(--muted)]">
+          {terminalsNeeded.toLocaleString()} terminals × ${(yearOnePerUnit + localEquipCost).toLocaleString()}/unit · {coverageRadius}-mi radius
+        </p>
       </div>
     </div>
   );
