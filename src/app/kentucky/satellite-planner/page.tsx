@@ -597,7 +597,7 @@ export default function SatellitePlannerPage() {
             {/* RHTP context — enhanced budget bar */}
             <div className="mt-4 rounded-xl bg-[color:rgba(15,124,134,0.08)] p-3">
               <p className="text-xs font-medium" style={{ color: parseFloat(pctOfRhtp) > 50 ? "#c46128" : parseFloat(pctOfRhtp) > 25 ? "#c49a2e" : "#0f7c86" }}>
-                {pctOfRhtp}% of Kentucky&apos;s annual RHTP allocation
+                {pctOfRhtp}% of Kentucky&apos;s annual state allocation
               </p>
               <div className="relative mt-1.5 h-3 overflow-hidden rounded-full bg-[color:rgba(15,124,134,0.12)]">
                 {/* Threshold markers */}
@@ -678,7 +678,7 @@ export default function SatellitePlannerPage() {
                   <span className="font-display text-lg font-semibold text-[color:var(--foreground)]">${totalYearOneCost.toLocaleString()}</span> year-one
                 </span>
                 <span className="text-xs" style={{ color: parseFloat(pctOfRhtp) > 50 ? "#c46128" : "#0f7c86" }}>
-                  {pctOfRhtp}% of RHTP
+                  {pctOfRhtp}% of allocation
                 </span>
               </div>
               <button
@@ -715,7 +715,7 @@ function StatewideCalculator({
   const bdcSummary = getKYBDCSummary();
 
   const targetBSLs = mode === "unserved" ? bdcSummary.unserved : bdcSummary.beadEligible;
-  const targetLabel = mode === "unserved" ? "Unserved" : "BEAD-eligible";
+  const targetLabel = mode === "unserved" ? "No internet" : "Underserved + unserved";
 
   // Calculate terminals needed per county based on local BSL density
   const terminalsNeeded = useMemo(() => {
@@ -742,7 +742,7 @@ function StatewideCalculator({
         </p>
       </div>
 
-      {/* Toggle: Unserved only vs All BEAD-eligible */}
+      {/* Toggle: Unserved only vs All underserved + unserved */}
       <div className="mt-3 flex overflow-hidden rounded-lg border border-[color:var(--line)]">
         <button
           type="button"
@@ -753,7 +753,7 @@ function StatewideCalculator({
               : "text-[color:var(--muted)]"
           }`}
         >
-          Unserved only
+          No internet
         </button>
         <button
           type="button"
@@ -764,7 +764,7 @@ function StatewideCalculator({
               : "text-[color:var(--muted)]"
           }`}
         >
-          All BEAD-eligible
+          All gaps
         </button>
       </div>
 
@@ -774,7 +774,7 @@ function StatewideCalculator({
           <p className="font-display text-2xl font-semibold text-[color:var(--accent)]">
             {targetBSLs.toLocaleString()}
           </p>
-          <p className="text-[10px] text-[color:var(--muted)]">{targetLabel} BSLs</p>
+          <p className="text-[10px] text-[color:var(--muted)]">{targetLabel} locations</p>
         </div>
         <div>
           <p className="font-display text-2xl font-semibold text-[color:var(--foreground)]">

@@ -8,7 +8,7 @@ import {
   useMotionValue,
   useSpring,
 } from "framer-motion";
-import { ArrowRight, Radio, Satellite, Wifi, WifiOff, Zap } from "lucide-react";
+import { ArrowRight, Info, Radio, Satellite, Wifi, WifiOff, Zap } from "lucide-react";
 import Link from "next/link";
 
 import { COVERAGE_MODEL, KY_CONTEXT, KY_RHTP, STARLINK_PRICING } from "@/data/kentucky-config";
@@ -83,32 +83,56 @@ export default function KentuckyOverview() {
           className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4"
         >
           {[
-            { label: "RHTP / year", value: `$${Math.round(KY_RHTP.annualAllocation / 1e6)}M` },
-            { label: "Facilities tracked", value: String(fSummary.total) },
-            { label: "Need coverage", value: String(fSummary.needsCoverage), accent: true },
+            { label: "State allocation / year", value: `$${Math.round(KY_RHTP.annualAllocation / 1e6)}M`, tip: "Kentucky's annual Rural Health Transformation Program (RHTP) allocation from CMS. Funds telehealth, remote monitoring, and clinical AI." },
+            { label: "Facilities tracked", value: String(fSummary.total), tip: "Hospitals, critical access hospitals, federally qualified health centers, and rural health clinics across Kentucky." },
+            { label: "Need coverage", value: String(fSummary.needsCoverage), accent: true, tip: "Healthcare facilities classified as underserved or unserved — lacking reliable broadband for telehealth and electronic health records." },
             { label: "Rural population", value: `${(KY_CONTEXT.ruralPopulation / 1e6).toFixed(1)}M` },
           ].map((card, i) => (
             <motion.div key={card.label} variants={fadeUp}>
-              <AnimatedStatCard label={card.label} value={card.value} accent={card.accent} delay={i * 0.1} />
+              <AnimatedStatCard label={card.label} value={card.value} accent={card.accent} delay={i * 0.1} tip={card.tip} />
             </motion.div>
           ))}
         </motion.div>
       </motion.section>
 
-      {/* ── BDC Summary — scroll-revealed with count-up ───────── */}
+      {/* ── Statewide Broadband Coverage ─────────────────────── */}
       <ScrollReveal scaleFrom={0.94}>
         <div className="surface-card rounded-[2rem] p-6 md:p-8">
-          <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
-            Broadband availability
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
+              Statewide broadband coverage
+            </p>
+            <InfoTip text="Percentage of all homes and businesses in Kentucky where broadband internet at the given speed is available from at least one provider. Source: FCC Broadband Data Collection, December 2024." />
+          </div>
+          <p className="mt-1 text-[10px] text-[color:var(--muted)]">
+            {bdcSummary.totalBSLs.toLocaleString()} homes &amp; businesses across {bdcSummary.totalCounties} counties
           </p>
           <div className="mt-5 grid grid-cols-3 gap-4 text-center">
-            <BigPct value={bdcSummary.pctServed} label="Served" sub="100/20+ Mbps" color="#0f7c86" delay={0} />
-            <BigPct value={pctUnderserved} label="Underserved" sub="25/3 – 100/20" color="#c49a2e" delay={0.15} />
-            <BigPct value={pctUnserved} label="Unserved" sub="< 25/3 Mbps" color="#c46128" delay={0.3} />
+            <BigPct
+              value={bdcSummary.pctServed}
+              count={bdcSummary.served}
+              label="Served"
+              sub="Reliable broadband (100/20+ Mbps)"
+              color="#0f7c86"
+              delay={0}
+            />
+            <BigPct
+              value={pctUnderserved}
+              count={bdcSummary.underserved}
+              label="Underserved"
+              sub="Slow broadband (25/3 – 100/20 Mbps)"
+              color="#c49a2e"
+              delay={0.15}
+            />
+            <BigPct
+              value={pctUnserved}
+              count={bdcSummary.unserved}
+              label="Unserved"
+              sub="No reliable internet (< 25/3 Mbps)"
+              color="#c46128"
+              delay={0.3}
+            />
           </div>
-          <p className="mt-4 text-center text-[10px] text-[color:var(--muted)]">
-            FCC BDC Dec 2024 · {bdcSummary.totalBSLs.toLocaleString()} locations across {bdcSummary.totalCounties} counties
-          </p>
         </div>
       </ScrollReveal>
 
@@ -135,9 +159,9 @@ export default function KentuckyOverview() {
               </div>
               <div className="mt-3 space-y-1.5">
                 <FacilityBar label="Hospitals" served={fSummary.byType.hospital.served} underserved={fSummary.byType.hospital.underserved} unserved={fSummary.byType.hospital.unserved} delay={0} />
-                <FacilityBar label="CAHs" served={fSummary.byType.cah.served} underserved={fSummary.byType.cah.underserved} unserved={fSummary.byType.cah.unserved} delay={0.1} />
-                <FacilityBar label="FQHCs" served={fSummary.byType.fqhc.served} underserved={fSummary.byType.fqhc.underserved} unserved={fSummary.byType.fqhc.unserved} delay={0.2} />
-                <FacilityBar label="RHCs" served={fSummary.byType.rhc.served} underserved={fSummary.byType.rhc.underserved} unserved={fSummary.byType.rhc.unserved} delay={0.3} />
+                <FacilityBar label="Critical Access" served={fSummary.byType.cah.served} underserved={fSummary.byType.cah.underserved} unserved={fSummary.byType.cah.unserved} delay={0.1} />
+                <FacilityBar label="Health Centers" served={fSummary.byType.fqhc.served} underserved={fSummary.byType.fqhc.underserved} unserved={fSummary.byType.fqhc.unserved} delay={0.2} />
+                <FacilityBar label="Rural Clinics" served={fSummary.byType.rhc.served} underserved={fSummary.byType.rhc.underserved} unserved={fSummary.byType.rhc.unserved} delay={0.3} />
               </div>
             </PhaseCard>
           </TiltCard>
@@ -154,7 +178,7 @@ export default function KentuckyOverview() {
                   <span className="text-sm font-normal text-[color:var(--muted)]"> year-one</span>
                 </>
               }
-              sub={`${fSummary.unserved} facilities · ${phase2PctOfRhtp}% of RHTP allocation`}
+              sub={`${fSummary.unserved} facilities · ${phase2PctOfRhtp}% of annual state allocation`}
             >
               <div className="mt-4 space-y-2">
                 <CostBreakdown label="Starlink terminals" count={fSummary.unserved} perUnit={costs.yearOneTotalPerUnit} total={fSummary.unserved * costs.yearOneTotalPerUnit} icon={<Satellite className="h-3.5 w-3.5" />} />
@@ -163,24 +187,34 @@ export default function KentuckyOverview() {
             </PhaseCard>
           </TiltCard>
 
-          {/* Phase 3: Full Household Coverage */}
+          {/* Phase 3: Remaining Coverage Gap */}
           <TiltCard>
             <Link href="/kentucky/satellite-planner" className="block h-full">
               <PhaseCard
                 phase={3}
                 color="var(--accent)"
-                label="Full Household Coverage"
+                label="Remaining Coverage Gap"
                 stat={
                   <>
-                    <span>{bdcSummary.beadEligible.toLocaleString()}</span>
-                    <span className="text-sm font-normal text-[color:var(--muted)]"> BSLs remaining</span>
+                    <span>{(bdcSummary.underserved + bdcSummary.unserved).toLocaleString()}</span>
+                    <span className="text-sm font-normal text-[color:var(--muted)]"> locations without reliable internet</span>
                   </>
                 }
                 clickable
               >
-                <div className="mt-4 flex items-center gap-2 text-sm font-medium text-[color:var(--foreground)]">
-                  Open Satellite Planner
-                  <ArrowRight className="h-4 w-4" />
+                <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+                  <div className="rounded-lg bg-[color:var(--surface-soft)] p-2">
+                    <p className="font-display text-lg font-semibold text-[color:#c49a2e]">{bdcSummary.underserved.toLocaleString()}</p>
+                    <p className="text-[color:var(--muted)]">Slow internet</p>
+                  </div>
+                  <div className="rounded-lg bg-[color:var(--surface-soft)] p-2">
+                    <p className="font-display text-lg font-semibold text-[color:var(--accent)]">{bdcSummary.unserved.toLocaleString()}</p>
+                    <p className="text-[color:var(--muted)]">No internet</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center gap-2 rounded-full bg-[color:var(--foreground)] px-4 py-2 text-xs font-medium text-white transition-transform group-hover:translate-x-1">
+                  Plan satellite coverage
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </PhaseCard>
             </Link>
@@ -201,11 +235,14 @@ export default function KentuckyOverview() {
 /* ------------------------------------------------------------------ */
 
 /** StatCard with animated count-up */
-function AnimatedStatCard({ label, value, accent, delay = 0 }: { label: string; value: string; accent?: boolean; delay?: number }) {
+function AnimatedStatCard({ label, value, accent, delay = 0, tip }: { label: string; value: string; accent?: boolean; delay?: number; tip?: string }) {
   const { prefix, number, suffix } = parseStatValue(value);
   return (
     <div className="rounded-[1.4rem] border border-[color:var(--line)] bg-white/75 p-4">
-      <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">{label}</p>
+      <p className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-[color:var(--muted)]">
+        {label}
+        {tip && <InfoTip text={tip} />}
+      </p>
       <p className={`mt-1 font-display text-3xl ${accent ? "text-[color:var(--accent)]" : "text-[color:var(--foreground)]"}`}>
         {prefix}
         <AnimatedNumber
@@ -219,16 +256,30 @@ function AnimatedStatCard({ label, value, accent, delay = 0 }: { label: string; 
   );
 }
 
-/** BDC percentage with animated count-up */
-function BigPct({ value, label, sub, color, delay = 0 }: { value: number; label: string; sub: string; color: string; delay?: number }) {
+/** BDC percentage with animated count-up and real count */
+function BigPct({ value, count, label, sub, color, delay = 0 }: { value: number; count: number; label: string; sub: string; color: string; delay?: number }) {
   return (
     <div>
       <p className="font-display text-4xl font-semibold md:text-5xl" style={{ color }}>
         <AnimatedNumber value={value} delay={delay} formatFn={(n) => n.toFixed(1)} />%
       </p>
       <p className="mt-1 text-sm font-medium text-[color:var(--foreground)]">{label}</p>
-      <p className="text-[10px] text-[color:var(--muted)]">{sub}</p>
+      <p className="text-[10px] font-medium" style={{ color }}>{count.toLocaleString()} locations</p>
+      <p className="mt-0.5 text-[10px] text-[color:var(--muted)]">{sub}</p>
     </div>
+  );
+}
+
+/** Inline info tooltip — hover/tap to reveal explanation */
+function InfoTip({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex cursor-help">
+      <Info className="h-3.5 w-3.5 text-[color:var(--muted)] transition-colors group-hover:text-[color:var(--foreground)]" />
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-64 -translate-x-1/2 rounded-xl bg-[color:var(--foreground)] px-3 py-2 text-[11px] leading-4 text-white opacity-0 shadow-lg transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
+        {text}
+        <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[color:var(--foreground)]" />
+      </span>
+    </span>
   );
 }
 
