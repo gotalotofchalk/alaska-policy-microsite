@@ -119,13 +119,20 @@ export function SiteHeader() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "rounded-full px-3 py-2 text-sm whitespace-nowrap transition-colors",
+                    "relative rounded-full px-3 py-2 text-sm whitespace-nowrap transition-colors",
                     active
-                      ? "bg-[color:var(--foreground)] text-white shadow-[0_10px_24px_rgba(16,34,53,0.11)]"
+                      ? "text-white"
                       : "text-[color:var(--muted)] hover:text-[color:var(--foreground)]",
                   )}
                 >
-                  {item.label}
+                  {active && (
+                    <motion.div
+                      layoutId="nav-pill"
+                      className="absolute inset-0 rounded-full bg-[color:var(--foreground)] shadow-[0_10px_24px_rgba(16,34,53,0.11)]"
+                      transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                    />
+                  )}
+                  <span className="relative z-10">{item.label}</span>
                 </Link>
               );
             })}

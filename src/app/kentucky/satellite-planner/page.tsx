@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion, useInView } from "framer-motion";
 import {
   ChevronDown,
   ChevronUp,
@@ -16,7 +16,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import {
   COVERAGE_MODEL,
@@ -94,6 +94,10 @@ export default function SatellitePlannerPage() {
   const [broadbandFilter, setBroadbandFilter] = useState<"all" | BroadbandStatus | "needs-coverage">("all");
   const [showFilters, setShowFilters] = useState(true);
   const [tierToast, setTierToast] = useState<string | null>(null);
+  const [placementFeedback, setPlacementFeedback] = useState<{ x: number; y: number; hh: number } | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const costCardRef = useRef<HTMLDivElement>(null);
+  const costCardInView = useInView(costCardRef, { margin: "-100px" });
 
   const toggleType = (type: FacilityType) =>
     setTypeFilters((prev) => ({ ...prev, [type]: !prev[type] }));
@@ -204,6 +208,16 @@ export default function SatellitePlannerPage() {
           facilitiesConnected: nearby.map((f) => f.id),
         },
       ]);
+      // Floating feedback — approximate pixel position from map container
+      if (mapContainerRef.current) {
+        const rect = mapContainerRef.current.getBoundingClientRect();
+        // Use a rough lat/lng → pixel approximation for the feedback position
+        // KY bounds: lat 36.5-39.1, lng -89.6 to -81.9
+        const px = ((lng - (-89.6)) / ((-81.9) - (-89.6))) * rect.width;
+        const py = ((39.1 - lat) / (39.1 - 36.5)) * rect.height;
+        setPlacementFeedback({ x: px, y: py, hh });
+        setTimeout(() => setPlacementFeedback(null), 1800);
+      }
       // Tier upgrade toast
       if (nearestForCounty) {
         const bdc = getBDCByFips(nearestForCounty.countyFips);
@@ -267,7 +281,7 @@ export default function SatellitePlannerPage() {
       {/* ── Main Layout: Map + Sidebar ────────────────────── */}
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
         {/* Map */}
-        <div className="relative h-[520px] overflow-hidden rounded-[1.8rem] border border-[color:var(--line)] md:h-[620px]">
+        <div ref={mapContainerRef} className="relative h-[520px] overflow-hidden rounded-[1.8rem] border border-[color:var(--line)] md:h-[620px]">
           <SatelliteMap
             facilities={filteredFacilities}
             terminals={allTerminals}
@@ -286,6 +300,35 @@ export default function SatellitePlannerPage() {
               {tierToast}
             </motion.div>
           )}
+
+          {/* Placement feedback — ripple + floating number */}
+          <AnimatePresence>
+            {placementFeedback && (
+              <>
+                {/* Ripple rings */}
+                {[0, 1, 2].map((ring) => (
+                  <motion.div
+                    key={`ripple-${ring}`}
+                    className="pointer-events-none absolute z-[1050] rounded-full border-2 border-[color:#6b5a8a]"
+                    style={{ left: placementFeedback.x, top: placementFeedback.y, translate: "-50% -50%" }}
+                    initial={{ width: 0, height: 0, opacity: 0.5 }}
+                    animate={{ width: 120, height: 120, opacity: 0 }}
+                    transition={{ duration: 0.8, delay: ring * 0.1, ease: "easeOut" }}
+                  />
+                ))}
+                {/* Floating household count */}
+                <motion.div
+                  className="pointer-events-none absolute z-[1050] whitespace-nowrap rounded-full bg-[color:var(--foreground)] px-3 py-1 text-xs font-semibold text-white shadow-lg"
+                  style={{ left: placementFeedback.x, top: placementFeedback.y, translate: "-50% -100%" }}
+                  initial={{ opacity: 1, y: 0 }}
+                  animate={{ opacity: 0, y: -40 }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                >
+                  +{placementFeedback.hh} households
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
 
           {/* Map overlay controls */}
           <div className="absolute left-4 top-4 z-[1000] flex flex-col gap-2">
@@ -470,7 +513,7 @@ export default function SatellitePlannerPage() {
           </div>
 
           {/* Cost Calculator */}
-          <div className="surface-card rounded-[1.6rem] border p-5">
+          <div ref={costCardRef} className="surface-card rounded-[1.6rem] border p-5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium uppercase tracking-[0.24em] text-[color:var(--foreground)]">
                 Cost estimate
@@ -551,16 +594,37 @@ export default function SatellitePlannerPage() {
               </div>
             </div>
 
-            {/* RHTP context */}
+            {/* RHTP context — enhanced budget bar */}
             <div className="mt-4 rounded-xl bg-[color:rgba(15,124,134,0.08)] p-3">
-              <p className="text-xs text-[color:var(--teal)]">
+              <p className="text-xs font-medium" style={{ color: parseFloat(pctOfRhtp) > 50 ? "#c46128" : parseFloat(pctOfRhtp) > 25 ? "#c49a2e" : "#0f7c86" }}>
                 {pctOfRhtp}% of Kentucky&apos;s annual RHTP allocation
               </p>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[color:rgba(15,124,134,0.15)]">
-                <div
-                  className="h-full rounded-full bg-[color:var(--teal)] transition-all duration-300"
-                  style={{ width: `${Math.min(parseFloat(pctOfRhtp), 100)}%` }}
+              <div className="relative mt-1.5 h-3 overflow-hidden rounded-full bg-[color:rgba(15,124,134,0.12)]">
+                {/* Threshold markers */}
+                {[25, 50, 100].map((t) => (
+                  <div key={t} className="absolute top-0 h-full" style={{ left: `${t}%` }}>
+                    <div className="h-full w-px border-l border-dashed border-[color:rgba(16,34,53,0.15)]" />
+                  </div>
+                ))}
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{
+                    background: parseFloat(pctOfRhtp) > 50 ? "#c46128" : parseFloat(pctOfRhtp) > 25 ? "#c49a2e" : "#0f7c86",
+                  }}
+                  animate={{
+                    width: `${Math.min(parseFloat(pctOfRhtp), 100)}%`,
+                    boxShadow: parseFloat(pctOfRhtp) > 100
+                      ? ["0 0 0 0 rgba(196,97,42,0)", "0 0 8px 4px rgba(196,97,42,0.3)"]
+                      : "none",
+                  }}
+                  transition={{
+                    width: { type: "spring", stiffness: 100, damping: 20 },
+                    boxShadow: { repeat: Infinity, repeatType: "reverse", duration: 1 },
+                  }}
                 />
+              </div>
+              <div className="mt-1 flex justify-between text-[8px] text-[color:var(--muted)]">
+                <span>0%</span><span>25%</span><span>50%</span><span>100%</span>
               </div>
             </div>
           </div>
@@ -593,6 +657,41 @@ export default function SatellitePlannerPage() {
           )}
         </div>
       </div>
+
+      {/* ── Sticky Cost Bar — appears when cost calculator scrolls out ── */}
+      <AnimatePresence>
+        {totalTerminals > 0 && !costCardInView && (
+          <motion.div
+            initial={{ y: 60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 60, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed bottom-0 left-0 right-0 z-[2000] border-t border-[color:var(--line)] bg-[color:rgba(245,241,233,0.85)] px-6 py-3 backdrop-blur-xl"
+            style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}
+          >
+            <div className="mx-auto flex max-w-[100rem] items-center justify-between gap-4">
+              <div className="flex items-center gap-6 text-sm">
+                <span className="text-[color:var(--muted)]">
+                  <span className="font-display text-lg font-semibold text-[color:var(--foreground)]">{totalTerminals}</span> terminals
+                </span>
+                <span className="text-[color:var(--muted)]">
+                  <span className="font-display text-lg font-semibold text-[color:var(--foreground)]">${totalYearOneCost.toLocaleString()}</span> year-one
+                </span>
+                <span className="text-xs" style={{ color: parseFloat(pctOfRhtp) > 50 ? "#c46128" : "#0f7c86" }}>
+                  {pctOfRhtp}% of RHTP
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => costCardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                className="rounded-full bg-[color:var(--foreground)] px-4 py-1.5 text-xs text-white transition-colors hover:bg-[color:#223a54]"
+              >
+                Cost details
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

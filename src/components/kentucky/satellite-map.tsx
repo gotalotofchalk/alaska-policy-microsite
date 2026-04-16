@@ -15,6 +15,7 @@
 
 import { Circle, GeoJSON, MapContainer, Marker, Popup, TileLayer, useMapEvents } from "react-leaflet";
 import L from "leaflet";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 import type { KYFacility, BroadbandStatus } from "@/data/kentucky-config";
@@ -327,21 +328,26 @@ export default function SatelliteMapComponent({
 
     {/* ── Bottom-right: Availability / Adoption toggle + legend ── */}
     <div className="absolute bottom-3 right-3 z-[1000] flex flex-col items-end gap-2">
-      {/* Toggle */}
-      <div className="flex overflow-hidden rounded-lg bg-white/95 shadow-lg backdrop-blur-sm">
+      {/* Toggle — iOS-style segmented control */}
+      <div className="relative flex overflow-hidden rounded-lg bg-white/95 shadow-lg backdrop-blur-sm">
         {(["availability", "adoption"] as ChoroplethMode[]).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => setChoroplethMode(m)}
-            className={`px-3 py-1.5 text-[10px] font-medium transition-colors ${
-              choroplethMode === m
-                ? "bg-[color:var(--foreground)] text-white"
-                : "text-[color:var(--muted)] hover:bg-[color:var(--surface-soft)]"
+            className={`relative z-10 px-3 py-1.5 text-[10px] font-medium transition-colors ${
+              choroplethMode === m ? "text-white" : "text-[color:var(--muted)]"
             }`}
             title={m === "availability" ? "FCC BDC supply-side (100/20 Mbps)" : "Census ACS demand-side (subscriptions)"}
           >
-            {m === "availability" ? "Availability" : "Adoption"}
+            {choroplethMode === m && (
+              <motion.div
+                layoutId="choropleth-toggle-bg"
+                className="absolute inset-0 rounded-lg bg-[color:var(--foreground)]"
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10">{m === "availability" ? "Availability" : "Adoption"}</span>
           </button>
         ))}
       </div>
