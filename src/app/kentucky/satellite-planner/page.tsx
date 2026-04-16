@@ -22,6 +22,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import {
@@ -278,6 +279,14 @@ export default function SatellitePlannerPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Breadcrumb */}
+      <Link
+        href="/kentucky"
+        className="inline-flex w-fit items-center gap-1 text-xs text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
+      >
+        &larr; Kentucky
+      </Link>
+
       {/* Hero */}
       <motion.div variants={fadeUp} initial="hidden" animate="show">
         <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[color:var(--muted)]">
