@@ -71,7 +71,6 @@ export default function KentuckyPage() {
         <PyramidTabs
           config={KENTUCKY_PYRAMID}
           defaultTab="infrastructure"
-          defaultOpenSections={["broadband_satellite"]}
         />
       </motion.div>
 

@@ -293,7 +293,7 @@ export default function SatellitePlannerPage() {
           Kentucky Broadband Infrastructure
         </p>
         <h1 className="mt-2 font-display text-3xl text-[color:var(--foreground)] md:text-4xl">
-          Satellite Terminal Planner
+          Broadband Map
         </h1>
         <p className="mt-2 text-sm text-[color:var(--muted)]">
           Click the map to place terminals. Each extends Wi-Fi to a {coverageRadius}-mile radius. Auto-placed at underserved and unserved facilities.

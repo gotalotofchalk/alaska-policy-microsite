@@ -50,7 +50,7 @@ export function SiteFooter() {
             </Link>
             {isKentucky && (
               <Link href="/kentucky/satellite-planner" className="rounded-full border border-white/12 px-3 py-1 hover:bg-white/8">
-                Satellite Planner
+                Broadband Map
               </Link>
             )}
           </div>

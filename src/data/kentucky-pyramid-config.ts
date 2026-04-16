@@ -34,10 +34,10 @@ export const KENTUCKY_PYRAMID: StatePyramidConfig = {
     {
       category: "broadband_satellite",
       label: "Broadband & Satellite",
-      statusSummary: `${pctUnserved}% unserved · ${facilitySummary.total} facilities tracked · Satellite planner available`,
+      statusSummary: `${pctUnserved}% unserved · ${facilitySummary.total} facilities tracked · Broadband Map available`,
       hasInteractiveTool: true,
       toolRoute: "/kentucky/satellite-planner",
-      toolLabel: "Open Satellite Planner",
+      toolLabel: "Open Broadband Map",
       content: "broadband",
     },
     {
