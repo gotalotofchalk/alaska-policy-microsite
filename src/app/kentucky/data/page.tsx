@@ -64,7 +64,7 @@ function DatasetCard({
   children: React.ReactNode;
 }) {
   return (
-    <motion.section variants={fadeUp} className="surface-card rounded-[1.6rem] border p-6 md:p-8">
+    <motion.section variants={fadeUp} className="surface-card rounded-[1.6rem] border p-6 transition-shadow hover:shadow-lg md:p-8">
       <div className="flex items-start gap-3">
         <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[color:var(--surface-soft)] text-[color:var(--muted)]">
           {icon}

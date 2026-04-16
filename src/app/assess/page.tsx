@@ -9,7 +9,7 @@ export default function AssessPage() {
   const regions = ALASKA_CONFIG.regions;
   return (
     <>
-      <PageHero eyebrow="Regional Assessment" title="Severity, capacity, readiness, and tier classification for each Alaska region." lede="Each region is scored across three domains and classified as Green (fast-start) or Red (build-first). Drill into any region to see the deficit breakdown and recommended portfolio." compact />
+      <PageHero eyebrow="Regional Assessment" title="Severity, capacity, readiness, and tier classification." compact />
       <Reveal>
         <section className="grid gap-4 lg:grid-cols-2">
           {regions.map((region) => {

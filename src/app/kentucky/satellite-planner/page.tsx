@@ -4,10 +4,6 @@ import { motion } from "framer-motion";
 import {
   ChevronDown,
   ChevronUp,
-  DollarSign,
-  Download,
-  Eye,
-  EyeOff,
   Info,
   Minus,
   Plus,
@@ -36,10 +32,8 @@ import {
   getKYFacilitySummary,
   KY_FACILITIES,
 } from "@/data/kentucky-facilities";
-import {
-  getKYBroadbandSummary,
-  KY_COUNTY_BROADBAND,
-} from "@/data/kentucky-broadband-data";
+import { KY_COUNTY_BROADBAND } from "@/data/kentucky-broadband-data";
+import { getBDCByFips } from "@/data/kentucky-broadband-availability";
 
 /* ------------------------------------------------------------------ */
 /*  Lazy-load the Leaflet map (client-only, no SSR)                    */
@@ -89,7 +83,6 @@ const BROADBAND_STATUS_LABELS: Record<BroadbandStatus, string> = {
 
 export default function SatellitePlannerPage() {
   const fSummary = getKYFacilitySummary();
-  const bSummary = getKYBroadbandSummary();
 
   /* ── Facility filters ────────────────────────────────────── */
   const [typeFilters, setTypeFilters] = useState<Record<FacilityType, boolean>>({
@@ -100,6 +93,7 @@ export default function SatellitePlannerPage() {
   });
   const [broadbandFilter, setBroadbandFilter] = useState<"all" | BroadbandStatus | "needs-coverage">("all");
   const [showFilters, setShowFilters] = useState(true);
+  const [tierToast, setTierToast] = useState<string | null>(null);
 
   const toggleType = (type: FacilityType) =>
     setTypeFilters((prev) => ({ ...prev, [type]: !prev[type] }));
@@ -191,17 +185,40 @@ export default function SatellitePlannerPage() {
           haversineDistMiles(lat, lng, f.lat, f.lng) <= coverageRadius,
       );
       const hh = estimateHouseholdsNearCoords(lat, lng, coverageRadius);
+      // Find nearest facility for county name
+      const nearestForCounty = findNearestFacility(lat, lng);
+      const countyLabel = nearestForCounty?.county ?? "";
+      const termLabel = nearby.length > 0
+        ? `Near ${nearby[0].name}`
+        : countyLabel
+          ? `${countyLabel} County (${lat.toFixed(3)}, ${lng.toFixed(3)})`
+          : `Manual (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
       setManualTerminals((prev) => [
         ...prev,
         {
           id,
           lat,
           lng,
-          label: nearby.length > 0 ? `Near ${nearby[0].name}` : `Manual (${lat.toFixed(3)}, ${lng.toFixed(3)})`,
+          label: termLabel,
           householdsReached: hh,
           facilitiesConnected: nearby.map((f) => f.id),
         },
       ]);
+      // Tier upgrade toast
+      if (nearestForCounty) {
+        const bdc = getBDCByFips(nearestForCounty.countyFips);
+        if (bdc) {
+          const oldTier = bdc.pctServed >= 80 ? "Served" : bdc.pctServed >= 25 ? "Underserved" : "Unserved";
+          const coverageAreaSqMi = Math.PI * coverageRadius * coverageRadius;
+          const bslsUpgraded = Math.round(bdc.unservedBSLs * (coverageAreaSqMi / 340));
+          const newServedPct = Math.min(100, bdc.pctServed + (bslsUpgraded / bdc.totalBSLs) * 100);
+          const newTier = newServedPct >= 80 ? "Served" : newServedPct >= 25 ? "Underserved" : "Unserved";
+          if (newTier !== oldTier) {
+            setTierToast(`${nearestForCounty.county} County: ${oldTier} → ${newTier}`);
+            setTimeout(() => setTierToast(null), 4000);
+          }
+        }
+      }
     },
     [coverageRadius],
   );
@@ -235,16 +252,21 @@ export default function SatellitePlannerPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Hero */}
-      <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex items-center gap-2">
-        <h1 className="font-display text-2xl text-[color:var(--foreground)] md:text-3xl">
-          Place terminals. Model coverage and cost.
-        </h1>
-        <span
-          title={`Click the map to place Starlink terminals. Each extends Wi-Fi to a ${coverageRadius}-mile radius. Terminals auto-placed at underserved/unserved facilities.`}
-          className="cursor-help text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-        >
-          <Info className="h-4 w-4" />
-        </span>
+      <motion.div variants={fadeUp} initial="hidden" animate="show">
+        <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[color:var(--muted)]">
+          Kentucky Satellite Planner
+        </p>
+        <div className="mt-2 flex items-center gap-2">
+          <h1 className="font-display text-3xl text-[color:var(--foreground)] md:text-4xl">
+            Place. Model. Budget.
+          </h1>
+          <span
+            title={`Click the map to place Starlink terminals. Each extends Wi-Fi to a ${coverageRadius}-mile radius. Terminals auto-placed at underserved/unserved facilities.`}
+            className="cursor-help text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
+          >
+            <Info className="h-4.5 w-4.5" />
+          </span>
+        </div>
       </motion.div>
 
       {/* ── Main Layout: Map + Sidebar ────────────────────── */}
@@ -257,6 +279,18 @@ export default function SatellitePlannerPage() {
             onMapClick={handleMapClick}
             coverageRadiusMiles={coverageRadius}
           />
+
+          {/* Tier upgrade toast */}
+          {tierToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="absolute left-1/2 top-4 z-[1100] -translate-x-1/2 rounded-full bg-[color:var(--teal)] px-4 py-2 text-xs font-semibold text-white shadow-lg"
+            >
+              {tierToast}
+            </motion.div>
+          )}
 
           {/* Map overlay controls */}
           <div className="absolute left-4 top-4 z-[1000] flex flex-col gap-2">
@@ -293,7 +327,7 @@ export default function SatellitePlannerPage() {
             >
               <span className="flex items-center gap-1.5">
                 <Sliders className="h-3 w-3" />
-                Map Filters
+                Filters
                 <span className="font-normal normal-case tracking-normal text-[color:var(--muted)]">
                   ({filteredFacilities.length} visible)
                 </span>
@@ -395,20 +429,21 @@ export default function SatellitePlannerPage() {
             <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
               Coverage impact
             </p>
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-4">
               <SidebarStat
-                icon={<Satellite className="h-4 w-4" />}
-                label="Terminals deployed"
+                icon={<Satellite className="h-5 w-5" />}
+                label="Terminals"
                 value={totalTerminals}
               />
               <SidebarStat
-                icon={<Wifi className="h-4 w-4" />}
+                icon={<Wifi className="h-5 w-5" />}
                 label="Facilities connected"
-                value={`${facilitiesConnected} / ${filteredNeedsCoverage.length} need coverage`}
+                value={facilitiesConnected}
+                sub={`of ${filteredNeedsCoverage.length} needing coverage`}
               />
               <SidebarStat
-                icon={<Users className="h-4 w-4" />}
-                label="Est. households reached"
+                icon={<Users className="h-5 w-5" />}
+                label="Households reached"
                 value={householdsReached.toLocaleString()}
               />
             </div>
@@ -442,19 +477,20 @@ export default function SatellitePlannerPage() {
           {/* Cost Calculator */}
           <div className="surface-card rounded-[1.6rem] border p-5">
             <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
+              <p className="text-sm font-medium uppercase tracking-[0.24em] text-[color:var(--foreground)]">
                 Cost estimate
               </p>
               <button
                 type="button"
                 onClick={() => setShowSettings((p) => !p)}
-                className={`rounded-full p-1.5 transition-colors ${
+                title="Adjust pricing assumptions"
+                className={`rounded-full p-2 transition-all ${
                   showSettings
                     ? "bg-[color:var(--foreground)] text-white"
-                    : "bg-[color:var(--surface-soft)] text-[color:var(--muted)]"
+                    : "bg-[color:var(--surface-soft)] text-[color:var(--muted)] hover:bg-[color:var(--foreground)] hover:text-white"
                 }`}
               >
-                <Settings2 className="h-3.5 w-3.5" />
+                <Settings2 className="h-4 w-4" />
               </button>
             </div>
 
@@ -567,15 +603,16 @@ export default function SatellitePlannerPage() {
 /*  Sub-components                                                     */
 /* ------------------------------------------------------------------ */
 
-function SidebarStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
+function SidebarStat({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string | number; sub?: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[color:var(--surface-soft)] text-[color:var(--muted)]">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--surface-soft)] text-[color:var(--muted)]">
         {icon}
       </div>
       <div>
         <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">{label}</p>
-        <p className="font-display text-lg font-semibold text-[color:var(--foreground)]">{typeof value === "number" ? value.toLocaleString() : value}</p>
+        <p className="font-display text-2xl font-semibold leading-tight text-[color:var(--foreground)]">{typeof value === "number" ? value.toLocaleString() : value}</p>
+        {sub && <p className="text-[10px] text-[color:var(--muted)]">{sub}</p>}
       </div>
     </div>
   );
@@ -664,14 +701,18 @@ function estimateHouseholdsNear(f: KYFacility): number {
   return Math.round(unservedDensity * 500);
 }
 
-function estimateHouseholdsNearCoords(lat: number, lng: number, radiusMiles: number): number {
-  // Find the nearest facility to determine which county we're in
+function findNearestFacility(lat: number, lng: number): KYFacility | null {
   let nearest: KYFacility | null = null;
   let minDist = Infinity;
   for (const f of KY_FACILITIES) {
     const d = haversineDistMiles(lat, lng, f.lat, f.lng);
     if (d < minDist) { minDist = d; nearest = f; }
   }
+  return nearest;
+}
+
+function estimateHouseholdsNearCoords(lat: number, lng: number, radiusMiles: number): number {
+  const nearest = findNearestFacility(lat, lng);
   if (!nearest) return 0;
   const county = KY_COUNTY_BROADBAND.find((c) => c.fips === nearest!.countyFips);
   if (!county) return 0;

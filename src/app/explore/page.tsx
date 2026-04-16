@@ -20,8 +20,7 @@ export default function ExplorePage() {
     <>
       <PageHero
         eyebrow="Explore"
-        title="Seven Alaska regions, framed as a rollout decision instead of a data portal."
-        lede="The explorer keeps only the signals that matter for sequencing: burden, screening gap, provider pressure, and readiness."
+        title="Seven Alaska regions, framed as a rollout decision."
         compact
       />
 

@@ -9,7 +9,7 @@ export function PageHero({
 }: {
   eyebrow: string;
   title: string;
-  lede: string;
+  lede?: string;
   children?: ReactNode;
   compact?: boolean;
 }) {
@@ -31,13 +31,15 @@ export function PageHero({
         >
           {title}
         </h1>
-        <p
-          className={`text-base text-[color:var(--muted)] ${
-            compact ? "max-w-[34rem] leading-7 md:text-[1rem]" : "max-w-2xl leading-8 md:text-[1.05rem]"
-          }`}
-        >
-          {lede}
-        </p>
+        {lede && (
+          <p
+            className={`text-base text-[color:var(--muted)] ${
+              compact ? "max-w-[34rem] leading-7 md:text-[1rem]" : "max-w-2xl leading-8 md:text-[1.05rem]"
+            }`}
+          >
+            {lede}
+          </p>
+        )}
         {children ? <div className="pt-2">{children}</div> : null}
       </div>
     </section>

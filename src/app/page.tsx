@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Globe, Lock, MapPin } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 /* ------------------------------------------------------------------ */
@@ -13,30 +13,13 @@ interface StateEntry {
   name: string;
   abbr: string;
   status: "active" | "demo" | "coming-soon";
-  description?: string;
   allocation?: string;
   highlight?: string;
 }
 
 const STATES: StateEntry[] = [
-  {
-    slug: "alaska",
-    name: "Alaska",
-    abbr: "AK",
-    status: "active",
-    description: "Full assessment, portfolio builder, and investment calculator.",
-    allocation: "$272M/yr",
-    highlight: "Full-Stack Demo",
-  },
-  {
-    slug: "kentucky",
-    name: "Kentucky",
-    abbr: "KY",
-    status: "demo",
-    description: "Broadband coverage analysis and satellite deployment planner.",
-    allocation: "$213M/yr",
-    highlight: "Infrastructure demo",
-  },
+  { slug: "alaska", name: "Alaska", abbr: "AK", status: "active", allocation: "$272M/yr", highlight: "Full-stack demo" },
+  { slug: "kentucky", name: "Kentucky", abbr: "KY", status: "demo", allocation: "$213M/yr", highlight: "Infrastructure demo" },
   { slug: "west-virginia", name: "West Virginia", abbr: "WV", status: "coming-soon" },
   { slug: "texas", name: "Texas", abbr: "TX", status: "coming-soon" },
   { slug: "nebraska", name: "Nebraska", abbr: "NE", status: "coming-soon" },
@@ -46,15 +29,11 @@ const STATES: StateEntry[] = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Animation variants                                                 */
+/*  Animation                                                          */
 /* ------------------------------------------------------------------ */
 
-const containerVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
-};
-
-const itemVariants = {
+const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
+const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
 };
@@ -76,224 +55,72 @@ export default function LandingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] as const }}
       >
-        <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[color:var(--muted)]">
-          Rural Health Transformation Program
-        </p>
-        <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.15] text-[color:var(--foreground)] md:text-5xl lg:text-[3.4rem]">
-          Sequencing rural health investments, state by state.
+        <h1 className="font-display text-5xl text-[color:var(--foreground)] md:text-7xl">
+          RHT-NAV
         </h1>
-        <p className="mt-5 max-w-xl text-base leading-7 text-[color:var(--muted)]">
-          Identify gaps, prioritize infrastructure, and build CMS-compliant portfolios with measurable 12-month outcomes.
+        <p className="mt-3 text-base text-[color:var(--muted)]">
+          Rural Health Technology Investment Framework
         </p>
-        <div className="mt-6 flex items-center gap-4 text-sm text-[color:var(--muted)]">
-          <span className="flex items-center gap-1.5">
-            <Globe className="h-3.5 w-3.5" />
-            $50B over 5 years
-          </span>
-          <span className="h-3.5 w-px bg-[color:var(--line)]" />
-          <span className="flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5" />
-            50 states eligible
-          </span>
-        </div>
       </motion.section>
 
-      {/* ── Active States ─────────────────────────────────────── */}
-      <motion.section
-        className="mt-4"
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-      >
+      {/* ── State Cards ──────────────────────────────────────── */}
+      <motion.section variants={stagger} initial="hidden" animate="show">
         <p className="mb-4 text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">
-          Select a state to explore
+          Select a state
         </p>
 
         <div className="grid gap-4 md:grid-cols-2">
           {activeStates.map((state) => (
-            <motion.div key={state.slug} variants={itemVariants}>
+            <motion.div key={state.slug} variants={fadeUp}>
               <Link
                 href={state.slug === "alaska" ? "/assess" : `/${state.slug}`}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] border border-[color:var(--line)] bg-white/80 p-6 transition-all hover:border-[color:var(--foreground)] hover:shadow-[0_12px_40px_rgba(16,34,53,0.08)] md:p-8"
+                className="group flex items-center justify-between rounded-[2rem] border border-[color:var(--line)] bg-white/80 p-6 transition-all hover:border-[color:var(--foreground)] hover:shadow-lg hover:scale-[1.01] md:p-8"
               >
-                <div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:#102235]">
-                      <span className="text-base font-bold text-white">{state.abbr}</span>
-                    </div>
-                    <div>
-                      <p className="font-display text-2xl text-[color:var(--foreground)]">
-                        {state.name}
-                      </p>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[color:#102235]">
+                    <span className="text-lg font-bold text-white">{state.abbr}</span>
+                  </div>
+                  <div>
+                    <p className="font-display text-2xl text-[color:var(--foreground)]">{state.name}</p>
+                    <div className="mt-1 flex items-center gap-2">
                       {state.highlight && (
                         <span className="rounded-full bg-[color:rgba(15,124,134,0.12)] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[color:var(--teal)]">
                           {state.highlight}
                         </span>
                       )}
+                      {state.allocation && (
+                        <span className="text-xs text-[color:var(--muted)]">{state.allocation}</span>
+                      )}
                     </div>
                   </div>
-                  <p className="mt-4 text-sm leading-7 text-[color:var(--muted)]">
-                    {state.description}
-                  </p>
                 </div>
-
-                <div className="mt-6 flex items-center justify-between">
-                  {state.allocation && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">RHTP allocation</p>
-                      <p className="font-display text-xl text-[color:var(--foreground)]">{state.allocation}</p>
-                    </div>
-                  )}
-                  <span className="flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-4 py-2.5 text-sm text-white transition-transform group-hover:translate-x-1">
-                    Explore
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </span>
-                </div>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--foreground)] text-white transition-transform group-hover:translate-x-1">
+                  <ArrowRight className="h-4 w-4" />
+                </span>
               </Link>
             </motion.div>
           ))}
         </div>
       </motion.section>
 
-      {/* ── Coming Soon States ────────────────────────────────── */}
-      <motion.section
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-      >
-        <p className="mb-4 text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">
-          Additional states in development
+      {/* ── Coming Soon ──────────────────────────────────────── */}
+      <motion.section variants={stagger} initial="hidden" animate="show">
+        <p className="mb-3 text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">
+          In development
         </p>
-
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
           {comingSoon.map((state) => (
             <motion.div
               key={state.slug}
-              variants={itemVariants}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-[color:var(--line)] bg-white/50 p-4 opacity-60"
+              variants={fadeUp}
+              className="flex flex-col items-center gap-1.5 rounded-xl border border-[color:var(--line)] bg-white/40 p-3 opacity-50"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:#102235]/10">
-                <span className="text-sm font-semibold text-[color:var(--foreground)]">{state.abbr}</span>
-              </div>
-              <p className="text-sm font-medium text-[color:var(--foreground)]">{state.name}</p>
-              <span className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">Coming soon</span>
+              <span className="text-sm font-semibold text-[color:var(--foreground)]">{state.abbr}</span>
+              <span className="text-[10px] text-[color:var(--muted)]">{state.name}</span>
             </motion.div>
           ))}
         </div>
       </motion.section>
-
-      {/* ── Framework Overview ────────────────────────────────── */}
-      <motion.section
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.6 }}
-        className="rounded-[2.5rem] border border-[color:var(--line)] bg-gradient-to-br from-white via-white to-[color:#f9f5ee] p-8 md:p-12"
-      >
-        <div className="mb-8 text-center">
-          <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">The RHT-NAV framework</p>
-          <h2 className="mt-2 font-display text-3xl leading-tight text-[color:var(--foreground)]">
-            Four steps to infrastructure-first health transformation
-          </h2>
-          <p className="mt-3 mx-auto max-w-2xl text-sm text-[color:var(--muted)]">
-            A proven sequence for deploying technology: map the gap, model solutions, layer interventions strategically, and demonstrate measurable outcomes.
-          </p>
-        </div>
-        
-        <div className="relative">
-          {/* Flowing connection path */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: "visible" }}>
-            <defs>
-              <linearGradient id="pathGradient" x1="0%" x2="100%" y1="0%" y2="0%">
-                <stop offset="0%" stopColor="var(--teal)" stopOpacity="0.3" />
-                <stop offset="50%" stopColor="var(--teal)" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.3" />
-              </linearGradient>
-            </defs>
-            <polyline
-              points="12.5%,48px 37.5%,48px 62.5%,48px 87.5%,48px"
-              fill="none"
-              stroke="url(#pathGradient)"
-              strokeWidth="2"
-              strokeDasharray="none"
-              className="hidden md:block"
-            />
-          </svg>
-          
-          <div className="grid gap-6 md:grid-cols-4">
-            <FrameworkStep 
-              number="1" 
-              title="Map the Gap" 
-              desc="Identify infrastructure deficits across regions and facilities" 
-              accent="var(--teal)"
-            />
-            <FrameworkStep 
-              number="2" 
-              title="Model Solutions" 
-              desc="Calculate deployment costs and coverage impact" 
-              accent="var(--teal)"
-            />
-            <FrameworkStep 
-              number="3" 
-              title="Sequence Interventions" 
-              desc="Layer telehealth, RPM, and clinical tools strategically" 
-              accent="var(--accent)"
-            />
-            <FrameworkStep 
-              number="4" 
-              title="Demonstrate Outcomes" 
-              desc="Track CMS metrics and prove 12-month ROI" 
-              accent="var(--accent)"
-            />
-          </div>
-        </div>
-      </motion.section>
-
-      {/* ── Future: Access Tiers Teaser ───────────────────────── */}
-      <motion.div
-        className="flex items-center gap-4 rounded-2xl border border-dashed border-[color:var(--line)] bg-white/40 p-5"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6, duration: 0.5 }}
-      >
-        <Lock className="h-5 w-5 shrink-0 text-[color:var(--muted)]" />
-        <div>
-          <p className="text-sm font-medium text-[color:var(--foreground)]">
-            Full-stack access coming soon
-          </p>
-          <p className="text-xs leading-5 text-[color:var(--muted)]">
-            Basic broadband and infrastructure analysis is freely available. Registered
-            state accounts will unlock full portfolio building, intervention sequencing,
-            and CMS compliance tools.
-          </p>
-        </div>
-      </motion.div>
     </>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Sub-components                                                     */
-/* ------------------------------------------------------------------ */
-
-function FrameworkStep({ number, title, desc, accent }: { number: string; title: string; desc: string; accent: string }) {
-  return (
-    <div className="group relative flex flex-col">
-      {/* Card background */}
-      <div className="absolute -inset-2 rounded-2xl bg-gradient-to-br from-white/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100 -z-10" />
-      
-      {/* Content */}
-      <div className="flex flex-col items-start gap-3">
-        <div 
-          className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 bg-white shadow-sm transition-transform group-hover:scale-110"
-          style={{ borderColor: accent }}
-        >
-          <span className="text-lg font-bold" style={{ color: accent }}>{number}</span>
-        </div>
-        <div>
-          <p className="font-display text-lg font-semibold text-[color:var(--foreground)] leading-snug">{title}</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-[color:var(--muted)]">{desc}</p>
-        </div>
-      </div>
-    </div>
   );
 }

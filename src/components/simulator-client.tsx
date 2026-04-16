@@ -500,11 +500,8 @@ export function SimulatorClient({
                   Calculator results
                 </p>
                 <h2 className="mt-3 max-w-3xl font-display text-[3rem] leading-[0.96] text-[color:var(--foreground)] md:text-[3.55rem]">
-                  See the care gap, the vision risk, and the modeled shift.
+                  Simulation Results
                 </h2>
-                <p className="mt-3 max-w-[38rem] text-sm leading-7 text-[color:var(--muted)]">
-                  Read the headlines first. Hover or open only the layers that need explanation.
-                </p>
               </div>
               <div className="rounded-full border border-[color:var(--line)] bg-white/75 px-4 py-2 text-sm text-[color:var(--foreground)]">
                 Confidence <span className="font-medium">{result.confidenceLabel}</span>
