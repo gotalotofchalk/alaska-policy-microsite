@@ -7,13 +7,17 @@ import {
   ChevronDown,
   ChevronUp,
   Globe,
+  Heart,
   Minus,
+  MonitorSmartphone,
   Plus,
   RotateCcw,
   Satellite,
   Settings2,
+  Shield,
   Sliders,
   Users,
+  Video,
   Wifi,
   WifiOff,
 } from "lucide-react";
@@ -641,6 +645,42 @@ export default function SatellitePlannerPage() {
             </div>
           </div>
 
+          {/* Deployment Impact */}
+          {totalTerminals > 0 && (
+            <div className="surface-card rounded-[1.6rem] border p-5">
+              <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
+                This plan enables
+              </p>
+              <div className="mt-3 space-y-2.5">
+                <ImpactRow
+                  icon={<Video className="h-3.5 w-3.5" />}
+                  value={facilitiesConnected}
+                  label="new telehealth-capable locations"
+                  color="var(--teal)"
+                />
+                <ImpactRow
+                  icon={<MonitorSmartphone className="h-3.5 w-3.5" />}
+                  value={householdsReached}
+                  label="households with RPM-ready bandwidth"
+                  color="var(--teal)"
+                />
+                <ImpactRow
+                  icon={<Shield className="h-3.5 w-3.5" />}
+                  value={facilitiesConnected}
+                  label="facilities eligible for cybersecurity enrollment"
+                  color="#3a9ca5"
+                />
+                <ImpactRow
+                  icon={<Heart className="h-3.5 w-3.5" />}
+                  value={facilitiesConnected * 25}
+                  label="estimated simultaneous telehealth sessions"
+                  color="#6b5a8a"
+                  sub="at ~100 Mbps per terminal"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Statewide Coverage Calculator */}
           <StatewideCalculator coverageRadius={coverageRadius} yearOnePerUnit={yearOnePerUnit} localEquipCost={localEquipCost} />
 
@@ -922,6 +962,23 @@ function ConnectivityBudgetPanel() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function ImpactRow({ icon, value, label, color, sub }: { icon: React.ReactNode; value: number; label: string; color: string; sub?: string }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md" style={{ background: `${color}15`, color }}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs text-[color:var(--foreground)]">
+          <span className="font-display text-sm font-semibold">{value.toLocaleString()}</span>{" "}
+          {label}
+        </p>
+        {sub && <p className="text-[10px] text-[color:var(--muted)]">{sub}</p>}
+      </div>
     </div>
   );
 }
