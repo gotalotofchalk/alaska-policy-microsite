@@ -157,7 +157,7 @@ function getCountyPopupHtml(geoid: string, mode: ChoroplethMode): string | null 
       <p style="font-weight:600;font-size:14px;margin:0">${d.name.replace(", Kentucky", "")}</p>
       <p style="font-size:12px;color:#666;margin:4px 0 0">HH: ${d.households.toLocaleString("en-US")}</p>
       <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(d.pctServed)}">${d.pctServed}% adoption</p>
-      <p style="font-size:11px;color:#999;margin:2px 0 0">${d.unservedHouseholds.toLocaleString("en-US")} without broadband</p>
+      <p style="font-size:12px;color:#999;margin:2px 0 0">${d.unservedHouseholds.toLocaleString("en-US")} without broadband</p>
     </div>`;
   }
   const d = KY_COUNTY_BDC.find((c) => c.fips === geoid);
@@ -166,7 +166,7 @@ function getCountyPopupHtml(geoid: string, mode: ChoroplethMode): string | null 
     <p style="font-weight:600;font-size:14px;margin:0">${d.name}</p>
     <p style="font-size:12px;color:#666;margin:4px 0 0">BSLs: ${d.totalBSLs.toLocaleString("en-US")}</p>
     <p style="font-size:13px;font-weight:500;margin:6px 0 0;color:${getBroadbandColor(d.pctServed)}">${d.pctServed}% served (100/20)</p>
-    <p style="font-size:11px;color:#999;margin:2px 0 0">${d.unservedBSLs.toLocaleString("en-US")} unserved · ${d.underservedBSLs.toLocaleString("en-US")} underserved</p>
+    <p style="font-size:12px;color:#999;margin:2px 0 0">${d.unservedBSLs.toLocaleString("en-US")} unserved · ${d.underservedBSLs.toLocaleString("en-US")} underserved</p>
   </div>`;
 }
 
@@ -357,7 +357,7 @@ export default function SatelliteMapComponent({
             key={m}
             type="button"
             onClick={() => setChoroplethMode(m)}
-            className={`relative z-10 px-3 py-1.5 text-[10px] font-medium transition-colors ${
+            className={`relative z-10 px-3 py-1.5 text-xs font-medium transition-colors ${
               choroplethMode === m ? "text-white" : "text-[color:var(--muted)]"
             }`}
             title={m === "availability" ? "FCC BDC supply-side (100/20 Mbps)" : "Census ACS demand-side (subscriptions)"}
@@ -375,7 +375,7 @@ export default function SatelliteMapComponent({
       </div>
       {/* Gradient legend */}
       <div className="rounded-lg bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
-        <p className="mb-1 text-[9px] uppercase tracking-wider text-[color:var(--muted)]">
+        <p className="mb-1 text-xs uppercase tracking-wider text-[color:var(--muted)]">
           {choroplethMode === "availability" ? "FCC BDC served %" : "ACS adoption %"}
         </p>
         <div className="flex gap-0.5">

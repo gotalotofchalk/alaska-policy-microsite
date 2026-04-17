@@ -1,12 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink, Wifi, Shield } from "lucide-react";
 import Link from "next/link";
 
 import { PyramidTabs } from "@/components/pyramid-tabs";
+import { useView } from "@/components/view-context";
 import { KENTUCKY_PYRAMID } from "@/data/kentucky-pyramid-config";
 import { KY_CONTEXT, KY_RHTP } from "@/data/kentucky-config";
+import { getKYBDCSummary } from "@/data/kentucky-broadband-availability";
+import { getKYFacilitySummary } from "@/data/kentucky-facilities";
 
 /* ------------------------------------------------------------------ */
 /*  Animation                                                          */
@@ -26,7 +29,19 @@ const stagger = {
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
+const ROLE_SUMMARIES: Record<string, string> = {
+  administrator: "Kentucky has $213M in annual RHTP funding to close broadband gaps across 120 counties, secure 124 healthcare facilities, and deploy clinical solutions that reduce ER visits and expand telehealth access for 1.9M rural residents.",
+  clinical: "124 rural healthcare facilities serving 1.9M patients need reliable broadband for telehealth, remote monitoring, and AI-assisted screening. Infrastructure assessment and clinical solution planning start here.",
+  partner: "Kentucky represents a $213M annual investment opportunity across broadband infrastructure, cybersecurity, remote patient monitoring, and telehealth platforms serving 124 facilities and 120 counties.",
+  executive: "Kentucky's RHTP investment targets broadband coverage, cybersecurity, and clinical technology deployment across 120 counties — the infrastructure foundation for measurable rural health transformation.",
+};
+
 export default function KentuckyPage() {
+  const { role } = useView();
+  const bdcSummary = getKYBDCSummary();
+  const fSummary = getKYFacilitySummary();
+  const pctUnserved = Math.round((bdcSummary.unserved / bdcSummary.totalBSLs) * 1000) / 10;
+
   const statPills = [
     { label: "RHTP / year", value: `$${Math.round(KY_RHTP.annualAllocation / 1e6)}M` },
     { label: "Counties", value: String(KY_CONTEXT.totalCounties) },
@@ -62,6 +77,34 @@ export default function KentuckyPage() {
         <p className="mt-3 max-w-2xl text-sm text-[color:var(--muted)]">
           State hub for Rural Health Transformation — infrastructure, ecosystem, and solutions planning.
         </p>
+      </motion.div>
+
+      {/* ── Executive Summary ────────────────────────────────── */}
+      <motion.div variants={fadeUp} className="rounded-2xl border border-[color:var(--line)] bg-white/90 p-5 shadow-[var(--shadow-soft)]">
+        <p className="text-sm leading-relaxed text-[color:var(--foreground)]">
+          {ROLE_SUMMARIES[role]}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href="/kentucky/satellite-planner"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[color:#223a54]"
+          >
+            <Wifi className="h-3.5 w-3.5" />
+            Broadband Map
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+          <Link
+            href="/kentucky/cybersecurity"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--line)] bg-white px-4 py-2 text-xs font-medium text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-soft)]"
+          >
+            <Shield className="h-3.5 w-3.5" />
+            Cybersecurity
+          </Link>
+          <span className="flex items-center gap-2 text-xs text-[color:var(--muted)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--accent)]" />
+            {pctUnserved}% BSLs unserved · {fSummary.unserved + fSummary.underserved} facilities need coverage
+          </span>
+        </div>
       </motion.div>
 
       {/* ── Pyramid Tabs ─────────────────────────────────────── */}

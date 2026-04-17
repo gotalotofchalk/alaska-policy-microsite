@@ -139,7 +139,7 @@ function ModuleCard({
           )}>
             {title}
           </h3>
-          <p className="mt-0.5 text-[11px] text-[color:var(--muted)] leading-snug">
+          <p className="mt-0.5 text-xs text-[color:var(--muted)] leading-snug">
             {subtitle}
           </p>
         </div>
@@ -195,11 +195,14 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
     return aActive - bActive;
   });
 
+  const activeSections = sorted.filter((s) => s.content === "broadband" || s.content === "cyber");
+  const pendingSections = sorted.filter((s) => s.content !== "broadband" && s.content !== "cyber");
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {sorted.map((section) => {
+    <div className="space-y-4">
+    <div className="grid gap-4 sm:grid-cols-2">
+      {activeSections.map((section) => {
         const Icon = INFRA_ICONS[section.content] ?? Wifi;
-        const isActive = section.content === "broadband" || section.content === "cyber";
 
         return (
           <ModuleCard
@@ -208,11 +211,9 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
             subtitle={section.statusSummary}
             icon={Icon}
             accentColor={
-              section.content === "broadband" ? "#0f7c86"
-              : section.content === "cyber" ? "#2b7ab8"
-              : "#8899a6"
+              section.content === "broadband" ? "#0f7c86" : "#2b7ab8"
             }
-            active={isActive}
+            active={true}
             href={section.hasInteractiveTool ? section.toolRoute : undefined}
           >
             {section.content === "broadband" && (
@@ -220,20 +221,20 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
                 <div className="flex gap-2">
                   <div className="flex-1 rounded-lg bg-[color:rgba(15,124,134,0.08)] px-2.5 py-2 text-center">
                     <p className="font-display text-lg font-semibold text-[color:var(--teal)]">{bdcSummary.pctServed}%</p>
-                    <p className="text-[9px] text-[color:var(--muted)]">Served</p>
+                    <p className="text-xs text-[color:var(--muted)]">Served</p>
                   </div>
                   <div className="flex-1 rounded-lg bg-[color:rgba(196,161,42,0.08)] px-2.5 py-2 text-center">
                     <p className="font-display text-lg font-semibold text-[color:#c49a2e]">
                       {Math.round((bdcSummary.underserved / bdcSummary.totalBSLs) * 1000) / 10}%
                     </p>
-                    <p className="text-[9px] text-[color:var(--muted)]">Underserved</p>
+                    <p className="text-xs text-[color:var(--muted)]">Underserved</p>
                   </div>
                   <div className="flex-1 rounded-lg bg-[color:rgba(196,97,42,0.08)] px-2.5 py-2 text-center">
                     <p className="font-display text-lg font-semibold text-[color:var(--accent)]">{pctUnserved}%</p>
-                    <p className="text-[9px] text-[color:var(--muted)]">Unserved</p>
+                    <p className="text-xs text-[color:var(--muted)]">Unserved</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-[10px] text-[color:var(--muted)]">
+                <div className="flex items-center gap-3 text-xs text-[color:var(--muted)]">
                   <div className="flex items-center gap-1">
                     <Satellite className="h-3 w-3" />
                     <span>Starlink LEO</span>
@@ -244,10 +245,10 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
                     <span>Microsoft Azure</span>
                   </div>
                 </div>
-                <p className="text-[10px] text-[color:var(--muted)]">
+                <p className="text-xs text-[color:var(--muted)]">
                   {usNum(fSummary.total)} facilities · {usNum(bdcSummary.totalBSLs)} BSLs tracked
                 </p>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-3 py-1.5 text-[11px] font-medium text-white">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-3 py-1.5 text-xs font-medium text-white">
                   Open Broadband Map <ArrowRight className="h-3 w-3" />
                 </div>
               </div>
@@ -258,14 +259,14 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
                 <div className="flex gap-2">
                   <div className="flex-1 rounded-lg bg-[color:rgba(43,122,184,0.08)] px-2.5 py-2 text-center">
                     <p className="font-display text-lg font-semibold text-[color:var(--foreground)]">0</p>
-                    <p className="text-[9px] text-[color:var(--muted)]">Assessed</p>
+                    <p className="text-xs text-[color:var(--muted)]">Assessed</p>
                   </div>
                   <div className="flex-1 rounded-lg bg-[color:rgba(43,122,184,0.08)] px-2.5 py-2 text-center">
                     <p className="font-display text-lg font-semibold text-[color:#2b7ab8]">{usNum(fSummary.total)}</p>
-                    <p className="text-[9px] text-[color:var(--muted)]">Total Facilities</p>
+                    <p className="text-xs text-[color:var(--muted)]">Total Facilities</p>
                   </div>
                 </div>
-                <div className="space-y-1.5 text-[10px] text-[color:var(--muted)]">
+                <div className="space-y-1.5 text-xs text-[color:var(--muted)]">
                   <div className="flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--teal)]" />
                     <span>Microsoft Azure Security</span>
@@ -275,7 +276,7 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
                     <span>Anthropic Project Glasswing</span>
                   </div>
                 </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-3 py-1.5 text-[11px] font-medium text-white">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-3 py-1.5 text-xs font-medium text-white">
                   View Program <ArrowRight className="h-3 w-3" />
                 </div>
               </div>
@@ -283,6 +284,22 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
           </ModuleCard>
         );
       })}
+    </div>
+
+    {/* Collapsed pending modules */}
+    {pendingSections.length > 0 && (
+      <div className="flex items-center gap-3 rounded-xl border border-dashed border-[color:var(--line)] bg-white/40 px-4 py-3">
+        <div className="flex gap-1">
+          {pendingSections.map((s) => {
+            const PIcon = INFRA_ICONS[s.content] ?? Wifi;
+            return <PIcon key={s.category} className="h-3.5 w-3.5 text-[color:var(--muted)] opacity-40" />;
+          })}
+        </div>
+        <p className="text-xs text-[color:var(--muted)]">
+          {pendingSections.length} more modules pending — {pendingSections.map((s) => s.label).join(", ")}
+        </p>
+      </div>
+    )}
     </div>
   );
 }
@@ -310,13 +327,13 @@ const ECO_MODULES: EcoModule[] = [
 ];
 
 function EcoGrid() {
-  // Active first
-  const sorted = [...ECO_MODULES].sort((a, b) => (a.active === b.active ? 0 : a.active ? -1 : 1));
+  const activeModules = ECO_MODULES.filter((m) => m.active);
+  const pendingModules = ECO_MODULES.filter((m) => !m.active);
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {sorted.map((mod) => {
+      <div className="grid gap-4 sm:grid-cols-2">
+        {activeModules.map((mod) => {
           const Icon = mod.icon;
           return (
             <ModuleCard
@@ -325,30 +342,30 @@ function EcoGrid() {
               subtitle={mod.tagline}
               icon={Icon}
               accentColor={mod.color}
-              active={mod.active}
+              active={true}
               href={mod.href}
             >
-              {mod.active && mod.name === "Microsoft" && (
+              {mod.name === "Microsoft" && (
                 <div className="space-y-1.5">
                   {["Azure Cloud Infrastructure", "AI/ML Health Analytics", "Cybersecurity for 700+ Rural Hospitals", "Teams Telehealth Integration"].map((cap) => (
                     <div key={cap} className="flex items-center gap-2">
                       <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#0078d4]" />
-                      <span className="text-[11px] text-[color:var(--foreground)]">{cap}</span>
+                      <span className="text-xs text-[color:var(--foreground)]">{cap}</span>
                     </div>
                   ))}
                 </div>
               )}
-              {mod.active && mod.name === "BioIntelliSense" && (
+              {mod.name === "BioIntelliSense" && (
                 <div className="space-y-3">
                   <div className="space-y-1.5">
                     {["BioButton Continuous Monitoring", "FDA-Cleared Vital Signs", "AI Early Warning System", "Clinical Dashboard Integration"].map((cap) => (
                       <div key={cap} className="flex items-center gap-2">
                         <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#00b4d8]" />
-                        <span className="text-[11px] text-[color:var(--foreground)]">{cap}</span>
+                        <span className="text-xs text-[color:var(--foreground)]">{cap}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-3 py-1.5 text-[11px] font-medium text-white">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-3 py-1.5 text-xs font-medium text-white">
                     Explore BioButton <ArrowRight className="h-3 w-3" />
                   </div>
                 </div>
@@ -357,9 +374,19 @@ function EcoGrid() {
           );
         })}
       </div>
-      <p className="text-[10px] text-[color:var(--muted)]">
-        Partner profiles will be populated as engagement agreements are finalized. Infrastructure-enabling technology (e.g. Starlink) appears within its respective infrastructure module.
-      </p>
+      {pendingModules.length > 0 && (
+        <div className="flex items-center gap-3 rounded-xl border border-dashed border-[color:var(--line)] bg-white/40 px-4 py-3">
+          <div className="flex gap-1">
+            {pendingModules.map((m) => {
+              const PIcon = m.icon;
+              return <PIcon key={m.name} className="h-3.5 w-3.5 text-[color:var(--muted)] opacity-40" />;
+            })}
+          </div>
+          <p className="text-xs text-[color:var(--muted)]">
+            {pendingModules.length} more partners pending — {pendingModules.map((m) => m.name).join(", ")}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -369,12 +396,8 @@ function EcoGrid() {
 /* ------------------------------------------------------------------ */
 
 function SolutionsGrid({ sections }: { sections: SolutionSection[] }) {
-  // Active (has any planned+ interventions) first
-  const sorted = [...sections].sort((a, b) => {
-    const aHas = a.interventions?.some((i) => i.status === "planned" || i.status === "available") ? 0 : 1;
-    const bHas = b.interventions?.some((i) => i.status === "planned" || i.status === "available") ? 0 : 1;
-    return aHas - bHas;
-  });
+  const activeSections = sections.filter((s) => s.interventions?.some((i) => i.status === "planned" || i.status === "available"));
+  const pendingSections = sections.filter((s) => !s.interventions?.some((i) => i.status === "planned" || i.status === "available"));
 
   return (
     <div className="space-y-4">
@@ -382,9 +405,8 @@ function SolutionsGrid({ sections }: { sections: SolutionSection[] }) {
         Once infrastructure is assessed and connectivity established, these clinical technologies and programs deliver measurable health outcomes — fewer ER visits, earlier diagnoses, reduced travel burden, and physician time saved.
       </p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {sorted.map((section) => {
+        {activeSections.map((section) => {
           const Icon = SOLUTION_ICONS[section.goal] ?? Lightbulb;
-          const hasPlannedItems = section.interventions?.some((i) => i.status === "planned" || i.status === "available");
 
           return (
             <ModuleCard
@@ -392,10 +414,10 @@ function SolutionsGrid({ sections }: { sections: SolutionSection[] }) {
               title={section.label}
               subtitle={section.statusSummary}
               icon={Icon}
-              accentColor={hasPlannedItems ? "var(--accent)" : "#8899a6"}
-              active={!!hasPlannedItems}
+              accentColor="var(--accent)"
+              active={true}
             >
-              {hasPlannedItems && section.interventions && (
+              {section.interventions && (
                 <div className="space-y-1.5">
                   {section.interventions.map((intervention) => {
                     const statusColors: Record<string, string> = {
@@ -408,10 +430,10 @@ function SolutionsGrid({ sections }: { sections: SolutionSection[] }) {
                         key={intervention.name}
                         className="flex items-center justify-between gap-2 rounded-lg bg-white/60 px-2.5 py-1.5"
                       >
-                        <span className="text-[11px] text-[color:var(--foreground)]">
+                        <span className="text-xs text-[color:var(--foreground)]">
                           {intervention.name}
                         </span>
-                        <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[9px] font-medium capitalize", statusColors[intervention.status])}>
+                        <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs font-medium capitalize", statusColors[intervention.status])}>
                           {intervention.status}
                         </span>
                       </div>
@@ -423,6 +445,19 @@ function SolutionsGrid({ sections }: { sections: SolutionSection[] }) {
           );
         })}
       </div>
+      {pendingSections.length > 0 && (
+        <div className="flex items-center gap-3 rounded-xl border border-dashed border-[color:var(--line)] bg-white/40 px-4 py-3">
+          <div className="flex gap-1">
+            {pendingSections.map((s) => {
+              const PIcon = SOLUTION_ICONS[s.goal] ?? Lightbulb;
+              return <PIcon key={s.goal} className="h-3.5 w-3.5 text-[color:var(--muted)] opacity-40" />;
+            })}
+          </div>
+          <p className="text-xs text-[color:var(--muted)]">
+            {pendingSections.length} more solution{pendingSections.length > 1 ? "s" : ""} pending — {pendingSections.map((s) => s.label).join(", ")}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

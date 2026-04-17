@@ -85,7 +85,7 @@ function DatasetCard({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-      <span className="flex-shrink-0 text-[10px] uppercase tracking-[0.2em] text-[color:var(--foreground)]/50 sm:w-32 sm:pt-[5px]">
+      <span className="flex-shrink-0 text-xs uppercase tracking-[0.2em] text-[color:var(--foreground)]/50 sm:w-32 sm:pt-[5px]">
         {label}
       </span>
       <span className="text-[color:var(--foreground)]">{children}</span>

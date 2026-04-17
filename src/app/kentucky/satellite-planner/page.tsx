@@ -49,6 +49,7 @@ import {
   maxSimultaneousSessions,
 } from "@/data/connectivity-budget";
 import { usNum } from "@/lib/utils";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 /* ------------------------------------------------------------------ */
 /*  Lazy-load the Leaflet map (client-only, no SSR)                    */
@@ -280,13 +281,12 @@ export default function SatellitePlannerPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Breadcrumb */}
-      <Link
-        href="/kentucky"
-        className="inline-flex w-fit items-center gap-1 text-xs text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
-      >
-        &larr; Kentucky
-      </Link>
+      {/* Breadcrumbs */}
+      <Breadcrumbs items={[
+        { label: "Kentucky", href: "/kentucky" },
+        { label: "Infrastructure", href: "/kentucky" },
+        { label: "Broadband Map" },
+      ]} />
 
       {/* Hero */}
       <motion.div variants={fadeUp} initial="hidden" animate="show">
@@ -384,7 +384,7 @@ export default function SatellitePlannerPage() {
             <button
               type="button"
               onClick={() => setShowFilters((p) => !p)}
-              className="flex w-full items-center justify-between px-3 py-2 text-[10px] font-medium uppercase tracking-wider text-[color:var(--foreground)]"
+              className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium uppercase tracking-wider text-[color:var(--foreground)]"
             >
               <span className="flex items-center gap-1.5">
                 <Sliders className="h-3 w-3" />
@@ -399,7 +399,7 @@ export default function SatellitePlannerPage() {
             {showFilters && (
               <div className="border-t border-[color:var(--line)] px-3 pb-3 pt-2">
                 {/* Facility type toggles */}
-                <p className="mb-1.5 text-[9px] uppercase tracking-widest text-[color:var(--muted)]">
+                <p className="mb-1.5 text-xs uppercase tracking-widest text-[color:var(--muted)]">
                   Facility types
                 </p>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -411,7 +411,7 @@ export default function SatellitePlannerPage() {
                         key={type}
                         type="button"
                         onClick={() => toggleType(type)}
-                        className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[10px] transition-all ${
+                        className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-all ${
                           active
                             ? "bg-[color:var(--surface-soft)] text-[color:var(--foreground)]"
                             : "bg-transparent text-[color:var(--muted)] opacity-50"
@@ -425,14 +425,14 @@ export default function SatellitePlannerPage() {
                           }}
                         />
                         <span className="truncate">{FACILITY_TYPE_LABELS[type]}</span>
-                        <span className="ml-auto text-[9px] text-[color:var(--muted)]">{count}</span>
+                        <span className="ml-auto text-xs text-[color:var(--muted)]">{count}</span>
                       </button>
                     );
                   })}
                 </div>
 
                 {/* Broadband status filter — three-tier */}
-                <p className="mb-1.5 mt-3 text-[9px] uppercase tracking-widest text-[color:var(--muted)]">
+                <p className="mb-1.5 mt-3 text-xs uppercase tracking-widest text-[color:var(--muted)]">
                   Broadband status
                 </p>
                 <div className="flex flex-wrap gap-1">
@@ -447,7 +447,7 @@ export default function SatellitePlannerPage() {
                       key={key}
                       type="button"
                       onClick={() => setBroadbandFilter(key)}
-                      className={`rounded-lg px-2 py-1.5 text-[10px] transition-all ${
+                      className={`rounded-lg px-2 py-1.5 text-xs transition-all ${
                         broadbandFilter === key
                           ? "text-white"
                           : "bg-[color:var(--surface-soft)] text-[color:var(--muted)]"
@@ -461,19 +461,19 @@ export default function SatellitePlannerPage() {
 
                 {/* Terminal + coverage legend */}
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-[color:var(--line)] pt-2">
-                  <span className="flex items-center gap-1 text-[10px] text-[color:var(--muted)]">
+                  <span className="flex items-center gap-1 text-xs text-[color:var(--muted)]">
                     <span className="inline-block h-2.5 w-2.5 rounded-full bg-[color:#6b5a8a]" />
                     Terminal
                   </span>
-                  <span className="flex items-center gap-1 text-[10px] text-[color:var(--muted)]">
+                  <span className="flex items-center gap-1 text-xs text-[color:var(--muted)]">
                     <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-[color:#6b5a8a] bg-[color:rgba(107,90,138,0.15)]" />
                     Coverage
                   </span>
-                  <span className="flex items-center gap-1 text-[10px] text-[color:var(--muted)]">
+                  <span className="flex items-center gap-1 text-xs text-[color:var(--muted)]">
                     <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-[#c46128] bg-[color:var(--foreground)]" />
                     Unserved
                   </span>
-                  <span className="flex items-center gap-1 text-[10px] text-[color:var(--muted)]">
+                  <span className="flex items-center gap-1 text-xs text-[color:var(--muted)]">
                     <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-[#c49a2e] bg-[color:var(--foreground)]" />
                     Underserved
                   </span>
@@ -511,7 +511,7 @@ export default function SatellitePlannerPage() {
 
             {/* Three-tier breakdown */}
             <div className="mt-4 space-y-1.5 rounded-xl bg-[color:var(--surface-soft)] p-3">
-              <p className="text-[9px] uppercase tracking-widest text-[color:var(--muted)]">
+              <p className="text-xs uppercase tracking-widest text-[color:var(--muted)]">
                 Facility broadband status
               </p>
               <StatusBar
@@ -568,7 +568,7 @@ export default function SatellitePlannerPage() {
               >
                 {/* Bulk discount slider */}
                 <label className="block">
-                  <span className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">
+                  <span className="text-xs uppercase tracking-wider text-[color:var(--muted)]">
                     Bulk discount: {discountPct}%
                   </span>
                   <div className="mt-1 flex items-center gap-2">
@@ -602,7 +602,7 @@ export default function SatellitePlannerPage() {
                     setLocalEquipCost(COVERAGE_MODEL.communityDistributionModel.localDistributionCostPerSite);
                     setCoverageRadius(COVERAGE_MODEL.communityDistributionModel.coverageRadiusMiles);
                   }}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-[10px] text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
                 >
                   <RotateCcw className="h-3 w-3" />
                   Reset to defaults
@@ -809,7 +809,7 @@ function StatewideCalculator({
         <button
           type="button"
           onClick={() => setMode("unserved")}
-          className={`flex-1 px-2 py-1.5 text-[10px] font-medium transition-colors ${
+          className={`flex-1 px-2 py-1.5 text-xs font-medium transition-colors ${
             mode === "unserved"
               ? "bg-[color:var(--foreground)] text-white"
               : "text-[color:var(--muted)]"
@@ -820,7 +820,7 @@ function StatewideCalculator({
         <button
           type="button"
           onClick={() => setMode("all-bead")}
-          className={`flex-1 px-2 py-1.5 text-[10px] font-medium transition-colors ${
+          className={`flex-1 px-2 py-1.5 text-xs font-medium transition-colors ${
             mode === "all-bead"
               ? "bg-[color:var(--foreground)] text-white"
               : "text-[color:var(--muted)]"
@@ -836,25 +836,25 @@ function StatewideCalculator({
           <p className="font-display text-2xl font-semibold text-[color:var(--accent)]">
             {targetBSLs.toLocaleString("en-US")}
           </p>
-          <p className="text-[10px] text-[color:var(--muted)]">{targetLabel} locations</p>
+          <p className="text-xs text-[color:var(--muted)]">{targetLabel} locations</p>
         </div>
         <div>
           <p className="font-display text-2xl font-semibold text-[color:var(--foreground)]">
             {terminalsNeeded.toLocaleString("en-US")}
           </p>
-          <p className="text-[10px] text-[color:var(--muted)]">Terminals needed</p>
+          <p className="text-xs text-[color:var(--muted)]">Terminals needed</p>
         </div>
       </div>
 
       {/* Cost estimate */}
       <div className="mt-3 rounded-xl bg-[color:var(--surface-soft)] p-3">
         <div className="flex items-baseline justify-between">
-          <span className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">Est. year-one cost</span>
+          <span className="text-xs uppercase tracking-wider text-[color:var(--muted)]">Est. year-one cost</span>
           <span className="font-display text-lg font-semibold text-[color:var(--foreground)]">
             ${totalCost.toLocaleString("en-US")}
           </span>
         </div>
-        <p className="mt-1 text-[10px] text-[color:var(--muted)]">
+        <p className="mt-1 text-xs text-[color:var(--muted)]">
           {terminalsNeeded.toLocaleString("en-US")} terminals × ${(yearOnePerUnit + localEquipCost).toLocaleString("en-US")}/unit · {coverageRadius}-mi radius
         </p>
       </div>
@@ -892,7 +892,7 @@ function ConnectivityBudgetPanel() {
             What this enables
           </p>
         </div>
-        <span className="rounded-full px-2 py-0.5 text-[10px] font-medium" style={{ background: `${tier.color}20`, color: tier.color }}>
+        <span className="rounded-full px-2 py-0.5 text-xs font-medium" style={{ background: `${tier.color}20`, color: tier.color }}>
           {tier.label}
         </span>
         {expanded ? <ChevronUp className="h-3 w-3 text-[color:var(--muted)]" /> : <ChevronDown className="h-3 w-3 text-[color:var(--muted)]" />}
@@ -902,11 +902,11 @@ function ConnectivityBudgetPanel() {
       <div className="mt-3 grid grid-cols-2 gap-2">
         <div className="rounded-lg bg-[color:var(--surface-soft)] p-2 text-center">
           <p className="font-display text-lg font-semibold text-[color:var(--foreground)]">{sessions}</p>
-          <p className="text-[10px] text-[color:var(--muted)]">Simultaneous telehealth sessions</p>
+          <p className="text-xs text-[color:var(--muted)]">Simultaneous telehealth sessions</p>
         </div>
         <div className="rounded-lg bg-[color:var(--surface-soft)] p-2 text-center">
           <p className="font-display text-lg font-semibold text-[color:var(--foreground)]">{services.length}</p>
-          <p className="text-[10px] text-[color:var(--muted)]">of {CLINICAL_SERVICES.length} services supported</p>
+          <p className="text-xs text-[color:var(--muted)]">of {CLINICAL_SERVICES.length} services supported</p>
         </div>
       </div>
 
@@ -921,23 +921,23 @@ function ConnectivityBudgetPanel() {
             className="overflow-hidden"
           >
             <div className="mt-3 space-y-3">
-              <p className="text-[10px] text-[color:var(--muted)]">
+              <p className="text-xs text-[color:var(--muted)]">
                 At ~100 Mbps (Starlink residential), a facility can run:
               </p>
 
               {/* Supported services by category */}
               {Object.entries(grouped).map(([cat, svcs]) => (
                 <div key={cat}>
-                  <p className="text-[9px] font-medium uppercase tracking-widest text-[color:var(--muted)]">
+                  <p className="text-xs font-medium uppercase tracking-widest text-[color:var(--muted)]">
                     {CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS]}
                   </p>
                   <div className="mt-1 space-y-1">
                     {svcs.map((s) => (
-                      <div key={s.id} className="flex items-start gap-1.5 text-[11px]">
+                      <div key={s.id} className="flex items-start gap-1.5 text-xs">
                         <Check className="mt-0.5 h-3 w-3 shrink-0 text-[color:var(--teal)]" />
                         <div>
                           <span className="font-medium text-[color:var(--foreground)]">{s.name}</span>
-                          <span className="ml-1 text-[10px] text-[color:var(--muted)]">({s.recommendedMbps} Mbps)</span>
+                          <span className="ml-1 text-xs text-[color:var(--muted)]">({s.recommendedMbps} Mbps)</span>
                         </div>
                       </div>
                     ))}
@@ -947,7 +947,7 @@ function ConnectivityBudgetPanel() {
 
               {/* Bandwidth breakdown bar */}
               <div>
-                <p className="text-[9px] font-medium uppercase tracking-widest text-[color:var(--muted)]">
+                <p className="text-xs font-medium uppercase tracking-widest text-[color:var(--muted)]">
                   Bandwidth per service
                 </p>
                 <div className="mt-1.5 space-y-1">
@@ -956,14 +956,14 @@ function ConnectivityBudgetPanel() {
                     .slice(0, 6)
                     .map((s) => (
                       <div key={s.id} className="flex items-center gap-2">
-                        <span className="w-24 truncate text-[10px] text-[color:var(--muted)]">{s.name}</span>
+                        <span className="w-24 truncate text-xs text-[color:var(--muted)]">{s.name}</span>
                         <div className="flex-1 overflow-hidden rounded-full bg-[color:#efe8db]" style={{ height: 4 }}>
                           <div
                             className="h-full rounded-full bg-[color:var(--teal)]"
                             style={{ width: `${Math.min(100, (s.recommendedMbps / 25) * 100)}%` }}
                           />
                         </div>
-                        <span className="w-10 text-right text-[10px] text-[color:var(--muted)]">{s.recommendedMbps}</span>
+                        <span className="w-10 text-right text-xs text-[color:var(--muted)]">{s.recommendedMbps}</span>
                       </div>
                     ))}
                 </div>
@@ -987,7 +987,7 @@ function ImpactRow({ icon, value, label, color, sub }: { icon: React.ReactNode; 
           <span className="font-display text-sm font-semibold">{value.toLocaleString("en-US")}</span>{" "}
           {label}
         </p>
-        {sub && <p className="text-[10px] text-[color:var(--muted)]">{sub}</p>}
+        {sub && <p className="text-xs text-[color:var(--muted)]">{sub}</p>}
       </div>
     </div>
   );
@@ -1000,9 +1000,9 @@ function SidebarStat({ icon, label, value, sub }: { icon: React.ReactNode; label
         {icon}
       </div>
       <div>
-        <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">{label}</p>
+        <p className="text-xs uppercase tracking-wider text-[color:var(--muted)]">{label}</p>
         <p className="font-display text-2xl font-semibold leading-tight text-[color:var(--foreground)]">{typeof value === "number" ? value.toLocaleString("en-US") : value}</p>
-        {sub && <p className="text-[10px] text-[color:var(--muted)]">{sub}</p>}
+        {sub && <p className="text-xs text-[color:var(--muted)]">{sub}</p>}
       </div>
     </div>
   );
@@ -1016,14 +1016,14 @@ function StatusBar({ label, count, total, color }: { label: string; count: numbe
         className="inline-block h-2 w-2 rounded-full"
         style={{ background: color }}
       />
-      <span className="w-20 text-[10px] text-[color:var(--muted)]">{label}</span>
+      <span className="w-20 text-xs text-[color:var(--muted)]">{label}</span>
       <div className="flex-1 overflow-hidden rounded-full bg-white/60" style={{ height: 6 }}>
         <div
           className="h-full rounded-full transition-all duration-300"
           style={{ width: `${pct}%`, background: color }}
         />
       </div>
-      <span className="w-8 text-right text-[10px] font-medium text-[color:var(--foreground)]">{count}</span>
+      <span className="w-8 text-right text-xs font-medium text-[color:var(--foreground)]">{count}</span>
     </div>
   );
 }
@@ -1033,7 +1033,7 @@ function CostLine({ label, value, detail, bold }: { label: string; value: number
     <div className={`flex items-baseline justify-between text-xs ${bold ? "font-semibold text-[color:var(--foreground)]" : "text-[color:var(--muted)]"}`}>
       <span>
         {label}
-        {detail && <span className="ml-1 text-[10px] opacity-60">({detail})</span>}
+        {detail && <span className="ml-1 text-xs opacity-60">({detail})</span>}
       </span>
       <span className={bold ? "font-display text-base" : ""}>${value.toLocaleString("en-US")}</span>
     </div>
@@ -1051,9 +1051,9 @@ function CostInput({
 }) {
   return (
     <label className="block">
-      <span className="text-[9px] uppercase tracking-wider text-[color:var(--muted)]">{label}</span>
+      <span className="text-xs uppercase tracking-wider text-[color:var(--muted)]">{label}</span>
       <div className="mt-0.5 flex items-center gap-0.5 rounded-lg border border-[color:var(--line)] bg-white px-2 py-1">
-        {prefix && <span className="text-[10px] text-[color:var(--muted)]">{prefix}</span>}
+        {prefix && <span className="text-xs text-[color:var(--muted)]">{prefix}</span>}
         <input
           type="number"
           value={value}
@@ -1062,7 +1062,7 @@ function CostInput({
           step={prefix === "$" ? 10 : 0.5}
           min={0}
         />
-        {suffix && <span className="text-[10px] text-[color:var(--muted)]">{suffix}</span>}
+        {suffix && <span className="text-xs text-[color:var(--muted)]">{suffix}</span>}
       </div>
     </label>
   );

@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   Activity,
   Heart,
   Thermometer,
@@ -19,6 +18,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 /* ------------------------------------------------------------------ */
 /*  Animation                                                          */
@@ -85,10 +86,10 @@ function VitalCard({ vital }: { vital: VitalSign }) {
           <Icon className={`h-4.5 w-4.5 ${colors.text}`} />
         </div>
         <div className="flex-1">
-          <p className="text-[11px] text-[color:var(--muted)]">{vital.name}</p>
+          <p className="text-xs text-[color:var(--muted)]">{vital.name}</p>
           <div className="flex items-baseline gap-1">
             <span className="font-display text-xl font-semibold text-[color:var(--foreground)]">{vital.value}</span>
-            <span className="text-[10px] text-[color:var(--muted)]">{vital.unit}</span>
+            <span className="text-xs text-[color:var(--muted)]">{vital.unit}</span>
           </div>
         </div>
         <div className={`h-2 w-2 rounded-full ${colors.dot}`} />
@@ -97,7 +98,7 @@ function VitalCard({ vital }: { vital: VitalSign }) {
         <motion.p
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          className="mt-3 border-t border-[color:var(--line)] pt-3 text-[11px] leading-relaxed text-[color:var(--muted)]"
+          className="mt-3 border-t border-[color:var(--line)] pt-3 text-xs leading-relaxed text-[color:var(--muted)]"
         >
           {vital.description}
         </motion.p>
@@ -118,15 +119,13 @@ export default function BioIntelliSensePage() {
       animate="show"
       className="flex flex-col gap-8"
     >
-      {/* ── Back ──────────────────────────────────────────────── */}
+      {/* ── Breadcrumbs ─────────────────────────────────────────── */}
       <motion.div variants={fadeUp}>
-        <Link
-          href="/kentucky"
-          className="inline-flex items-center gap-1.5 text-sm text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Kentucky
-        </Link>
+        <Breadcrumbs items={[
+          { label: "Kentucky", href: "/kentucky" },
+          { label: "Ecosystem", href: "/kentucky" },
+          { label: "BioIntelliSense" },
+        ]} />
       </motion.div>
 
       {/* ── Hero ──────────────────────────────────────────────── */}
@@ -164,7 +163,7 @@ export default function BioIntelliSensePage() {
             <div key={label} className="rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-3">
               <FIcon className="h-4 w-4 text-[#00b4d8]" />
               <p className="mt-2 text-xs font-semibold text-[color:var(--foreground)]">{label}</p>
-              <p className="mt-0.5 text-[10px] text-[color:var(--muted)]">{desc}</p>
+              <p className="mt-0.5 text-xs text-[color:var(--muted)]">{desc}</p>
             </div>
           ))}
         </div>
@@ -197,24 +196,24 @@ export default function BioIntelliSensePage() {
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
           <div className="rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-4 text-center">
             <p className="font-display text-3xl font-semibold text-[color:var(--teal)]">94%</p>
-            <p className="mt-1 text-[10px] text-[color:var(--muted)]">Patient compliance rate</p>
-            <p className="text-[9px] text-[color:var(--muted)]">(industry avg: ~60%)</p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">Patient compliance rate</p>
+            <p className="text-xs text-[color:var(--muted)]">(industry avg: ~60%)</p>
           </div>
           <div className="rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-4 text-center">
             <p className="font-display text-3xl font-semibold text-[color:var(--foreground)]">89%</p>
-            <p className="mt-1 text-[10px] text-[color:var(--muted)]">Reduction in preventable readmissions</p>
-            <p className="text-[9px] text-[color:var(--muted)]">(published clinical studies)</p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">Reduction in preventable readmissions</p>
+            <p className="text-xs text-[color:var(--muted)]">(published clinical studies)</p>
           </div>
           <div className="rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-4 text-center">
             <p className="font-display text-3xl font-semibold text-[color:#2b7ab8]">24/7</p>
-            <p className="mt-1 text-[10px] text-[color:var(--muted)]">Continuous monitoring</p>
-            <p className="text-[9px] text-[color:var(--muted)]">(vs. spot-checks every 4-8 hrs)</p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">Continuous monitoring</p>
+            <p className="text-xs text-[color:var(--muted)]">(vs. spot-checks every 4-8 hrs)</p>
           </div>
         </div>
 
         <div className="mt-4 rounded-xl border border-dashed border-[color:var(--line)] bg-[color:var(--surface-soft)] p-4">
           <p className="text-xs font-medium text-[color:var(--foreground)]">How it connects to RHT</p>
-          <p className="mt-1 text-[11px] leading-relaxed text-[color:var(--muted)]">
+          <p className="mt-1 text-xs leading-relaxed text-[color:var(--muted)]">
             BioButton enables post-discharge monitoring for rural patients who would otherwise need to travel hours for follow-up visits. Combined with Starlink broadband coverage and telehealth platforms, a rural facility can monitor chronic disease patients remotely — catching deterioration early, reducing ER visits, and keeping patients closer to home.
           </p>
         </div>
@@ -253,7 +252,7 @@ export default function BioIntelliSensePage() {
                 <CaseIcon className="h-4 w-4 text-[#00b4d8]" />
                 <h3 className="text-sm font-semibold text-[color:var(--foreground)]">{title}</h3>
               </div>
-              <p className="mt-2 text-[11px] leading-relaxed text-[color:var(--muted)]">{desc}</p>
+              <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">{desc}</p>
             </div>
           ))}
         </div>
@@ -261,12 +260,10 @@ export default function BioIntelliSensePage() {
 
       {/* ── Footer link ───────────────────────────────────────── */}
       <motion.div variants={fadeUp} className="border-t border-[color:var(--line)] pt-6">
-        <Link
-          href="/kentucky"
-          className="text-sm text-[color:var(--teal)] underline decoration-[color:var(--teal)]/30 underline-offset-2 hover:decoration-[color:var(--teal)]"
-        >
-          Back to Kentucky hub
-        </Link>
+        <Breadcrumbs items={[
+          { label: "Kentucky", href: "/kentucky" },
+          { label: "BioIntelliSense" },
+        ]} />
       </motion.div>
     </motion.div>
   );

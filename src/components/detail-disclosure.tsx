@@ -82,7 +82,7 @@ function DetailButton({
       aria-expanded={open}
       aria-label={`${open ? "Hide" : "Show"} details for ${label}`}
       className={cn(
-        "inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1.5 text-[11px] uppercase tracking-[0.16em] transition-colors",
+        "inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs uppercase tracking-[0.16em] transition-colors",
         toneClasses[tone].button
       )}
     >
@@ -209,7 +209,7 @@ export function DisclosureRow({
           {badge ? (
             <span
               className={cn(
-                "rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.16em]",
+                "rounded-full border px-3 py-1 text-xs uppercase tracking-[0.16em]",
                 tone === "navy"
                   ? "border-white/10 bg-white/6 text-white/65"
                   : "border-[color:var(--line)] bg-white/82 text-[color:var(--muted)]"
@@ -224,7 +224,7 @@ export function DisclosureRow({
               target="_blank"
               rel="noreferrer"
               className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-[11px] uppercase tracking-[0.16em] transition-colors",
+                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs uppercase tracking-[0.16em] transition-colors",
                 toneClasses[tone].button
               )}
             >

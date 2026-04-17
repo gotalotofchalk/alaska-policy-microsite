@@ -4,10 +4,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, Menu, X, Lock } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/utils";
+import { useView, VIEW_ROLES } from "@/components/view-context";
 
 /* ------------------------------------------------------------------ */
 /*  Navigation config per context                                      */
@@ -64,6 +65,18 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const viewRef = useRef<HTMLDivElement>(null);
+  const { role, setRole, roleConfig } = useView();
+
+  useEffect(() => {
+    if (!viewOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (viewRef.current && !viewRef.current.contains(e.target as Node)) setViewOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [viewOpen]);
   const context = getNavContext(pathname);
   const navItems = context === "alaska" ? ALASKA_NAV : context === "kentucky" ? KENTUCKY_NAV : [];
 
@@ -139,6 +152,45 @@ export function SiteHeader() {
 
         {/* ── Right side ────────────────────────────────────── */}
         <div className="flex shrink-0 items-center gap-2">
+          {/* View-as toggle */}
+          <div ref={viewRef} className="relative hidden lg:block">
+            <button
+              onClick={() => setViewOpen((p) => !p)}
+              className="flex items-center gap-1.5 rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-3 py-2 text-xs text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-strong)]"
+            >
+              <span className="text-[color:var(--muted)]">View:</span>
+              <span className="font-medium">{roleConfig.shortLabel}</span>
+            </button>
+            <AnimatePresence>
+              {viewOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 4, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-2xl border border-[color:var(--line)] bg-white shadow-[var(--shadow-lift)]"
+                >
+                  {VIEW_ROLES.map((r) => (
+                    <button
+                      key={r.key}
+                      type="button"
+                      onClick={() => { setRole(r.key); setViewOpen(false); }}
+                      className={cn(
+                        "flex w-full flex-col gap-0.5 px-4 py-3 text-left transition-colors hover:bg-[color:var(--surface-soft)]",
+                        role === r.key && "bg-[color:var(--surface-soft)]",
+                      )}
+                    >
+                      <span className={cn("text-xs font-medium", role === r.key ? "text-[color:var(--teal)]" : "text-[color:var(--foreground)]")}>
+                        {r.label}
+                      </span>
+                      <span className="text-xs text-[color:var(--muted)]">{r.description}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <button
             onClick={() => setAdminOpen(true)}
             className="hidden rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-strong)] lg:inline-flex"
@@ -148,7 +200,7 @@ export function SiteHeader() {
 
           <div
             className={cn(
-              "hidden rounded-full px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider lg:block",
+              "hidden rounded-full px-3 py-1.5 text-xs font-medium uppercase tracking-wider lg:block",
               CONTEXT_COLORS[context],
             )}
           >

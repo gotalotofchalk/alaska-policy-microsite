@@ -3,6 +3,7 @@ import { Newsreader, Public_Sans } from "next/font/google";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { ViewProvider } from "@/components/view-context";
 
 import "./globals.css";
 
@@ -31,6 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${display.variable} ${sans.variable}`}>
+        <ViewProvider>
         <div className="relative min-h-screen">
           <SiteHeader />
           <main className="mx-auto flex w-full max-w-[100rem] flex-col gap-10 px-4 py-8 md:px-8 lg:px-12">
@@ -38,6 +40,7 @@ export default function RootLayout({
           </main>
           <SiteFooter />
         </div>
+        </ViewProvider>
       </body>
     </html>
   );

@@ -84,7 +84,7 @@ export default function LandingPage() {
                     <p className="font-display text-2xl text-[color:var(--foreground)]">{state.name}</p>
                     <div className="mt-1 flex items-center gap-2">
                       {state.highlight && (
-                        <span className="rounded-full bg-[color:rgba(15,124,134,0.12)] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[color:var(--teal)]">
+                        <span className="rounded-full bg-[color:rgba(15,124,134,0.12)] px-2.5 py-0.5 text-xs font-medium uppercase tracking-wider text-[color:var(--teal)]">
                           {state.highlight}
                         </span>
                       )}
@@ -116,7 +116,7 @@ export default function LandingPage() {
               className="flex flex-col items-center gap-1.5 rounded-xl border border-[color:var(--line)] bg-white/40 p-3 opacity-50"
             >
               <span className="text-sm font-semibold text-[color:var(--foreground)]">{state.abbr}</span>
-              <span className="text-[10px] text-[color:var(--muted)]">{state.name}</span>
+              <span className="text-xs text-[color:var(--muted)]">{state.name}</span>
             </motion.div>
           ))}
         </div>

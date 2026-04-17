@@ -38,7 +38,7 @@ export function SeverityReadinessMatrix({
               <div
                 className={`flex h-5 w-5 items-center justify-center rounded-full border-2 border-white shadow-lg ${pathwayColor[region.recommendedPathway]}`}
               />
-              <div className="rounded-full bg-white/90 px-2 py-1 text-[11px] font-medium text-[color:var(--foreground)] shadow-sm">
+              <div className="rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-[color:var(--foreground)] shadow-sm">
                 {region.name}
               </div>
             </div>

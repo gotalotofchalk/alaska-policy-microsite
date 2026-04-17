@@ -754,7 +754,7 @@ export function SimulatorClient({
                   >
                     <div className="flex items-center justify-between gap-4">
                       <p className="font-medium text-white">{note.name}</p>
-                      <span className="rounded-full bg-[color:rgba(15,124,134,0.18)] px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#9be6e2]">
+                      <span className="rounded-full bg-[color:rgba(15,124,134,0.18)] px-3 py-1 text-xs uppercase tracking-[0.18em] text-[#9be6e2]">
                         {note.evidenceTier}
                       </span>
                     </div>
@@ -887,7 +887,7 @@ function ImpactCompareSlider({
       </div>
 
       <div className="relative z-20 border-t border-[color:var(--line)] bg-[color:#faf7f0]/92 px-5 py-5">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--muted)]">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
           <span>Current baseline</span>
           <span>Drag the divider to compare the modeled investment effect</span>
           <span>After investment</span>
@@ -1429,7 +1429,7 @@ function ComparisonPackageCard({
             {scenario.clinicInstalls} installs · {titleCase(scenario.staffingModel)}
           </p>
         </div>
-        <span className={`rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.18em] ${toneClasses[accentTone].pill}`}>
+        <span className={`rounded-full px-3 py-1 text-xs uppercase tracking-[0.18em] ${toneClasses[accentTone].pill}`}>
           {scenario.referralModel === "tele_ophthalmology_network"
             ? "network-led"
             : scenario.referralModel === "regional_hub"
@@ -1508,7 +1508,7 @@ function BlindnessReductionSpotlight({
 
       <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-end">
         <div className="rounded-[1.3rem] border border-white/10 bg-white/6 px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">Baseline risk</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-white/45">Baseline risk</p>
           <p className="mt-3 font-display text-[2.6rem] leading-none">{formatSmartCount(baselineBlindness)}</p>
           <p className="mt-3 text-sm leading-6 text-white/70">
             Modeled {DISPLAY_HORIZON_YEARS}-year cases likely ending in blindness or profound
@@ -1525,12 +1525,12 @@ function BlindnessReductionSpotlight({
         <div className="rounded-[1.3rem] border border-white/10 bg-white/8 px-4 py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">With investment</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/45">With investment</p>
               <p className="mt-3 font-display text-[2.6rem] leading-none">
                 {formatSmartCount(interventionBlindness)}
               </p>
             </div>
-            <span className="rounded-full border border-white/10 bg-[color:rgba(15,124,134,0.16)] px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#8fe2dd]">
+            <span className="rounded-full border border-white/10 bg-[color:rgba(15,124,134,0.16)] px-3 py-1 text-xs uppercase tracking-[0.18em] text-[#8fe2dd]">
               {formatSmartCount(blindnessAvoided)} avoided
             </span>
           </div>
@@ -1596,7 +1596,7 @@ function CompareHighlightStat({
       whileHover={{ y: -3, scale: 1.01 }}
       transition={hoverSpring}
     >
-      <p className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--muted)]">{label}</p>
+      <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">{label}</p>
       <p className="mt-3 font-display text-3xl text-[color:var(--foreground)]">{value}</p>
       <div className="pointer-events-none absolute inset-x-4 bottom-4 hidden rounded-[1rem] border border-[color:var(--line)] bg-white/92 p-3 text-xs leading-5 text-[color:var(--foreground)] opacity-0 transition duration-200 md:block md:translate-y-2 md:group-hover:translate-y-0 md:group-hover:opacity-100">
         {note}
@@ -1688,10 +1688,10 @@ function PathwaySummaryPanel({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/65">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.2em] text-white/65">
               Confidence {confidenceLabel}
             </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/65">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.2em] text-white/65">
               Pathway summary
             </span>
           </div>
@@ -1717,7 +1717,7 @@ function PathwaySummaryPanel({
             key={milestone.label}
             className="rounded-[1.1rem] border border-white/10 bg-white/6 px-4 py-3"
           >
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/48">
+            <p className="text-xs uppercase tracking-[0.18em] text-white/48">
               {milestone.label}
             </p>
             <p className="mt-2 font-display text-[2rem] leading-none text-white">
@@ -1844,7 +1844,7 @@ function SidebarSectionHeading({ children }: { children: string }) {
 function BaselineMiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[1.2rem] border border-[color:var(--line)] bg-white/84 px-3 py-3">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
+      <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
       <p className="mt-2 font-display text-[1.7rem] leading-none text-[color:var(--foreground)]">{value}</p>
     </div>
   );
@@ -1867,7 +1867,7 @@ function PathwaySignalPill({
       className={`rounded-[1.2rem] border px-4 py-3 ${toneClasses[tone].shell}`}
       transition={layoutSpring}
     >
-      <p className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--muted)]">
+      <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
         {label}
       </p>
       <p className="mt-2 font-display text-[1.95rem] leading-none text-[color:var(--foreground)]">
@@ -1933,7 +1933,7 @@ function TransitionMetricCard({
 
       <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-end">
         <div className="min-w-0 rounded-[1.15rem] border border-white/45 bg-white/55 px-4 py-3">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--muted)]">Today</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">Today</p>
           <p className="mt-2 font-display text-[2.35rem] leading-none text-[color:var(--foreground)]">
             {formatByType(before, format)}
           </p>
@@ -1955,7 +1955,7 @@ function TransitionMetricCard({
         </div>
 
         <div className="min-w-0 rounded-[1.15rem] border border-white/45 bg-white/78 px-4 py-3 md:text-right">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--muted)]">
+          <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--muted)]">
             With investment
           </p>
           <p className="mt-2 font-display text-[2.35rem] leading-none text-[color:var(--foreground)]">
@@ -2033,7 +2033,7 @@ function HealthOutcomeRow({
             <p className="font-display text-[2.35rem] leading-none text-white">
               {formatByType(value.base, format)}
             </p>
-            <p className="mt-2 text-[11px] uppercase tracking-[0.18em] text-white/50">
+            <p className="mt-2 text-xs uppercase tracking-[0.18em] text-white/50">
               Range {formatRange(value, format)}
             </p>
           </div>
@@ -2281,7 +2281,7 @@ function CardInfoButton({
       onClick={onClick}
       aria-expanded={open}
       aria-label={`${open ? "Hide" : "Show"} explanation for ${label}`}
-      className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1.5 text-[11px] uppercase tracking-[0.16em] transition-colors ${
+      className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs uppercase tracking-[0.16em] transition-colors ${
         dark
           ? "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
           : "border-[color:var(--line)] bg-white/80 text-[color:var(--muted)] hover:bg-white"

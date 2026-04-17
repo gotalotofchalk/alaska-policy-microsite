@@ -63,7 +63,7 @@ export default function PlaybooksPage() {
 function PlaybookSignal({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[1.2rem] border border-[color:var(--line)] bg-white/78 p-4">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
+      <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
       <p className="mt-2 text-sm leading-6 text-[color:var(--foreground)]">{value}</p>
     </div>
   );

@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   Shield,
   ShieldCheck,
   ShieldAlert,
@@ -16,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getKYFacilitySummary } from "@/data/kentucky-facilities";
 import { usNum } from "@/lib/utils";
 
@@ -47,15 +47,13 @@ export default function CybersecurityPage() {
       animate="show"
       className="flex flex-col gap-8"
     >
-      {/* ── Back ──────────────────────────────────────────────── */}
+      {/* ── Breadcrumbs ─────────────────────────────────────────── */}
       <motion.div variants={fadeUp}>
-        <Link
-          href="/kentucky"
-          className="inline-flex items-center gap-1.5 text-sm text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Kentucky
-        </Link>
+        <Breadcrumbs items={[
+          { label: "Kentucky", href: "/kentucky" },
+          { label: "Infrastructure", href: "/kentucky" },
+          { label: "Cybersecurity" },
+        ]} />
       </motion.div>
 
       {/* ── Hero ──────────────────────────────────────────────── */}
@@ -108,7 +106,7 @@ export default function CybersecurityPage() {
               <Database className="h-4 w-4 text-[#0078d4]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Azure SQL & Cosmos DB</h3>
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-[color:var(--muted)]">
+            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
               HIPAA-compliant database infrastructure with encryption at rest and in transit. Automated backup, geo-redundancy, and disaster recovery for patient data across all rural facilities.
             </p>
           </div>
@@ -118,7 +116,7 @@ export default function CybersecurityPage() {
               <Lock className="h-4 w-4 text-[#0078d4]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Microsoft Defender for Cloud</h3>
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-[color:var(--muted)]">
+            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
               Continuous security posture assessment across cloud and hybrid environments. Threat detection, vulnerability scanning, and compliance monitoring tailored for healthcare workloads.
             </p>
           </div>
@@ -128,7 +126,7 @@ export default function CybersecurityPage() {
               <Server className="h-4 w-4 text-[#0078d4]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Azure Sentinel (SIEM)</h3>
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-[color:var(--muted)]">
+            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
               Cloud-native security information and event management. Real-time log aggregation across facility networks, automated incident detection, and response playbooks for healthcare-specific threats.
             </p>
           </div>
@@ -138,7 +136,7 @@ export default function CybersecurityPage() {
               <FileWarning className="h-4 w-4 text-[#0078d4]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Compliance Manager</h3>
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-[color:var(--muted)]">
+            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
               Pre-built assessment templates for HIPAA, HITECH, and NIST CSF. Continuous compliance scoring, gap analysis, and remediation tracking across all enrolled facilities.
             </p>
           </div>
@@ -163,7 +161,7 @@ export default function CybersecurityPage() {
               <Eye className="h-4 w-4 text-[color:var(--teal)]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">AI Vulnerability Detection</h3>
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-[color:var(--muted)]">
+            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
               Claude-powered analysis of network configurations, access patterns, and system logs to identify vulnerabilities before they are exploited. Contextualized for healthcare IT environments.
             </p>
           </div>
@@ -173,7 +171,7 @@ export default function CybersecurityPage() {
               <ShieldCheck className="h-4 w-4 text-[color:var(--teal)]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Threat Analysis & Response</h3>
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-[color:var(--muted)]">
+            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
               Natural-language threat briefings and incident response guidance for facility IT staff. Translates complex security alerts into actionable steps, reducing mean time to respond.
             </p>
           </div>
@@ -193,13 +191,13 @@ export default function CybersecurityPage() {
           ].map(({ step, title, desc, icon: StepIcon }) => (
             <div key={step} className="relative rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-4">
               <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--foreground)] text-[10px] font-bold text-white">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--foreground)] text-xs font-bold text-white">
                   {step}
                 </span>
                 <StepIcon className="h-4 w-4 text-[color:#2b7ab8]" />
               </div>
               <h3 className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">{title}</h3>
-              <p className="mt-1 text-[11px] leading-relaxed text-[color:var(--muted)]">{desc}</p>
+              <p className="mt-1 text-xs leading-relaxed text-[color:var(--muted)]">{desc}</p>
             </div>
           ))}
         </div>
@@ -207,12 +205,10 @@ export default function CybersecurityPage() {
 
       {/* ── Footer link ───────────────────────────────────────── */}
       <motion.div variants={fadeUp} className="border-t border-[color:var(--line)] pt-6">
-        <Link
-          href="/kentucky"
-          className="text-sm text-[color:var(--teal)] underline decoration-[color:var(--teal)]/30 underline-offset-2 hover:decoration-[color:var(--teal)]"
-        >
-          Back to Kentucky hub
-        </Link>
+        <Breadcrumbs items={[
+          { label: "Kentucky", href: "/kentucky" },
+          { label: "Cybersecurity" },
+        ]} />
       </motion.div>
     </motion.div>
   );

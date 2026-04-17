@@ -25,7 +25,7 @@ export function PricingDisclaimer({
           <p className="text-xs font-medium text-amber-900">
             Pricing assumption: {discountPct}% bulk discount
           </p>
-          <p className="text-[11px] leading-[1.6] text-amber-800">
+          <p className="text-xs leading-[1.6] text-amber-800">
             All cost estimates assume a {discountPct}% discount off Starlink retail
             pricing ({planName}: ${retailHardware} hardware, ${retailMonthly}/mo
             service at retail).{" "}
@@ -36,7 +36,7 @@ export function PricingDisclaimer({
             the settings panel above to explore alternative scenarios.
           </p>
           {!compact && (
-            <p className="text-[10px] leading-[1.5] text-amber-700">
+            <p className="text-xs leading-[1.5] text-amber-700">
               Sources: Starlink.com residential pricing (Jan 2026 restructure).
               SpaceX&apos;s FCC RDOF award was permanently revoked (Dec 2023). Kentucky
               BEAD Draft Final Proposal (Aug 2025) allocates 25% of $1.1B to LEO

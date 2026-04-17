@@ -27,7 +27,7 @@ export default function AssessPage() {
                     <p className="mt-1 text-sm text-[color:var(--muted)]">Population: {region.population.toLocaleString("en-US")} &middot; Signal: {region.expectedTimeToSignalMonths} months</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">Severity / Readiness</p>
+                    <p className="text-xs uppercase tracking-wider text-[color:var(--muted)]">Severity / Readiness</p>
                     <p className="mt-1 font-display text-2xl text-[color:var(--foreground)]">{region.scores.deficitSeverityScore.toFixed(0)} / {region.scores.executionReadinessScore.toFixed(0)}</p>
                   </div>
                 </div>
@@ -36,16 +36,16 @@ export default function AssessPage() {
                   <ScoreBar label="Execution Readiness" score={region.scores.executionReadinessScore} color="var(--teal)" subScores={[{label:"Digital",value:region.scores.digitalReadinessSubScore},{label:"Operational",value:region.scores.operationalReadinessSubScore},{label:"Policy",value:region.scores.policyReadinessSubScore},{label:"Measurement",value:region.scores.measurementReadinessSubScore}]} />
                 </div>
                 <div className="mt-4">
-                  <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">Top deficits</p>
+                  <p className="text-xs uppercase tracking-wider text-[color:var(--muted)]">Top deficits</p>
                   <ul className="mt-2 space-y-1">{region.topDeficits.map((d) => (<li key={d} className="rounded-lg border border-[color:var(--line)] bg-white/60 px-3 py-2 text-sm text-[color:var(--foreground)]">{d}</li>))}</ul>
                 </div>
                 <div className="mt-4">
-                  <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">Recommended portfolio</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">{region.recommendedInitiatives.map((type) => { const i = INTERVENTION_CATALOG.find((x) => x.type === type); return (<span key={type} className="rounded-full border border-[color:var(--line)] bg-white/80 px-2.5 py-1 text-[11px] text-[color:var(--foreground)]">{i?.label ?? type}</span>);})}</div>
+                  <p className="text-xs uppercase tracking-wider text-[color:var(--muted)]">Recommended portfolio</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">{region.recommendedInitiatives.map((type) => { const i = INTERVENTION_CATALOG.find((x) => x.type === type); return (<span key={type} className="rounded-full border border-[color:var(--line)] bg-white/80 px-2.5 py-1 text-xs text-[color:var(--foreground)]">{i?.label ?? type}</span>);})}</div>
                 </div>
                 <div className="mt-4">
-                  <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">CMS categories covered ({region.cmsCategories.length}/6)</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">{region.cmsCategories.map((cat) => (<span key={cat} className="rounded-full bg-[color:rgba(15,124,134,0.1)] px-2.5 py-1 text-[10px] text-[color:var(--teal)]">{CMS_CATEGORY_LABELS[cat].split("&")[0].trim()}</span>))}</div>
+                  <p className="text-xs uppercase tracking-wider text-[color:var(--muted)]">CMS categories covered ({region.cmsCategories.length}/6)</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">{region.cmsCategories.map((cat) => (<span key={cat} className="rounded-full bg-[color:rgba(15,124,134,0.1)] px-2.5 py-1 text-xs text-[color:var(--teal)]">{CMS_CATEGORY_LABELS[cat].split("&")[0].trim()}</span>))}</div>
                 </div>
                 <div className="mt-5"><Link href={`/portfolio-builder?region=${region.slug}`} className="inline-flex rounded-full border border-[color:var(--line)] bg-white px-4 py-2.5 text-sm text-[color:var(--foreground)] transition-colors hover:bg-[color:#f9f5ee]">Build portfolio for {region.name}</Link></div>
               </article>
@@ -62,7 +62,7 @@ function ScoreBar({label,score,color,subScores}:{label:string;score:number;color
     <div>
       <div className="flex items-center justify-between text-sm"><span className="font-medium text-[color:var(--foreground)]">{label}</span><span className="font-display text-lg text-[color:var(--foreground)]">{score.toFixed(1)}</span></div>
       <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-[color:#efe8db]"><div className="h-full rounded-full transition-all duration-500" style={{width:`${Math.min(score,100)}%`,backgroundColor:color}} /></div>
-      <div className="mt-2 flex gap-2">{subScores.map((sub) => (<div key={sub.label} className="flex-1"><div className="flex items-center justify-between text-[10px] text-[color:var(--muted)]"><span>{sub.label}</span><span>{sub.value}</span></div><div className="mt-0.5 h-1 overflow-hidden rounded-full bg-[color:#efe8db]"><div className="h-full rounded-full opacity-60 transition-all duration-500" style={{width:`${Math.min(sub.value,100)}%`,backgroundColor:color}} /></div></div>))}</div>
+      <div className="mt-2 flex gap-2">{subScores.map((sub) => (<div key={sub.label} className="flex-1"><div className="flex items-center justify-between text-xs text-[color:var(--muted)]"><span>{sub.label}</span><span>{sub.value}</span></div><div className="mt-0.5 h-1 overflow-hidden rounded-full bg-[color:#efe8db]"><div className="h-full rounded-full opacity-60 transition-all duration-500" style={{width:`${Math.min(sub.value,100)}%`,backgroundColor:color}} /></div></div>))}</div>
     </div>
   );
 }

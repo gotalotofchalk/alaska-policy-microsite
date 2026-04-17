@@ -24,7 +24,7 @@ export default function MapPage() {
             <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[color:var(--muted)]">Map layers</p>
             {MAP_VIEWS.map((view) => (
               <button key={view.id} type="button" onClick={() => setActiveView(view)} className={`w-full rounded-[1.2rem] border p-3 text-left transition-all ${activeView.id === view.id ? "border-[color:var(--foreground)] bg-[color:#102235] text-white shadow-lg" : "border-[color:var(--line)] bg-white/80 text-[color:var(--foreground)] hover:bg-white"}`}>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${activeView.id === view.id ? "bg-white/15 text-white/80" : DOMAIN_COLORS[view.domain]}`}>{view.domain === "all" ? "All" : `Domain: ${view.domain}`}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs uppercase tracking-wider ${activeView.id === view.id ? "bg-white/15 text-white/80" : DOMAIN_COLORS[view.domain]}`}>{view.domain === "all" ? "All" : `Domain: ${view.domain}`}</span>
                 <p className="mt-1.5 text-sm font-medium">{view.label}</p>
                 <p className={`mt-1 text-xs leading-5 ${activeView.id === view.id ? "text-white/65" : "text-[color:var(--muted)]"}`}>{view.description}</p>
               </button>

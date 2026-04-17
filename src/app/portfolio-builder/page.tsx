@@ -47,14 +47,14 @@ function PortfolioBuilderInner() {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="font-medium">{intervention.label}</p>
-                          {isRecommended && <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${isSelected ? "bg-white/15 text-white/70" : "bg-[color:rgba(15,124,134,0.12)] text-[color:var(--teal)]"}`}>Recommended</span>}
-                          {hasUnmet && <span className="flex items-center gap-1 rounded-full bg-[color:rgba(196,97,42,0.12)] px-2 py-0.5 text-[10px] text-[color:var(--accent)]"><AlertTriangle className="h-3 w-3" /> Prerequisites needed</span>}
+                          {isRecommended && <span className={`rounded-full px-2 py-0.5 text-xs uppercase tracking-wider ${isSelected ? "bg-white/15 text-white/70" : "bg-[color:rgba(15,124,134,0.12)] text-[color:var(--teal)]"}`}>Recommended</span>}
+                          {hasUnmet && <span className="flex items-center gap-1 rounded-full bg-[color:rgba(196,97,42,0.12)] px-2 py-0.5 text-xs text-[color:var(--accent)]"><AlertTriangle className="h-3 w-3" /> Prerequisites needed</span>}
                         </div>
                         <p className={`mt-1 text-xs leading-5 ${isSelected ? "text-white/65" : "text-[color:var(--muted)]"}`}>{intervention.description}</p>
                         <div className="mt-2 flex flex-wrap gap-1.5">
-                          {intervention.rhtCollaborativePartner && <span className={`rounded-full px-2 py-0.5 text-[10px] ${isSelected ? "bg-white/10 text-white/60" : "bg-[color:var(--line)] text-[color:var(--muted)]"}`}>{intervention.rhtCollaborativePartner.split("/")[0].trim()}</span>}
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] ${isSelected ? "bg-white/10 text-white/60" : "bg-[color:var(--line)] text-[color:var(--muted)]"}`}>{intervention.estimatedTimeToSignalMonths}mo signal</span>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] ${isSelected ? "bg-white/10 text-white/60" : "bg-[color:var(--line)] text-[color:var(--muted)]"}`}>${(intervention.estimatedCostRange.low/1000).toFixed(0)}K-${(intervention.estimatedCostRange.high/1000).toFixed(0)}K</span>
+                          {intervention.rhtCollaborativePartner && <span className={`rounded-full px-2 py-0.5 text-xs ${isSelected ? "bg-white/10 text-white/60" : "bg-[color:var(--line)] text-[color:var(--muted)]"}`}>{intervention.rhtCollaborativePartner.split("/")[0].trim()}</span>}
+                          <span className={`rounded-full px-2 py-0.5 text-xs ${isSelected ? "bg-white/10 text-white/60" : "bg-[color:var(--line)] text-[color:var(--muted)]"}`}>{intervention.estimatedTimeToSignalMonths}mo signal</span>
+                          <span className={`rounded-full px-2 py-0.5 text-xs ${isSelected ? "bg-white/10 text-white/60" : "bg-[color:var(--line)] text-[color:var(--muted)]"}`}>${(intervention.estimatedCostRange.low/1000).toFixed(0)}K-${(intervention.estimatedCostRange.high/1000).toFixed(0)}K</span>
                         </div>
                       </div>
                       <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${isSelected ? "border-white/30 bg-white/20" : "border-[color:var(--line)] bg-white"}`}>{isSelected && <Check className="h-4 w-4 text-white" />}</div>
@@ -68,7 +68,7 @@ function PortfolioBuilderInner() {
           <section className="space-y-4 xl:sticky xl:top-24 xl:self-start">
             <div className={`rounded-[1.8rem] border p-5 ${compliance.meetsMinimum ? "border-[color:rgba(15,124,134,0.2)] bg-[linear-gradient(180deg,rgba(15,124,134,0.06),rgba(255,255,255,0.96))]" : "border-[color:rgba(196,97,42,0.2)] bg-[linear-gradient(180deg,rgba(196,97,42,0.06),rgba(255,255,255,0.96))]"}`}>
               <div className="flex items-center gap-2">{compliance.meetsMinimum ? <CheckCircle2 className="h-5 w-5 text-[color:var(--teal)]" /> : <XCircle className="h-5 w-5 text-[color:var(--accent)]" />}<p className="text-sm font-medium text-[color:var(--foreground)]">CMS Compliance: {compliance.categoryCount}/6 categories{compliance.meetsMinimum ? " (meets 3+ minimum)" : " (needs 3+)"}</p></div>
-              <div className="mt-3 flex flex-wrap gap-1.5">{Object.entries(CMS_CATEGORY_LABELS).map(([key, label]) => { const active = compliance.categories.has(key); return (<span key={key} className={`rounded-full px-2.5 py-1 text-[10px] ${active ? "bg-[color:var(--teal)] text-white" : "bg-[color:var(--line)] text-[color:var(--muted)]"}`}>{label.split("&")[0].trim()}</span>);})}</div>
+              <div className="mt-3 flex flex-wrap gap-1.5">{Object.entries(CMS_CATEGORY_LABELS).map(([key, label]) => { const active = compliance.categories.has(key); return (<span key={key} className={`rounded-full px-2.5 py-1 text-xs ${active ? "bg-[color:var(--teal)] text-white" : "bg-[color:var(--line)] text-[color:var(--muted)]"}`}>{label.split("&")[0].trim()}</span>);})}</div>
             </div>
             <div className="surface-card rounded-[1.8rem] border p-5">
               <div className="flex items-center gap-2"><LinkIcon className="h-4 w-4 text-[color:var(--teal)]" /><p className="text-sm font-medium text-[color:var(--foreground)]">Synergy Score</p></div>
@@ -78,9 +78,9 @@ function PortfolioBuilderInner() {
             <div className="surface-card rounded-[1.8rem] border p-5">
               <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-[color:var(--foreground)]" /><p className="text-sm font-medium text-[color:var(--foreground)]">Time-to-Signal</p></div>
               <div className="mt-3 grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-[color:var(--line)] bg-white/70 p-3 text-center"><p className="font-display text-2xl" style={{color:"var(--teal)"}}>{timeDistribution.quickWin}</p><p className="text-[10px] font-medium text-[color:var(--foreground)]">Quick-win</p></div>
-                <div className="rounded-xl border border-[color:var(--line)] bg-white/70 p-3 text-center"><p className="font-display text-2xl" style={{color:"var(--foreground)"}}>{timeDistribution.mediumTerm}</p><p className="text-[10px] font-medium text-[color:var(--foreground)]">Medium</p></div>
-                <div className="rounded-xl border border-[color:var(--line)] bg-white/70 p-3 text-center"><p className="font-display text-2xl" style={{color:"var(--accent)"}}>{timeDistribution.longHorizon}</p><p className="text-[10px] font-medium text-[color:var(--foreground)]">Long</p></div>
+                <div className="rounded-xl border border-[color:var(--line)] bg-white/70 p-3 text-center"><p className="font-display text-2xl" style={{color:"var(--teal)"}}>{timeDistribution.quickWin}</p><p className="text-xs font-medium text-[color:var(--foreground)]">Quick-win</p></div>
+                <div className="rounded-xl border border-[color:var(--line)] bg-white/70 p-3 text-center"><p className="font-display text-2xl" style={{color:"var(--foreground)"}}>{timeDistribution.mediumTerm}</p><p className="text-xs font-medium text-[color:var(--foreground)]">Medium</p></div>
+                <div className="rounded-xl border border-[color:var(--line)] bg-white/70 p-3 text-center"><p className="font-display text-2xl" style={{color:"var(--accent)"}}>{timeDistribution.longHorizon}</p><p className="text-xs font-medium text-[color:var(--foreground)]">Long</p></div>
               </div>
               {timeDistribution.quickWin === 0 && selected.length > 0 && <p className="mt-2 rounded-lg bg-[color:rgba(196,97,42,0.1)] px-3 py-2 text-xs text-[color:var(--accent)]">Warning: No quick-win interventions selected.</p>}
             </div>

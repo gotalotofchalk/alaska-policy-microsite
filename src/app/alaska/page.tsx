@@ -126,7 +126,7 @@ export default function LandingPage() {
                         {state.name}
                       </p>
                       {state.highlight && (
-                        <span className="rounded-full bg-[color:rgba(15,124,134,0.12)] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[color:var(--teal)]">
+                        <span className="rounded-full bg-[color:rgba(15,124,134,0.12)] px-2.5 py-0.5 text-xs font-medium uppercase tracking-wider text-[color:var(--teal)]">
                           {state.highlight}
                         </span>
                       )}
@@ -140,7 +140,7 @@ export default function LandingPage() {
                 <div className="mt-6 flex items-center justify-between">
                   {state.allocation && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">RHTP allocation</p>
+                      <p className="text-xs uppercase tracking-wider text-[color:var(--muted)]">RHTP allocation</p>
                       <p className="font-display text-xl text-[color:var(--foreground)]">{state.allocation}</p>
                     </div>
                   )}
@@ -176,7 +176,7 @@ export default function LandingPage() {
                 <span className="text-sm font-semibold text-[color:var(--foreground)]">{state.abbr}</span>
               </div>
               <p className="text-sm font-medium text-[color:var(--foreground)]">{state.name}</p>
-              <span className="text-[10px] uppercase tracking-wider text-[color:var(--muted)]">Coming soon</span>
+              <span className="text-xs uppercase tracking-wider text-[color:var(--muted)]">Coming soon</span>
             </motion.div>
           ))}
         </div>
