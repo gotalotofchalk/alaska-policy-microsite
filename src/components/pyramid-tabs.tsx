@@ -15,6 +15,11 @@ import {
   Users,
   Lightbulb,
   Satellite,
+  Eye,
+  Stethoscope,
+  Video,
+  Brain,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -58,12 +63,12 @@ const INFRA_ICONS: Record<string, React.ElementType> = {
   cloud: Cloud,
 };
 
-const SOLUTION_ICONS: Record<number, React.ElementType> = {
-  1: Heart,
-  2: Activity,
-  3: Users,
-  4: Lightbulb,
-  5: Zap,
+const SOLUTION_ICONS: Record<string, React.ElementType> = {
+  healthy_again: Eye,
+  sustainable_access: Video,
+  innovative_care: Activity,
+  workforce: Brain,
+  tech_innovation: ClipboardList,
 };
 
 /* ------------------------------------------------------------------ */
@@ -161,7 +166,7 @@ function ModuleCard({
         )}>
           <div className="flex items-center gap-2 rounded-full bg-[color:var(--foreground)]/80 px-4 py-2">
             <Lock className="h-3.5 w-3.5 text-white/80" />
-            <span className="text-xs font-medium text-white">Coming Soon</span>
+            <span className="text-xs font-medium text-white">Pending</span>
           </div>
         </div>
       )}
@@ -183,9 +188,16 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
   const fSummary = getKYFacilitySummary();
   const pctUnserved = Math.round((bdcSummary.unserved / bdcSummary.totalBSLs) * 1000) / 10;
 
+  // Active modules first
+  const sorted = [...sections].sort((a, b) => {
+    const aActive = a.content === "broadband" || a.content === "cyber" ? 0 : 1;
+    const bActive = b.content === "broadband" || b.content === "cyber" ? 0 : 1;
+    return aActive - bActive;
+  });
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {sections.map((section) => {
+      {sorted.map((section) => {
         const Icon = INFRA_ICONS[section.content] ?? Wifi;
         const isActive = section.content === "broadband" || section.content === "cyber";
 
@@ -205,7 +217,6 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
           >
             {section.content === "broadband" && (
               <div className="space-y-3">
-                {/* Mini stat row */}
                 <div className="flex gap-2">
                   <div className="flex-1 rounded-lg bg-[color:rgba(15,124,134,0.08)] px-2.5 py-2 text-center">
                     <p className="font-display text-lg font-semibold text-[color:var(--teal)]">{bdcSummary.pctServed}%</p>
@@ -222,7 +233,6 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
                     <p className="text-[9px] text-[color:var(--muted)]">Unserved</p>
                   </div>
                 </div>
-                {/* Partner attribution */}
                 <div className="flex items-center gap-3 text-[10px] text-[color:var(--muted)]">
                   <div className="flex items-center gap-1">
                     <Satellite className="h-3 w-3" />
@@ -258,16 +268,16 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
                 <div className="space-y-1.5 text-[10px] text-[color:var(--muted)]">
                   <div className="flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--teal)]" />
-                    <span>Rural Health Resiliency Program</span>
+                    <span>Microsoft Azure Security</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-[color:#2b7ab8]" />
                     <span>Anthropic Project Glasswing</span>
                   </div>
                 </div>
-                <span className="inline-block rounded-full bg-[color:rgba(196,161,42,0.1)] px-2.5 py-0.5 text-[10px] font-medium text-[color:#c49a2e]">
-                  Enrollment in progress
-                </span>
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-3 py-1.5 text-[11px] font-medium text-white">
+                  View Program <ArrowRight className="h-3 w-3" />
+                </div>
               </div>
             )}
           </ModuleCard>
@@ -278,7 +288,7 @@ function InfraGrid({ sections }: { sections: InfraSection[] }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Ecosystem Grid — mostly coming-soon                                */
+/*  Ecosystem Grid                                                     */
 /* ------------------------------------------------------------------ */
 
 interface EcoModule {
@@ -287,11 +297,12 @@ interface EcoModule {
   icon: React.ElementType;
   color: string;
   active: boolean;
+  href?: string;
 }
 
 const ECO_MODULES: EcoModule[] = [
   { name: "Microsoft", tagline: "Cloud, AI & cybersecurity platform", icon: Cloud, color: "#0078d4", active: true },
-  { name: "BioIntelliSense", tagline: "Remote patient monitoring wearables", icon: Activity, color: "#00b4d8", active: false },
+  { name: "BioIntelliSense", tagline: "Remote patient monitoring wearables", icon: Activity, color: "#00b4d8", active: true, href: "/kentucky/biointellisense" },
   { name: "Accenture", tagline: "System integration & advisory", icon: Users, color: "#a100ff", active: false },
   { name: "eClinicalWorks", tagline: "Electronic health records", icon: FileText, color: "#e11d48", active: false },
   { name: "Avel eCare", tagline: "Telehealth services", icon: Heart, color: "#059669", active: false },
@@ -299,10 +310,13 @@ const ECO_MODULES: EcoModule[] = [
 ];
 
 function EcoGrid() {
+  // Active first
+  const sorted = [...ECO_MODULES].sort((a, b) => (a.active === b.active ? 0 : a.active ? -1 : 1));
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {ECO_MODULES.map((mod) => {
+        {sorted.map((mod) => {
           const Icon = mod.icon;
           return (
             <ModuleCard
@@ -312,6 +326,7 @@ function EcoGrid() {
               icon={Icon}
               accentColor={mod.color}
               active={mod.active}
+              href={mod.href}
             >
               {mod.active && mod.name === "Microsoft" && (
                 <div className="space-y-1.5">
@@ -323,39 +338,64 @@ function EcoGrid() {
                   ))}
                 </div>
               )}
+              {mod.active && mod.name === "BioIntelliSense" && (
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    {["BioButton Continuous Monitoring", "FDA-Cleared Vital Signs", "AI Early Warning System", "Clinical Dashboard Integration"].map((cap) => (
+                      <div key={cap} className="flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#00b4d8]" />
+                        <span className="text-[11px] text-[color:var(--foreground)]">{cap}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--foreground)] px-3 py-1.5 text-[11px] font-medium text-white">
+                    Explore BioButton <ArrowRight className="h-3 w-3" />
+                  </div>
+                </div>
+              )}
             </ModuleCard>
           );
         })}
       </div>
       <p className="text-[10px] text-[color:var(--muted)]">
-        Partner profiles will be populated as engagement agreements are finalized. Technology partners enabling infrastructure (e.g. Starlink) appear within their respective infrastructure modules.
+        Partner profiles will be populated as engagement agreements are finalized. Infrastructure-enabling technology (e.g. Starlink) appears within its respective infrastructure module.
       </p>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Solutions Grid — mostly coming-soon                                */
+/*  Solutions Grid                                                     */
 /* ------------------------------------------------------------------ */
 
 function SolutionsGrid({ sections }: { sections: SolutionSection[] }) {
+  // Active (has any planned+ interventions) first
+  const sorted = [...sections].sort((a, b) => {
+    const aHas = a.interventions?.some((i) => i.status === "planned" || i.status === "available") ? 0 : 1;
+    const bHas = b.interventions?.some((i) => i.status === "planned" || i.status === "available") ? 0 : 1;
+    return aHas - bHas;
+  });
+
   return (
     <div className="space-y-4">
+      <p className="text-xs text-[color:var(--muted)]">
+        Once infrastructure is assessed and connectivity established, these clinical technologies and programs deliver measurable health outcomes — fewer ER visits, earlier diagnoses, reduced travel burden, and physician time saved.
+      </p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {sections.map((section) => {
-          const Icon = SOLUTION_ICONS[section.goalNumber] ?? Heart;
-          const hasAvailableItems = section.interventions?.some((i) => i.status === "available");
+        {sorted.map((section) => {
+          const Icon = SOLUTION_ICONS[section.goal] ?? Lightbulb;
+          const hasPlannedItems = section.interventions?.some((i) => i.status === "planned" || i.status === "available");
 
           return (
             <ModuleCard
               key={section.goal}
-              title={`${section.goalNumber}. ${section.label}`}
+              title={section.label}
               subtitle={section.statusSummary}
               icon={Icon}
-              accentColor={hasAvailableItems ? "var(--accent)" : "#8899a6"}
-              active={!!hasAvailableItems}
+              accentColor={hasPlannedItems ? "var(--accent)" : "#8899a6"}
+              active={!!hasPlannedItems}
             >
-              {hasAvailableItems && section.interventions && (
+              {hasPlannedItems && section.interventions && (
                 <div className="space-y-1.5">
                   {section.interventions.map((intervention) => {
                     const statusColors: Record<string, string> = {
@@ -383,9 +423,6 @@ function SolutionsGrid({ sections }: { sections: SolutionSection[] }) {
           );
         })}
       </div>
-      <p className="text-[10px] text-[color:var(--muted)]">
-        Solution modules map to the 5 CMS RHT goals. Active modules reflect interventions with available infrastructure tooling.
-      </p>
     </div>
   );
 }

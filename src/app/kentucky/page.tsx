@@ -30,6 +30,8 @@ export default function KentuckyPage() {
   const statPills = [
     { label: "RHTP / year", value: `$${Math.round(KY_RHTP.annualAllocation / 1e6)}M` },
     { label: "Counties", value: String(KY_CONTEXT.totalCounties) },
+    { label: "Population", value: KY_CONTEXT.totalPopulation.toLocaleString("en-US") },
+    { label: "sq mi", value: KY_CONTEXT.totalSquareMiles.toLocaleString("en-US") },
   ];
 
   return (
@@ -58,7 +60,7 @@ export default function KentuckyPage() {
         </div>
 
         <p className="mt-3 max-w-2xl text-sm text-[color:var(--muted)]">
-          State hub for Rural Health Transformation — infrastructure, ecosystem, and solutions planning under RHTP&nbsp;/&nbsp;MRHRP.
+          State hub for Rural Health Transformation — infrastructure, ecosystem, and solutions planning.
         </p>
       </motion.div>
 
@@ -86,8 +88,6 @@ export default function KentuckyPage() {
         >
           Report a data issue
         </a>
-        <span className="hidden sm:inline">·</span>
-        <span>FCC broadband data may underestimate rural coverage gaps.</span>
       </motion.div>
     </motion.div>
   );

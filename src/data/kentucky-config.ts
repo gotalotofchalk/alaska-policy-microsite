@@ -143,6 +143,7 @@ export const KY_CONTEXT = {
   ruralPopulation: 1_886_487,             // ~41.6% per CMS allocation formula
   ruralPct: 0.416,
   totalCounties: 120,
+  totalSquareMiles: 40_408,               // US Census Bureau land area
   totalHouseholds: 1_814_469,             // Census ACS 2020-2024 5-year
   maternityDesertCounties: 40,            // from KY RHTP narrative
   primaryCareHPSACounties: 98,            // estimate — verify

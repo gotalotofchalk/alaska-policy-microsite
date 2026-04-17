@@ -2,8 +2,10 @@
  * Kentucky Pyramid Configuration
  *
  * Drives the three-tab pyramid framework for Kentucky's state page.
- * Imports real data where available; uses "Assessment pending" placeholders
- * for sections still in development.
+ * Infrastructure = what physical/digital systems exist or need building.
+ * Ecosystem = partners, vendors, advisors enabling the transformation.
+ * Solutions = clinical technologies & programs that save lives once
+ *             infrastructure is in place.
  */
 
 import { getKYBDCSummary } from "@/data/kentucky-broadband-availability";
@@ -41,28 +43,31 @@ export const KENTUCKY_PYRAMID: StatePyramidConfig = {
       content: "broadband",
     },
     {
+      category: "cybersecurity",
+      label: "Cybersecurity",
+      statusSummary: `0 of ${facilitySummary.total} facilities assessed`,
+      hasInteractiveTool: true,
+      toolRoute: "/kentucky/cybersecurity",
+      toolLabel: "View Cybersecurity Program",
+      content: "cyber",
+    },
+    {
       category: "ehr",
       label: "Electronic Health Records",
-      statusSummary: "Assessment pending",
+      statusSummary: "Pending",
       content: "ehr",
     },
     {
       category: "interoperability",
       label: "Interoperability",
-      statusSummary: "Assessment pending",
+      statusSummary: "Pending",
       content: "interop",
     },
     {
       category: "cloud_ai",
       label: "Cloud & AI",
-      statusSummary: "Assessment pending",
+      statusSummary: "Pending",
       content: "cloud",
-    },
-    {
-      category: "cybersecurity",
-      label: "Cybersecurity",
-      statusSummary: `0 of ${facilitySummary.total} facilities assessed`,
-      content: "cyber",
     },
   ],
 
@@ -116,60 +121,61 @@ export const KENTUCKY_PYRAMID: StatePyramidConfig = {
     },
   ],
 
-  /* ── Solutions (Layer 3) ───────────────────────────────────────── */
+  /* ── Solutions (Layer 3) — clinical technologies & programs ────── */
   solutions: [
     {
       goal: "healthy_again",
       goalNumber: 1,
-      label: "Make Rural America Healthy Again",
-      statusSummary: "Infrastructure assessment in progress",
+      label: "Diabetic Retinopathy Screening",
+      statusSummary: "AI-powered retinal screening at the point of care",
       interventions: [
-        { name: "Broadband gap analysis", status: "available", partner: "FCC/Microsoft" },
-        { name: "Facility connectivity assessment", status: "available" },
-        { name: "Chronic care hub planning", status: "planned" },
+        { name: "Topcon retinal camera deployment", status: "planned", partner: "Topcon" },
+        { name: "AI screening with Viz.ai integration", status: "future", partner: "Viz.ai" },
+        { name: "Referral pathway to ophthalmology", status: "future" },
       ],
     },
     {
       goal: "sustainable_access",
       goalNumber: 2,
-      label: "Sustainable Access",
-      statusSummary: "Broadband analysis active · Satellite planner available",
+      label: "Telehealth Platforms",
+      statusSummary: "Virtual care reducing travel burden for rural patients",
       interventions: [
-        { name: "Satellite coverage planner", status: "available", partner: "SpaceX/Starlink" },
-        { name: "Telehealth-enabled maternal care", status: "planned" },
-        { name: "Rural dental access expansion", status: "planned" },
-      ],
-    },
-    {
-      goal: "workforce",
-      goalNumber: 3,
-      label: "Workforce Development",
-      statusSummary: "Planned",
-      interventions: [
-        { name: "Telehealth training programs", status: "planned" },
-        { name: "Remote monitoring workforce", status: "future" },
+        { name: "Avel eCare specialty telehealth", status: "planned", partner: "Avel eCare" },
+        { name: "Teladoc virtual primary care", status: "planned", partner: "Teladoc" },
+        { name: "Maternal care in maternity deserts", status: "planned" },
       ],
     },
     {
       goal: "innovative_care",
-      goalNumber: 4,
-      label: "Innovative Care",
-      statusSummary: "Planned",
+      goalNumber: 3,
+      label: "Remote Patient Monitoring",
+      statusSummary: "Continuous vitals monitoring for chronic care management",
       interventions: [
-        { name: "Remote patient monitoring", status: "planned", partner: "BioIntelliSense" },
-        { name: "AI diagnostic screening", status: "future", partner: "Viz.ai/Topcon" },
-        { name: "EmPATH behavioral health", status: "planned" },
+        { name: "BioButton wearable deployment", status: "planned", partner: "BioIntelliSense" },
+        { name: "Chronic disease early warning", status: "future" },
+        { name: "Post-discharge monitoring programs", status: "future" },
+      ],
+    },
+    {
+      goal: "workforce",
+      goalNumber: 4,
+      label: "Clinical AI Documentation",
+      statusSummary: "AI-assisted documentation saving physician time",
+      interventions: [
+        { name: "Ambient clinical documentation", status: "future" },
+        { name: "AI-powered clinical decision support", status: "future" },
+        { name: "Automated coding and billing", status: "future" },
       ],
     },
     {
       goal: "tech_innovation",
       goalNumber: 5,
-      label: "Tech Innovation",
-      statusSummary: "Satellite planner deployed · Cybersecurity assessment planned",
+      label: "Integrated Care Pathways",
+      statusSummary: "Connecting solutions into measurable health outcomes",
       interventions: [
-        { name: "Satellite planning tool", status: "available" },
-        { name: "Cybersecurity assessment program", status: "planned", partner: "Microsoft" },
-        { name: "AI vulnerability detection", status: "future", partner: "Anthropic" },
+        { name: "EmPATH behavioral health crisis model", status: "planned" },
+        { name: "Rural pharmacy hub networks", status: "future", partner: "CVS/Kroger" },
+        { name: "Outcomes simulation and ROI modeling", status: "future" },
       ],
     },
   ],

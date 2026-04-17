@@ -68,7 +68,7 @@ export function SiteFooter() {
               joshgott@stanford.edu
             </a>
             <p className="text-xs leading-relaxed text-white/35">
-              Questions about methodology, state applicability, or partnership opportunities.
+              Questions, suggestions, or opportunities for partnership.
             </p>
           </div>
         </div>
