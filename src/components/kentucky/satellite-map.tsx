@@ -55,16 +55,17 @@ function createFacilityIcon(
     shadow = "0 1px 4px rgba(0,0,0,0.2)";
   }
 
-  const shieldColor = CYBER_STATUS_COLORS[cyberStatus];
-  // Small shield badge offset to bottom-right
-  const shieldBadge = `<div style="
-    position:absolute; bottom:-3px; right:-3px;
-    width:8px; height:8px;
-    background:${shieldColor};
-    border:1px solid white;
-    border-radius:2px;
-    clip-path: polygon(50% 0%, 100% 25%, 100% 65%, 50% 100%, 0% 65%, 0% 25%);
-  "></div>`;
+  // Only show shield badge for facilities with a known cyber status
+  const shieldBadge = cyberStatus !== "unknown"
+    ? `<div style="
+        position:absolute; bottom:-3px; right:-3px;
+        width:8px; height:8px;
+        background:${CYBER_STATUS_COLORS[cyberStatus]};
+        border:1px solid white;
+        border-radius:2px;
+        clip-path: polygon(50% 0%, 100% 25%, 100% 65%, 50% 100%, 0% 65%, 0% 25%);
+      "></div>`
+    : "";
 
   return L.divIcon({
     className: "",
