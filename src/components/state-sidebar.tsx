@@ -70,7 +70,7 @@ function getNavItems(state: ValidState): NavItem[] {
       label: "Connectivity",
       icon: Network,
       children: [
-        { href: `${base}/connectivity#translator`, label: "Connectivity Translator", icon: Radio },
+        { href: `${base}/connectivity/translator`, label: "Connectivity Translator", icon: Radio },
       ],
     },
     { href: `${base}/capacity`, label: "Capacity & Readiness", icon: Shield },

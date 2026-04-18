@@ -50,7 +50,6 @@ import {
 } from "@/data/connectivity-budget";
 import { usNum } from "@/lib/utils";
 import { useParams } from "next/navigation";
-import { ConnectivityTranslator } from "@/components/connectivity-translator";
 import { ModuleSources } from "@/components/module-sources";
 
 /* ------------------------------------------------------------------ */
@@ -720,11 +719,6 @@ export default function ConnectivityPage() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* ── Connectivity Translator ────────────────────────── */}
-      <div className="mt-6 surface-card rounded-[1.6rem] border border-[color:var(--line)] p-5">
-        <ConnectivityTranslator />
       </div>
 
       {/* ── Sticky Cost Bar — appears when cost calculator scrolls out ── */}
