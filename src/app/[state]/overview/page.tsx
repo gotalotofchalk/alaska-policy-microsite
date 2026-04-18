@@ -76,7 +76,7 @@ function ProgressRing({ pct, label, color }: { pct: number; label: string; color
         />
         <text x="44" y="44" textAnchor="middle" dominantBaseline="central"
           className="font-display text-lg font-semibold" fill="var(--foreground)">
-          {pct}%
+          {Math.round(pct * 10) / 10}%
         </text>
       </svg>
       <span className="text-xs text-[color:var(--muted)]">{label}</span>
@@ -200,7 +200,7 @@ export default function OverviewPage() {
         {s === "kentucky" && ky && (
           <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-8 rounded-2xl border border-[color:var(--line)] bg-white/90 px-6 py-8 shadow-[var(--shadow-soft)]">
             <ProgressRing pct={ky.pctServed} label="BSLs served" color="var(--teal)" />
-            <ProgressRing pct={100 - ky.pctServed - ky.pctUnserved} label="Underserved" color="#c49a2e" />
+            <ProgressRing pct={Math.round((100 - ky.pctServed - ky.pctUnserved) * 10) / 10} label="Underserved" color="#c49a2e" />
             <ProgressRing pct={ky.pctUnserved} label="Unserved" color="var(--accent)" />
             <div className="flex flex-col items-center gap-1">
               <span className="font-display text-3xl font-semibold text-[color:var(--foreground)]">{ky.needCoverage}</span>
