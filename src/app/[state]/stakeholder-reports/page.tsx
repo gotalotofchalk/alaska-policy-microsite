@@ -1,19 +1,116 @@
-import { notFound } from "next/navigation";
-import { isValidState } from "@/config/states";
+"use client";
 
-export default async function stakeholderreportsPage({ params }: { params: Promise<{ state: string }> }) {
-  const { state } = await params;
-  if (!isValidState(state)) notFound();
+import { motion } from "framer-motion";
+import { FileText, Printer } from "lucide-react";
+import { useParams } from "next/navigation";
+
+import { STATE_CONFIGS, type ValidState } from "@/config/states";
+
+/* ------------------------------------------------------------------ */
+/*  Animation                                                          */
+/* ------------------------------------------------------------------ */
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
+};
+
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07 } },
+};
+
+/* ------------------------------------------------------------------ */
+/*  Page                                                               */
+/* ------------------------------------------------------------------ */
+
+export default function StakeholderReportsPage() {
+  const { state } = useParams<{ state: string }>();
+  const validState = state as ValidState;
+  const config = STATE_CONFIGS[validState];
 
   return (
-    <div className="p-6 lg:p-10">
-      <p className="text-xs uppercase tracking-wider text-[color:var(--muted)]">stakeholder reports</p>
-      <h1 className="mt-2 font-display text-3xl text-[color:var(--foreground)] md:text-4xl">
-        stakeholder reports
-      </h1>
-      <p className="mt-2 text-sm text-[color:var(--muted)]">
-        Module content — migration in progress.
-      </p>
-    </div>
+    <>
+      {/* Print-specific styles: hide sidebar and header when printing */}
+      <style jsx global>{`
+        @media print {
+          nav, aside, header, [data-sidebar], [data-site-header] {
+            display: none !important;
+          }
+          main {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+        }
+      `}</style>
+
+      <div className="p-6 lg:p-10">
+        <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-8 max-w-5xl">
+
+          {/* ── Header ─────────────────────────────────────────── */}
+          <motion.div variants={fadeUp}>
+            <p className="text-xs uppercase tracking-wider text-[color:var(--muted)]">
+              {config.name}
+            </p>
+            <h1 className="mt-2 font-display text-3xl text-[color:var(--foreground)] md:text-4xl">
+              Stakeholder Reports
+            </h1>
+          </motion.div>
+
+          {/* ── Explainer Card ───────────────────────────────────── */}
+          <motion.div variants={fadeUp}>
+            <div className="rounded-2xl border border-[color:var(--line)] bg-white/90 p-6 shadow-[var(--shadow-soft)]">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--surface-soft)]">
+                  <FileText className="h-5 w-5 text-[color:var(--muted)]" />
+                </div>
+                <div>
+                  <h2 className="font-display text-xl font-semibold text-[color:var(--foreground)]">
+                    Print-Friendly Briefs
+                  </h2>
+                  <p className="text-xs text-[color:var(--muted)]">
+                    Formatted for sharing with stakeholders and decision-makers
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm leading-relaxed text-[color:var(--foreground)]">
+                This module generates a print-friendly executive brief for {config.name}, summarizing
+                need assessment findings, connectivity status, capacity metrics, and intervention
+                progress. The brief is designed for distribution to state legislators, CMS regional
+                offices, and community health partners.
+              </p>
+
+              <p className="mt-3 text-xs text-[color:var(--muted)]">
+                Use your browser&apos;s print function (Ctrl+P / Cmd+P) to generate a clean PDF.
+                The sidebar and site header are automatically hidden during printing.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* ── Print Button ─────────────────────────────────────── */}
+          <motion.div variants={fadeUp}>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line)] bg-white px-5 py-2.5 text-sm font-medium text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-soft)]"
+            >
+              <Printer className="h-4 w-4" />
+              Print Brief
+            </button>
+          </motion.div>
+
+          {/* ── Coming Soon ──────────────────────────────────────── */}
+          <motion.div variants={fadeUp}>
+            <div className="rounded-2xl border border-dashed border-[color:var(--line)] bg-white/60 p-8 text-center">
+              <p className="text-sm text-[color:var(--muted)]">
+                Report content will be populated as data modules are completed for {config.name}.
+              </p>
+            </div>
+          </motion.div>
+
+        </motion.div>
+      </div>
+    </>
   );
 }
