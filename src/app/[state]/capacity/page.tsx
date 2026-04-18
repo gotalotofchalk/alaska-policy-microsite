@@ -20,6 +20,7 @@ import { useParams } from "next/navigation";
 import { STATE_CONFIGS, type ValidState } from "@/config/states";
 import { getKYFacilitySummary } from "@/data/kentucky-facilities";
 import { usNum } from "@/lib/utils";
+import { ModuleSources } from "@/components/module-sources";
 
 /* ------------------------------------------------------------------ */
 /*  Animation                                                          */
@@ -101,9 +102,7 @@ function KentuckyCybersecurity() {
               <Database className="h-4 w-4 text-[#0078d4]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Azure SQL &amp; Cosmos DB</h3>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
-              HIPAA-compliant database infrastructure with encryption at rest and in transit. Automated backup, geo-redundancy, and disaster recovery for patient data across all rural facilities.
-            </p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">HIPAA-compliant, encrypted, geo-redundant</p>
           </div>
 
           <div className="rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-4">
@@ -111,9 +110,7 @@ function KentuckyCybersecurity() {
               <Lock className="h-4 w-4 text-[#0078d4]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Microsoft Defender for Cloud</h3>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
-              Continuous security posture assessment across cloud and hybrid environments. Threat detection, vulnerability scanning, and compliance monitoring tailored for healthcare workloads.
-            </p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">Threat detection, vulnerability scanning, compliance</p>
           </div>
 
           <div className="rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-4">
@@ -121,9 +118,7 @@ function KentuckyCybersecurity() {
               <Server className="h-4 w-4 text-[#0078d4]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Azure Sentinel (SIEM)</h3>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
-              Cloud-native security information and event management. Real-time log aggregation across facility networks, automated incident detection, and response playbooks for healthcare-specific threats.
-            </p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">Real-time SIEM, incident detection, response playbooks</p>
           </div>
 
           <div className="rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-4">
@@ -131,9 +126,7 @@ function KentuckyCybersecurity() {
               <FileWarning className="h-4 w-4 text-[#0078d4]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Compliance Manager</h3>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
-              Pre-built assessment templates for HIPAA, HITECH, and NIST CSF. Continuous compliance scoring, gap analysis, and remediation tracking across all enrolled facilities.
-            </p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">HIPAA, HITECH, NIST CSF templates and scoring</p>
           </div>
         </div>
       </motion.div>
@@ -156,9 +149,7 @@ function KentuckyCybersecurity() {
               <Eye className="h-4 w-4 text-[color:var(--teal)]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">AI Vulnerability Detection</h3>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
-              Claude-powered analysis of network configurations, access patterns, and system logs to identify vulnerabilities before they are exploited. Contextualized for healthcare IT environments.
-            </p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">Network, access, and log analysis for healthcare IT</p>
           </div>
 
           <div className="rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-4">
@@ -166,9 +157,7 @@ function KentuckyCybersecurity() {
               <ShieldCheck className="h-4 w-4 text-[color:var(--teal)]" />
               <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Threat Analysis &amp; Response</h3>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-[color:var(--muted)]">
-              Natural-language threat briefings and incident response guidance for facility IT staff. Translates complex security alerts into actionable steps, reducing mean time to respond.
-            </p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">Actionable threat briefings, reduced response time</p>
           </div>
         </div>
       </motion.div>
@@ -180,9 +169,9 @@ function KentuckyCybersecurity() {
 
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
           {[
-            { step: 1, title: "Risk Assessment", desc: "Baseline security posture evaluation using NIST CSF framework. Identifies critical vulnerabilities, compliance gaps, and infrastructure exposure.", icon: FileWarning },
-            { step: 2, title: "Enrollment & Deployment", desc: "Azure security tools deployed across facility network. Defender, Sentinel, and Compliance Manager configured for healthcare-specific threat models.", icon: Server },
-            { step: 3, title: "Continuous Monitoring", desc: "24/7 threat detection with AI-powered analysis. Ongoing compliance scoring, quarterly assessments, and incident response support.", icon: CheckCircle2 },
+            { step: 1, title: "Risk Assessment", desc: "NIST CSF baseline evaluation", icon: FileWarning },
+            { step: 2, title: "Enrollment", desc: "Azure security suite deployment", icon: Server },
+            { step: 3, title: "Monitoring", desc: "24/7 AI-powered threat detection", icon: CheckCircle2 },
           ].map(({ step, title, desc, icon: StepIcon }) => (
             <div key={step} className="relative rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-4">
               <div className="flex items-center gap-2">
@@ -218,6 +207,13 @@ function KentuckyCybersecurity() {
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
+
+const CAPACITY_SOURCES = [
+  { name: "CMS Hospital Compare", url: "https://data.cms.gov/provider-data/", detail: "Facility-level quality and operational data for rural hospitals" },
+  { name: "HRSA Area Health Resources File", url: "https://data.hrsa.gov/topics/health-workforce/ahrf", detail: "County-level workforce supply indicators" },
+  { name: "Microsoft Azure for Healthcare", detail: "Cybersecurity posture assessment and enrollment data via Azure Defender, Sentinel, and Compliance Manager" },
+  { name: "HRSA HPSA Designations", detail: "Data coming soon — Health Professional Shortage Area scores pending integration" },
+];
 
 export default function CapacityPage() {
   const { state } = useParams<{ state: string }>();
@@ -265,6 +261,9 @@ export default function CapacityPage() {
             </motion.div>
           </>
         )}
+
+        {/* ── Sources (collapsed at bottom) ───────────────────── */}
+        <ModuleSources sources={CAPACITY_SOURCES} module="Capacity & Readiness" />
 
       </motion.div>
     </div>

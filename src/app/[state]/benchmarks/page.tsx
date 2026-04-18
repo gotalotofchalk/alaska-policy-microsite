@@ -5,6 +5,7 @@ import { BarChart3, Pencil } from "lucide-react";
 import { useParams } from "next/navigation";
 
 import { STATE_CONFIGS, type ValidState } from "@/config/states";
+import { ModuleSources } from "@/components/module-sources";
 
 /* ------------------------------------------------------------------ */
 /*  Animation                                                          */
@@ -35,6 +36,10 @@ const METRIC_ROWS = [
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
+
+const BENCHMARKS_SOURCES = [
+  { name: "Admin-entered baselines", detail: "No federal source — metrics populated by state administrators" },
+];
 
 export default function BenchmarksPage() {
   const { state } = useParams<{ state: string }>();
@@ -91,6 +96,9 @@ export default function BenchmarksPage() {
             </p>
           </div>
         </motion.div>
+
+        {/* ── Sources (collapsed at bottom) ───────────────────── */}
+        <ModuleSources sources={BENCHMARKS_SOURCES} module="Benchmarks & Tracking" />
 
       </motion.div>
     </div>

@@ -5,6 +5,7 @@ import { FileText, Printer } from "lucide-react";
 import { useParams } from "next/navigation";
 
 import { STATE_CONFIGS, type ValidState } from "@/config/states";
+import { ModuleSources } from "@/components/module-sources";
 
 /* ------------------------------------------------------------------ */
 /*  Animation                                                          */
@@ -23,6 +24,10 @@ const stagger = {
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
+
+const STAKEHOLDER_SOURCES = [
+  { name: "Aggregated Module Sources", detail: "Report data is aggregated from Need, Connectivity, Capacity, and Portfolio module sources" },
+];
 
 export default function StakeholderReportsPage() {
   const { state } = useParams<{ state: string }>();
@@ -74,17 +79,7 @@ export default function StakeholderReportsPage() {
                 </div>
               </div>
 
-              <p className="mt-4 text-sm leading-relaxed text-[color:var(--foreground)]">
-                This module generates a print-friendly executive brief for {config.name}, summarizing
-                need assessment findings, connectivity status, capacity metrics, and intervention
-                progress. The brief is designed for distribution to state legislators, CMS regional
-                offices, and community health partners.
-              </p>
-
-              <p className="mt-3 text-xs text-[color:var(--muted)]">
-                Use your browser&apos;s print function (Ctrl+P / Cmd+P) to generate a clean PDF.
-                The sidebar and site header are automatically hidden during printing.
-              </p>
+              <p className="mt-3 text-xs text-[color:var(--muted)]">Ctrl+P / Cmd+P to generate PDF</p>
             </div>
           </motion.div>
 
@@ -104,10 +99,12 @@ export default function StakeholderReportsPage() {
           <motion.div variants={fadeUp}>
             <div className="rounded-2xl border border-dashed border-[color:var(--line)] bg-white/60 p-8 text-center">
               <p className="text-sm text-[color:var(--muted)]">
-                Report content will be populated as data modules are completed for {config.name}.
+                Report content populates as data modules are completed.
               </p>
             </div>
           </motion.div>
+
+          <ModuleSources sources={STAKEHOLDER_SOURCES} module="Stakeholder Reports" />
 
         </motion.div>
       </div>

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart3,
   BookOpen,
+  ChevronDown,
   ChevronLeft,
   ClipboardList,
   FileText,
@@ -13,6 +14,7 @@ import {
   MapPin,
   Menu,
   Network,
+  Radio,
   Settings,
   Shield,
   Stethoscope,
@@ -27,23 +29,17 @@ import { cn } from "@/lib/utils";
 import { STATE_CONFIGS, type ValidState } from "@/config/states";
 
 /* ------------------------------------------------------------------ */
-/*  Sidebar nav items                                                  */
+/*  Icon map for dynamic sidebar items                                 */
 /* ------------------------------------------------------------------ */
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  LayoutDashboard,
-  Stethoscope,
-  Network,
-  Shield,
-  ClipboardList,
-  BookOpen,
-  BarChart3,
-  FileText,
-  Users,
-  Settings,
   HeartHandshake,
   MapPin,
 };
+
+/* ------------------------------------------------------------------ */
+/*  Nav item types                                                     */
+/* ------------------------------------------------------------------ */
 
 interface NavItem {
   href: string;
@@ -61,7 +57,6 @@ function getNavItems(state: ValidState): NavItem[] {
     { href: `${base}/need`, label: "Need Assessment", icon: Stethoscope },
   ];
 
-  // State-specific items after Need Assessment
   if (config.extraSidebarItems) {
     for (const extra of config.extraSidebarItems) {
       const Icon = ICON_MAP[extra.icon] ?? MapPin;
@@ -70,27 +65,34 @@ function getNavItems(state: ValidState): NavItem[] {
   }
 
   items.push(
-    { href: `${base}/connectivity`, label: "Connectivity & Infrastructure", icon: Network },
+    {
+      href: `${base}/connectivity`,
+      label: "Connectivity",
+      icon: Network,
+      children: [
+        { href: `${base}/connectivity#translator`, label: "Connectivity Translator", icon: Radio },
+      ],
+    },
     { href: `${base}/capacity`, label: "Capacity & Readiness", icon: Shield },
     {
       href: `${base}/portfolio`,
-      label: "Intervention Portfolio",
+      label: "Interventions",
       icon: ClipboardList,
       children: [
         { href: `${base}/portfolio/implementation-playbook`, label: "Implementation Playbook", icon: BookOpen },
       ],
     },
-    { href: `${base}/benchmarks`, label: "Benchmarks & Tracking", icon: BarChart3 },
-    { href: `${base}/stakeholder-reports`, label: "Stakeholder Reports", icon: FileText },
-    { href: `${base}/implementation-strategy`, label: "Implementation Strategy", icon: Users },
-    { href: `${base}/account`, label: "Account / Admin", icon: Settings },
+    { href: `${base}/benchmarks`, label: "Benchmarks", icon: BarChart3 },
+    { href: `${base}/stakeholder-reports`, label: "Reports", icon: FileText },
+    { href: `${base}/implementation-strategy`, label: "Strategy", icon: Users },
+    { href: `${base}/account`, label: "Admin", icon: Settings },
   );
 
   return items;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Nav Link                                                           */
+/*  Nav Link with collapsible children                                 */
 /* ------------------------------------------------------------------ */
 
 function NavLink({
@@ -106,37 +108,66 @@ function NavLink({
   onClick?: () => void;
   depth?: number;
 }) {
-  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+  const baseHref = item.href.split("#")[0];
+  const isActive = pathname === baseHref || pathname.startsWith(baseHref + "/");
+  const hasChildren = item.children && item.children.length > 0;
+  const [childrenOpen, setChildrenOpen] = useState(false);
+  const showChildren = isActive || childrenOpen;
   const Icon = item.icon;
 
   return (
     <>
-      <Link
-        href={item.href}
-        onClick={onClick}
-        title={collapsed ? item.label : undefined}
-        className={cn(
-          "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
-          depth > 0 && "ml-7 py-2",
-          isActive
-            ? "bg-[color:var(--foreground)] text-white shadow-sm"
-            : "text-[color:var(--muted)] hover:bg-white/60 hover:text-[color:var(--foreground)]",
+      <div className="flex items-center">
+        <Link
+          href={item.href}
+          onClick={onClick}
+          title={collapsed ? item.label : undefined}
+          className={cn(
+            "flex flex-1 items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all",
+            depth > 0 && "ml-7 py-1.5 text-xs",
+            isActive && depth === 0
+              ? "bg-[color:var(--foreground)] text-white shadow-sm"
+              : isActive && depth > 0
+              ? "text-[color:var(--foreground)] font-medium"
+              : "text-[color:var(--muted)] hover:bg-white/60 hover:text-[color:var(--foreground)]",
+          )}
+        >
+          <Icon className={cn("h-4 w-4 shrink-0", depth > 0 && "h-3.5 w-3.5", isActive && depth === 0 ? "text-white" : "")} />
+          {!collapsed && <span className="truncate">{item.label}</span>}
+        </Link>
+        {hasChildren && !collapsed && (
+          <button
+            type="button"
+            onClick={() => setChildrenOpen((p) => !p)}
+            className="mr-1 rounded-md p-1 text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
+            aria-label={showChildren ? "Collapse sub-items" : "Expand sub-items"}
+          >
+            <ChevronDown className={cn("h-3 w-3 transition-transform", showChildren && "rotate-180")} />
+          </button>
         )}
-      >
-        <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-white" : "")} />
-        {!collapsed && <span className="truncate">{item.label}</span>}
-      </Link>
-      {item.children && !collapsed &&
-        item.children.map((child) => (
-          <NavLink
-            key={child.href}
-            item={child}
-            pathname={pathname}
-            collapsed={collapsed}
-            onClick={onClick}
-            depth={depth + 1}
-          />
-        ))}
+      </div>
+      <AnimatePresence>
+        {hasChildren && showChildren && !collapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            {item.children!.map((child) => (
+              <NavLink
+                key={child.href}
+                item={child}
+                pathname={pathname}
+                collapsed={collapsed}
+                onClick={onClick}
+                depth={depth + 1}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
@@ -157,10 +188,7 @@ export function StateSidebar({ state }: { state: ValidState }) {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[color:var(--line)] px-4 py-4">
         {!collapsed && (
-          <div>
-            <p className="text-xs uppercase tracking-wider text-[color:var(--muted)]">State Module</p>
-            <p className="font-display text-lg font-semibold text-[color:var(--foreground)]">{config.name}</p>
-          </div>
+          <p className="font-display text-lg font-semibold text-[color:var(--foreground)]">{config.name}</p>
         )}
         <button
           type="button"
@@ -249,10 +277,10 @@ export function StateSidebar({ state }: { state: ValidState }) {
         )}
       </AnimatePresence>
 
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar — sticky, scrolls with viewport */}
       <aside
         className={cn(
-          "hidden h-screen shrink-0 border-r border-[color:var(--line)] bg-[color:var(--background)]/80 backdrop-blur-xl transition-all duration-300 lg:block",
+          "sticky top-0 hidden h-screen shrink-0 border-r border-[color:var(--line)] bg-[color:var(--background)]/80 backdrop-blur-xl transition-all duration-300 lg:block",
           collapsed ? "w-16" : "w-64",
         )}
       >

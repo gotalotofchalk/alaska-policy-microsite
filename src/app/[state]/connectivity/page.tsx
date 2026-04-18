@@ -51,6 +51,7 @@ import {
 import { usNum } from "@/lib/utils";
 import { useParams } from "next/navigation";
 import { ConnectivityTranslator } from "@/components/connectivity-translator";
+import { ModuleSources } from "@/components/module-sources";
 
 /* ------------------------------------------------------------------ */
 /*  Lazy-load the Leaflet map (client-only, no SSR)                    */
@@ -81,6 +82,13 @@ export interface PlacedTerminal {
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
+
+const CONNECTIVITY_SOURCES = [
+  { name: "FCC Broadband Data Collection", url: "https://broadbandmap.fcc.gov/", detail: "County-level broadband serviceable location (BSL) availability data" },
+  { name: "FCC Healthcare Bandwidth Guidance", detail: "Connectivity Translator clinical bandwidth tiers derived from FCC healthcare program guidance" },
+  { name: "NTIA BEAD Program", url: "https://broadbandusa.ntia.gov/", detail: "Broadband Equity, Access, and Deployment statutory requirements (100/20 Mbps floor)" },
+  { name: "Starlink Pricing", detail: "Data coming soon — Starlink pricing data is pending a reliable public source" },
+];
 
 const BROADBAND_STATUS_COLORS: Record<BroadbandStatus, string> = {
   served: "#0f7c86",
@@ -753,6 +761,8 @@ export default function ConnectivityPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ModuleSources sources={CONNECTIVITY_SOURCES} module="Connectivity" />
     </div>
   );
 }

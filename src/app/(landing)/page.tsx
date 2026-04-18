@@ -38,9 +38,6 @@ export default function LandingPage() {
         <p className="mt-3 text-base text-[color:var(--muted)]">
           Rural Health Transformation Navigator
         </p>
-        <p className="mt-2 max-w-lg text-sm text-[color:var(--muted)]">
-          {RHTP_PROGRAM.totalFunding} under {RHTP_PROGRAM.statutoryBasis}, administered by the {RHTP_PROGRAM.adminBody}.
-        </p>
       </motion.section>
 
       {/* ── State Cards ──────────────────────────────────────── */}
@@ -102,24 +99,6 @@ export default function LandingPage() {
         </div>
       </motion.section>
 
-      {/* ── Program context ──────────────────────────────────── */}
-      <motion.section
-        variants={fadeUp}
-        initial="hidden"
-        animate="show"
-        className="rounded-2xl border border-[color:var(--line)] bg-white/60 p-5 text-xs text-[color:var(--muted)]"
-      >
-        <p className="font-medium text-[color:var(--foreground)]">About the RHTP</p>
-        <p className="mt-1">
-          {RHTP_PROGRAM.totalFunding} across FY2026–2030 under {RHTP_PROGRAM.statutoryBasis}.
-          Allocation formula: {RHTP_PROGRAM.formulaBreakdown}.
-          Source: {RHTP_PROGRAM.formulaSource}.
-        </p>
-        <p className="mt-1">
-          {RHTP_PROGRAM.nationalHospitalClosures} rural hospitals have completely closed since 2005.
-          Source: {RHTP_PROGRAM.nationalClosuresSource}.
-        </p>
-      </motion.section>
     </>
   );
 }

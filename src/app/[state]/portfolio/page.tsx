@@ -9,6 +9,7 @@ import { STATE_CONFIGS, type ValidState } from "@/config/states";
 import { INTERVENTION_CATALOG } from "@/data/intervention-catalog";
 import { CMS_CATEGORY_LABELS, type CMSCategory } from "@/types/rht-nav";
 import { cn } from "@/lib/utils";
+import { ModuleSources } from "@/components/module-sources";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -26,6 +27,12 @@ const EVIDENCE_COLORS: Record<string, string> = {
   synthetic: "bg-[color:rgba(196,161,42,0.1)] text-[color:#c49a2e]",
 };
 
+const PORTFOLIO_SOURCES = [
+  { name: "RHT Collaborative", detail: "10-intervention framework" },
+  { name: "CMS RHTP Categories", detail: "6 required investment categories" },
+  { name: "Cost/outcome data", detail: "Pending peer-reviewed validation" },
+];
+
 export default function PortfolioPage() {
   const { state } = useParams<{ state: string }>();
   const validState = state as ValidState;
@@ -40,9 +47,6 @@ export default function PortfolioPage() {
           <h1 className="mt-2 font-display text-3xl text-[color:var(--foreground)] md:text-4xl">
             {config.name} Intervention Portfolio
           </h1>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">
-            10-intervention framework for rural health transformation. Each intervention maps to CMS RHTP categories, includes prerequisites, and estimated time-to-signal.
-          </p>
         </motion.div>
 
         {/* CMS Category Legend */}
@@ -140,6 +144,9 @@ export default function PortfolioPage() {
             <ArrowRight className="h-4 w-4 text-[color:var(--muted)] transition-transform group-hover:translate-x-0.5" />
           </Link>
         </motion.div>
+
+        {/* ── Sources (collapsed at bottom) ───────────────────── */}
+        <ModuleSources sources={PORTFOLIO_SOURCES} module="Intervention Portfolio" />
 
       </motion.div>
     </div>

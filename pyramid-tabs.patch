@@ -1,0 +1,1361 @@
+From e4f00b3b8ed9e41bc6bd8dc1e1e0d358a45717f6 Mon Sep 17 00:00:00 2001
+From: Joshua <joshgottt@gmail.com>
+Date: Thu, 16 Apr 2026 00:10:08 -0700
+Subject: [PATCH] =?UTF-8?q?feat:=20pyramid=20tab=20framework=20=E2=80=94?=
+ =?UTF-8?q?=20Kentucky=20restructured=20to=20Infrastructure/Ecosystem/Solu?=
+ =?UTF-8?q?tions=20tabs?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Three-layer pyramid model mirroring the RHT Collaborative's presentation structure:
+- Layer 1 (Infrastructure): Broadband, EHR, Interop, Cloud/AI, Cybersecurity
+- Layer 2 (Ecosystem): Technology, Advisors, Providers, Other partners
+- Layer 3 (Solutions): Mapped to 5 CMS RHT Goals
+
+New files:
+- src/types/state-pyramid.ts — typed config interfaces for any state
+- src/components/pyramid-tabs.tsx — reusable tabbed accordion component
+- src/data/kentucky-pyramid-config.ts — Kentucky-specific pyramid data
+
+Changes:
+- Kentucky page rebuilt with compact header + PyramidTabs + footer
+- Nav header simplified to single "Kentucky" link
+- Satellite planner gets back-link breadcrumb
+- Data appendix page preserved as-is
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+---
+ package-lock.json                           |   1 +
+ src/app/kentucky/page.tsx                   | 542 +++-----------------
+ src/app/kentucky/satellite-planner/page.tsx |   9 +
+ src/components/pyramid-tabs.tsx             | 412 +++++++++++++++
+ src/components/site-header.tsx              |   4 +-
+ src/data/kentucky-pyramid-config.ts         | 176 +++++++
+ src/types/state-pyramid.ts                  |  83 +++
+ 7 files changed, 745 insertions(+), 482 deletions(-)
+ create mode 100644 src/components/pyramid-tabs.tsx
+ create mode 100644 src/data/kentucky-pyramid-config.ts
+ create mode 100644 src/types/state-pyramid.ts
+
+diff --git a/package-lock.json b/package-lock.json
+index c34a91a..71ece71 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -4459,6 +4459,7 @@
+       "version": "2.3.2",
+       "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.2.tgz",
+       "integrity": "sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==",
++      "dev": true,
+       "hasInstallScript": true,
+       "license": "MIT",
+       "optional": true,
+diff --git a/src/app/kentucky/page.tsx b/src/app/kentucky/page.tsx
+index c371dfb..2acdadb 100644
+--- a/src/app/kentucky/page.tsx
++++ b/src/app/kentucky/page.tsx
+@@ -1,21 +1,13 @@
+ "use client";
+ 
+-import { useRef, useState } from "react";
+-import {
+-  AnimatePresence,
+-  motion,
+-  useInView,
+-  useMotionValue,
+-  useSpring,
+-} from "framer-motion";
+-import { ArrowRight, Info, Radio, Satellite, Shield, ShieldCheck, Wifi, WifiOff, Zap } from "lucide-react";
++import { motion } from "framer-motion";
++import { ExternalLink } from "lucide-react";
+ import Link from "next/link";
+ 
+-import { COVERAGE_MODEL, KY_CONTEXT, KY_RHTP, STARLINK_PRICING } from "@/data/kentucky-config";
++import { PyramidTabs } from "@/components/pyramid-tabs";
++import { KENTUCKY_PYRAMID } from "@/data/kentucky-pyramid-config";
++import { KY_CONTEXT, KY_RHTP } from "@/data/kentucky-config";
+ import { getKYFacilitySummary } from "@/data/kentucky-facilities";
+-import { getKYBDCSummary } from "@/data/kentucky-broadband-availability";
+-import { AnimatedNumber, parseStatValue } from "@/components/animated-number";
+-import { ScrollReveal } from "@/components/scroll-reveal";
+ 
+ /* ------------------------------------------------------------------ */
+ /*  Animation                                                          */
+@@ -31,485 +23,77 @@ const stagger = {
+   show: { transition: { staggerChildren: 0.07 } },
+ };
+ 
+-/* ------------------------------------------------------------------ */
+-/*  Connectivity Budget data                                           */
+-/* ------------------------------------------------------------------ */
+-
+-const BANDWIDTH_TIERS = [
+-  { speed: "100+ Mbps", label: "Full family", detail: "Telehealth + streaming + multiple devices + remote monitoring", color: "#0f7c86", barPct: 100 },
+-  { speed: "25–100 Mbps", label: "Clinical", detail: "Telehealth visits + EHR access + basic remote monitoring", color: "#3a9ca5", barPct: 62 },
+-  { speed: "10–25 Mbps", label: "Minimal", detail: "Single telehealth session OR remote patient monitoring", color: "#c49a2e", barPct: 25 },
+-  { speed: "<10 Mbps", label: "Insufficient", detail: "Unreliable for clinical use", color: "#c46128", barPct: 10 },
+-];
+-
+ /* ------------------------------------------------------------------ */
+ /*  Page                                                               */
+ /* ------------------------------------------------------------------ */
+ 
+-export default function KentuckyOverview() {
++export default function KentuckyPage() {
+   const fSummary = getKYFacilitySummary();
+-  const bdcSummary = getKYBDCSummary();
+-  const costs = STARLINK_PRICING.getEffectiveCosts();
+-
+-  const phase2TotalYearOne =
+-    fSummary.unserved * costs.yearOneTotalPerUnit +
+-    fSummary.unserved * COVERAGE_MODEL.communityDistributionModel.localDistributionCostPerSite;
+-  const phase2PctOfRhtp = ((phase2TotalYearOne / KY_RHTP.annualAllocation) * 100).toFixed(2);
+ 
+-  const pctUnderserved = Math.round((bdcSummary.underserved / bdcSummary.totalBSLs) * 1000) / 10;
+-  const pctUnserved = Math.round((bdcSummary.unserved / bdcSummary.totalBSLs) * 1000) / 10;
+-
+-  return (
+-    <>
+-      {/* ── Hero ──────────────────────────────────────────────── */}
+-      <motion.section
+-        variants={stagger}
+-        initial="hidden"
+-        animate="show"
+-        className="flex flex-col"
+-      >
+-        <motion.div variants={fadeUp}>
+-          <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[color:var(--muted)]">
+-            Kentucky Broadband Infrastructure
+-          </p>
+-          <h1 className="mt-3 max-w-3xl font-display text-4xl leading-[1.1] text-[color:var(--foreground)] md:text-5xl">
+-            Kentucky Broadband &amp; Satellite Planning
+-          </h1>
+-        </motion.div>
+-
+-        {/* ── Hero Stats — animated count-up numbers ───────────── */}
+-        <motion.div
+-          variants={stagger}
+-          className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4"
+-        >
+-          {[
+-            { label: "State allocation / year", value: `$${Math.round(KY_RHTP.annualAllocation / 1e6)}M`, tip: "Kentucky's annual Rural Health Transformation Program (RHTP) allocation from CMS. Funds telehealth, remote monitoring, and clinical AI." },
+-            { label: "Facilities tracked", value: String(fSummary.total), tip: "Hospitals, critical access hospitals, federally qualified health centers, and rural health clinics across Kentucky." },
+-            { label: "Need coverage", value: String(fSummary.needsCoverage), accent: true, tip: "Healthcare facilities classified as underserved or unserved — lacking reliable broadband for telehealth and electronic health records." },
+-            { label: "Rural population", value: `${(KY_CONTEXT.ruralPopulation / 1e6).toFixed(1)}M` },
+-          ].map((card, i) => (
+-            <motion.div key={card.label} variants={fadeUp}>
+-              <AnimatedStatCard label={card.label} value={card.value} accent={card.accent} delay={i * 0.1} tip={card.tip} />
+-            </motion.div>
+-          ))}
+-        </motion.div>
+-      </motion.section>
+-
+-      {/* ── Statewide Broadband Coverage ─────────────────────── */}
+-      <ScrollReveal scaleFrom={0.94}>
+-        <div className="surface-card rounded-[2rem] p-6 md:p-8">
+-          <div className="flex items-center gap-1.5">
+-            <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
+-              Statewide broadband coverage
+-            </p>
+-            <InfoTip text="Percentage of all homes and businesses in Kentucky where broadband internet at the given speed is available from at least one provider. Source: FCC Broadband Data Collection, December 2024." />
+-          </div>
+-          <p className="mt-1 text-[10px] text-[color:var(--muted)]">
+-            {bdcSummary.totalBSLs.toLocaleString()} homes &amp; businesses across {bdcSummary.totalCounties} counties
+-          </p>
+-          <div className="mt-5 grid grid-cols-3 gap-4 text-center">
+-            <BigPct
+-              value={bdcSummary.pctServed}
+-              count={bdcSummary.served}
+-              label="Served"
+-              sub="Reliable broadband (100/20+ Mbps)"
+-              color="#0f7c86"
+-              delay={0}
+-            />
+-            <BigPct
+-              value={pctUnderserved}
+-              count={bdcSummary.underserved}
+-              label="Underserved"
+-              sub="Slow broadband (25/3 – 100/20 Mbps)"
+-              color="#c49a2e"
+-              delay={0.15}
+-            />
+-            <BigPct
+-              value={pctUnserved}
+-              count={bdcSummary.unserved}
+-              label="Unserved"
+-              sub="No reliable internet (< 25/3 Mbps)"
+-              color="#c46128"
+-              delay={0.3}
+-            />
+-          </div>
+-        </div>
+-      </ScrollReveal>
+-
+-      {/* ── Infrastructure Readiness ─────────────────────────── */}
+-      <ScrollReveal>
+-        <div className="grid gap-4 md:grid-cols-2">
+-          {/* Broadband readiness */}
+-          <div className="surface-card flex items-start gap-4 rounded-[1.6rem] border p-5">
+-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:rgba(15,124,134,0.1)]">
+-              <Wifi className="h-5 w-5 text-[color:var(--teal)]" />
+-            </div>
+-            <div>
+-              <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">Broadband</p>
+-              <p className="mt-1 font-display text-2xl font-semibold text-[color:var(--foreground)]">
+-                {fSummary.servedPct}%
+-                <span className="ml-1 text-sm font-normal text-[color:var(--muted)]">of facilities connected</span>
+-              </p>
+-              <p className="mt-1 text-[10px] text-[color:var(--muted)]">
+-                {fSummary.served} served · {fSummary.underserved} underserved · {fSummary.unserved} unserved
+-              </p>
+-            </div>
+-          </div>
+-
+-          {/* Cybersecurity readiness */}
+-          <div className="surface-card flex items-start gap-4 rounded-[1.6rem] border p-5">
+-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:rgba(156,163,175,0.12)]">
+-              <Shield className="h-5 w-5 text-[color:#9ca3af]" />
+-            </div>
+-            <div>
+-              <p className="flex items-center gap-1.5 text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
+-                Cybersecurity
+-                <InfoTip text="Tracks facility enrollment in the Rural Health Resiliency Program — cybersecurity risk assessments, incident response planning, and compliance monitoring. Assessment enrollment is in progress." />
+-              </p>
+-              <p className="mt-1 font-display text-2xl font-semibold text-[color:var(--foreground)]">
+-                {fSummary.cyber.assessed}
+-                <span className="ml-1 text-sm font-normal text-[color:var(--muted)]">of {fSummary.total} assessed</span>
+-              </p>
+-              <p className="mt-1 text-[10px] text-[color:#c49a2e]">
+-                Assessment enrollment in progress
+-              </p>
+-            </div>
+-          </div>
+-        </div>
+-      </ScrollReveal>
+-
+-      {/* ── Phase Cards — with hover tilt ─────────────────────── */}
+-      <ScrollReveal>
+-        <div className="grid gap-4 md:grid-cols-3">
+-          {/* Phase 1: Facility Coverage */}
+-          <TiltCard>
+-            <PhaseCard
+-              phase={1}
+-              color="var(--foreground)"
+-              label="Healthcare Facility Coverage"
+-              stat={
+-                <>
+-                  <span className="text-[color:var(--accent)]">{fSummary.needsCoverage}</span>
+-                  <span className="text-[color:var(--muted)]"> of {fSummary.total} need coverage</span>
+-                </>
+-              }
+-            >
+-              <div className="mt-3 flex gap-3 text-center text-[10px]">
+-                <div><span className="font-display text-lg font-semibold text-[color:var(--teal)]">{fSummary.served}</span><p className="text-[color:var(--muted)]">Served</p></div>
+-                <div><span className="font-display text-lg font-semibold text-[color:#c49a2e]">{fSummary.underserved}</span><p className="text-[color:var(--muted)]">Underserved</p></div>
+-                <div><span className="font-display text-lg font-semibold text-[color:var(--accent)]">{fSummary.unserved}</span><p className="text-[color:var(--muted)]">Unserved</p></div>
+-              </div>
+-              <div className="mt-3 space-y-1.5">
+-                <FacilityBar label="Hospitals" served={fSummary.byType.hospital.served} underserved={fSummary.byType.hospital.underserved} unserved={fSummary.byType.hospital.unserved} delay={0} />
+-                <FacilityBar label="Critical Access" served={fSummary.byType.cah.served} underserved={fSummary.byType.cah.underserved} unserved={fSummary.byType.cah.unserved} delay={0.1} />
+-                <FacilityBar label="Health Centers" served={fSummary.byType.fqhc.served} underserved={fSummary.byType.fqhc.underserved} unserved={fSummary.byType.fqhc.unserved} delay={0.2} />
+-                <FacilityBar label="Rural Clinics" served={fSummary.byType.rhc.served} underserved={fSummary.byType.rhc.underserved} unserved={fSummary.byType.rhc.unserved} delay={0.3} />
+-              </div>
+-            </PhaseCard>
+-          </TiltCard>
+-
+-          {/* Phase 2: Satellite Cost Modeling */}
+-          <TiltCard>
+-            <PhaseCard
+-              phase={2}
+-              color="var(--teal)"
+-              label="Satellite Cost Modeling"
+-              stat={
+-                <>
+-                  <span>${Math.round(phase2TotalYearOne).toLocaleString()}</span>
+-                  <span className="text-sm font-normal text-[color:var(--muted)]"> year-one</span>
+-                </>
+-              }
+-              sub={`${fSummary.unserved} facilities · ${phase2PctOfRhtp}% of annual state allocation`}
+-            >
+-              <div className="mt-4 space-y-2">
+-                <CostBreakdown label="Starlink terminals" count={fSummary.unserved} perUnit={costs.yearOneTotalPerUnit} total={fSummary.unserved * costs.yearOneTotalPerUnit} icon={<Satellite className="h-3.5 w-3.5" />} />
+-                <CostBreakdown label="Distribution equipment" count={fSummary.unserved} perUnit={COVERAGE_MODEL.communityDistributionModel.localDistributionCostPerSite} total={fSummary.unserved * COVERAGE_MODEL.communityDistributionModel.localDistributionCostPerSite} icon={<Radio className="h-3.5 w-3.5" />} />
+-              </div>
+-            </PhaseCard>
+-          </TiltCard>
+-
+-          {/* Phase 3: Remaining Coverage Gap */}
+-          <TiltCard>
+-            <Link href="/kentucky/satellite-planner" className="block h-full">
+-              <PhaseCard
+-                phase={3}
+-                color="var(--accent)"
+-                label="Remaining Coverage Gap"
+-                stat={
+-                  <>
+-                    <span>{(bdcSummary.underserved + bdcSummary.unserved).toLocaleString()}</span>
+-                    <span className="text-sm font-normal text-[color:var(--muted)]"> locations without reliable internet</span>
+-                  </>
+-                }
+-                clickable
+-              >
+-                <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+-                  <div className="rounded-lg bg-[color:var(--surface-soft)] p-2">
+-                    <p className="font-display text-lg font-semibold text-[color:#c49a2e]">{bdcSummary.underserved.toLocaleString()}</p>
+-                    <p className="text-[color:var(--muted)]">Slow internet</p>
+-                  </div>
+-                  <div className="rounded-lg bg-[color:var(--surface-soft)] p-2">
+-                    <p className="font-display text-lg font-semibold text-[color:var(--accent)]">{bdcSummary.unserved.toLocaleString()}</p>
+-                    <p className="text-[color:var(--muted)]">No internet</p>
+-                  </div>
+-                </div>
+-                <div className="mt-3 flex items-center gap-2 rounded-full bg-[color:var(--foreground)] px-4 py-2 text-xs font-medium text-white transition-transform group-hover:translate-x-1">
+-                  Plan satellite coverage
+-                  <ArrowRight className="h-3.5 w-3.5" />
+-                </div>
+-              </PhaseCard>
+-            </Link>
+-          </TiltCard>
+-        </div>
+-      </ScrollReveal>
+-
+-      {/* ── Connectivity Budget Translator ─────────────────────── */}
+-      <ScrollReveal>
+-        <ConnectivityBudget />
+-      </ScrollReveal>
+-    </>
+-  );
+-}
+-
+-/* ------------------------------------------------------------------ */
+-/*  Sub-components                                                     */
+-/* ------------------------------------------------------------------ */
+-
+-/** StatCard with animated count-up */
+-function AnimatedStatCard({ label, value, accent, delay = 0, tip }: { label: string; value: string; accent?: boolean; delay?: number; tip?: string }) {
+-  const { prefix, number, suffix } = parseStatValue(value);
+-  return (
+-    <div className="rounded-[1.4rem] border border-[color:var(--line)] bg-white/75 p-4">
+-      <p className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-[color:var(--muted)]">
+-        {label}
+-        {tip && <InfoTip text={tip} />}
+-      </p>
+-      <p className={`mt-1 font-display text-3xl ${accent ? "text-[color:var(--accent)]" : "text-[color:var(--foreground)]"}`}>
+-        {prefix}
+-        <AnimatedNumber
+-          value={number}
+-          delay={delay}
+-          formatFn={(n) => suffix === "M" ? n.toFixed(1) : Math.round(n).toLocaleString()}
+-        />
+-        {suffix}
+-      </p>
+-    </div>
+-  );
+-}
+-
+-/** BDC percentage with animated count-up and real count */
+-function BigPct({ value, count, label, sub, color, delay = 0 }: { value: number; count: number; label: string; sub: string; color: string; delay?: number }) {
+-  return (
+-    <div>
+-      <p className="font-display text-4xl font-semibold md:text-5xl" style={{ color }}>
+-        <AnimatedNumber value={value} delay={delay} formatFn={(n) => n.toFixed(1)} />%
+-      </p>
+-      <p className="mt-1 text-sm font-medium text-[color:var(--foreground)]">{label}</p>
+-      <p className="text-[10px] font-medium" style={{ color }}>{count.toLocaleString()} locations</p>
+-      <p className="mt-0.5 text-[10px] text-[color:var(--muted)]">{sub}</p>
+-    </div>
+-  );
+-}
+-
+-/** Inline info tooltip — hover/tap to reveal explanation */
+-function InfoTip({ text }: { text: string }) {
+-  return (
+-    <span className="group relative inline-flex cursor-help">
+-      <Info className="h-3.5 w-3.5 text-[color:var(--muted)] transition-colors group-hover:text-[color:var(--foreground)]" />
+-      <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-64 -translate-x-1/2 rounded-xl bg-[color:var(--foreground)] px-3 py-2 text-[11px] leading-4 text-white opacity-0 shadow-lg transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
+-        {text}
+-        <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[color:var(--foreground)]" />
+-      </span>
+-    </span>
+-  );
+-}
+-
+-/** Tilt card wrapper — tracks mouse for 3D rotation */
+-function TiltCard({ children }: { children: React.ReactNode }) {
+-  const ref = useRef<HTMLDivElement>(null);
+-  const rotateX = useSpring(0, { stiffness: 300, damping: 30 });
+-  const rotateY = useSpring(0, { stiffness: 300, damping: 30 });
+-
+-  const handleMouse = (e: React.MouseEvent<HTMLDivElement>) => {
+-    if (!ref.current) return;
+-    const rect = ref.current.getBoundingClientRect();
+-    const centerX = rect.left + rect.width / 2;
+-    const centerY = rect.top + rect.height / 2;
+-    rotateX.set(Math.max(-5, Math.min(5, (e.clientY - centerY) / 20)));
+-    rotateY.set(Math.max(-5, Math.min(5, (centerX - e.clientX) / 20)));
+-  };
+-
+-  const handleLeave = () => {
+-    rotateX.set(0);
+-    rotateY.set(0);
+-  };
++  const statPills = [
++    { label: "RHTP / year", value: `$${Math.round(KY_RHTP.annualAllocation / 1e6)}M` },
++    { label: "Counties", value: String(KY_CONTEXT.totalCounties) },
++    { label: "Facilities tracked", value: String(fSummary.total) },
++  ];
+ 
+   return (
+     <motion.div
+-      ref={ref}
+-      onMouseMove={handleMouse}
+-      onMouseLeave={handleLeave}
+-      style={{ rotateX, rotateY, transformPerspective: 800 }}
+-      className="h-full will-change-transform"
++      variants={stagger}
++      initial="hidden"
++      animate="show"
++      className="flex flex-col gap-8"
+     >
+-      {children}
+-    </motion.div>
+-  );
+-}
+-
+-function PhaseCard({
+-  phase, color, label, stat, sub, clickable, children,
+-}: {
+-  phase: number;
+-  color: string;
+-  label: string;
+-  stat: React.ReactNode;
+-  sub?: string;
+-  clickable?: boolean;
+-  children?: React.ReactNode;
+-}) {
+-  return (
+-    <div className={`surface-card flex h-full flex-col rounded-[1.6rem] border p-5 transition-shadow ${clickable ? "cursor-pointer hover:shadow-lg" : ""}`}>
+-      <div className="flex items-center gap-2">
+-        <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: color }}>
+-          <span className="text-xs font-bold text-white">{phase}</span>
++      {/* ── Header ───────────────────────────────────────────── */}
++      <motion.div variants={fadeUp}>
++        <h1 className="font-display text-4xl leading-[1.1] text-[color:var(--foreground)] md:text-5xl">
++          Kentucky
++        </h1>
++
++        <div className="mt-4 flex flex-wrap gap-2">
++          {statPills.map((pill) => (
++            <span
++              key={pill.label}
++              className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--line)] bg-white/75 px-3 py-1.5 text-xs"
++            >
++              <span className="text-[color:var(--muted)]">{pill.label}</span>
++              <span className="font-semibold text-[color:var(--foreground)]">{pill.value}</span>
++            </span>
++          ))}
+         </div>
+-        <p className="text-xs font-medium uppercase tracking-wider text-[color:var(--foreground)]">{label}</p>
+-      </div>
+-      <p className="mt-3 font-display text-2xl font-semibold text-[color:var(--foreground)]">{stat}</p>
+-      {sub && <p className="mt-0.5 text-[10px] text-[color:var(--muted)]">{sub}</p>}
+-      {children}
+-    </div>
+-  );
+-}
+-
+-/** Facility bar with animated three-tier segments */
+-function FacilityBar({ label, served, underserved, unserved, delay = 0 }: { label: string; served: number; underserved: number; unserved: number; delay?: number }) {
+-  const total = served + underserved + unserved;
+-  const servedPct = total > 0 ? (served / total) * 100 : 0;
+-  const underservedPct = total > 0 ? (underserved / total) * 100 : 0;
+-  const unservedPct = total > 0 ? (unserved / total) * 100 : 0;
+-
+-  const ref = useRef(null);
+-  const isInView = useInView(ref, { once: true, margin: "-40px" });
+-
+-  return (
+-    <div ref={ref}>
+-      <div className="flex items-center justify-between text-xs">
+-        <span className="text-[color:var(--foreground)]">{label}</span>
+-        <span className="text-[10px] text-[color:var(--muted)]">
+-          {served}<span className="mx-0.5 text-[color:var(--line)]">/</span>{underserved}<span className="mx-0.5 text-[color:var(--line)]">/</span>{unserved}
+-        </span>
+-      </div>
+-      <div className="mt-0.5 flex h-1.5 overflow-hidden rounded-full bg-[color:#efe8db]">
+-        <motion.div
+-          className="h-full rounded-l-full bg-[color:var(--teal)]"
+-          initial={{ width: 0 }}
+-          animate={{ width: isInView ? `${servedPct}%` : 0 }}
+-          transition={{ duration: 0.6, delay: delay, ease: [0.22, 1, 0.36, 1] }}
+-        />
+-        <motion.div
+-          className="h-full bg-[color:#c49a2e]"
+-          initial={{ width: 0 }}
+-          animate={{ width: isInView ? `${underservedPct}%` : 0 }}
+-          transition={{ duration: 0.6, delay: delay + 0.15, ease: [0.22, 1, 0.36, 1] }}
+-        />
+-        <motion.div
+-          className="h-full rounded-r-full bg-[color:var(--accent)]"
+-          initial={{ width: 0 }}
+-          animate={{ width: isInView ? `${unservedPct}%` : 0 }}
+-          transition={{ duration: 0.6, delay: delay + 0.3, ease: [0.22, 1, 0.36, 1] }}
+-        />
+-      </div>
+-    </div>
+-  );
+-}
+-
+-function CostBreakdown({
+-  label, count, perUnit, total, icon,
+-}: {
+-  label: string; count: number; perUnit: number; total: number; icon: React.ReactNode;
+-}) {
+-  return (
+-    <div className="flex items-center gap-2.5 rounded-lg border border-[color:var(--line)] bg-white/75 p-2.5">
+-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[color:var(--foreground)] text-white">
+-        {icon}
+-      </div>
+-      <div className="min-w-0 flex-1">
+-        <p className="text-xs font-medium text-[color:var(--foreground)]">{label}</p>
+-        <p className="text-[10px] text-[color:var(--muted)]">
+-          {count} × ${perUnit.toLocaleString()} = ${Math.round(total).toLocaleString()}
+-        </p>
+-      </div>
+-    </div>
+-  );
+-}
+-
+-function ConnectivityBudget() {
+-  const [expanded, setExpanded] = useState(false);
+ 
+-  return (
+-    <div className="surface-card rounded-[2rem] border p-5 md:p-6">
+-      <button
+-        type="button"
+-        onClick={() => setExpanded((p) => !p)}
+-        className="flex w-full items-center gap-2 text-left"
+-      >
+-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[color:var(--foreground)]">
+-          <Zap className="h-3.5 w-3.5 text-white" />
+-        </div>
+-        <p className="flex-1 text-xs font-medium uppercase tracking-wider text-[color:var(--foreground)]">
+-          Connectivity budget
++        <p className="mt-3 max-w-2xl text-sm text-[color:var(--muted)]">
++          Infrastructure-first assessment and planning for Kentucky&apos;s RHTP investment.
+         </p>
+-        <span className="text-[10px] text-[color:var(--muted)]">
+-          {expanded ? "Collapse" : "What does bandwidth mean in practice?"}
+-        </span>
+-      </button>
++      </motion.div>
++
++      {/* ── Pyramid Tabs ─────────────────────────────────────── */}
++      <motion.div variants={fadeUp}>
++        <PyramidTabs
++          config={KENTUCKY_PYRAMID}
++          defaultTab="infrastructure"
++          defaultOpenSections={["broadband_satellite"]}
++        />
++      </motion.div>
+ 
+-      <AnimatePresence>
+-        {expanded && (
+-          <motion.div
+-            key="budget-tiers"
+-            initial={{ opacity: 0, height: 0 }}
+-            animate={{ opacity: 1, height: "auto" }}
+-            exit={{ opacity: 0, height: 0 }}
+-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+-            className="overflow-hidden"
+-          >
+-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+-              {BANDWIDTH_TIERS.map((tier, i) => (
+-                <motion.div
+-                  key={tier.speed}
+-                  initial={{ opacity: 0, y: 8 }}
+-                  animate={{ opacity: 1, y: 0 }}
+-                  transition={{ delay: i * 0.08, duration: 0.3 }}
+-                  className="flex flex-col gap-2 rounded-xl border border-[color:var(--line)] bg-white/75 p-3"
+-                >
+-                  <div className="flex items-start gap-3">
+-                    <span className="mt-0.5 inline-block h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: tier.color }} />
+-                    <div className="flex-1">
+-                      <p className="text-sm font-semibold text-[color:var(--foreground)]">{tier.speed}</p>
+-                      <p className="text-[10px] font-medium uppercase tracking-wide" style={{ color: tier.color }}>{tier.label}</p>
+-                      <p className="mt-0.5 text-xs text-[color:var(--muted)]">{tier.detail}</p>
+-                    </div>
+-                  </div>
+-                  {/* Speed bar */}
+-                  <div className="h-1 overflow-hidden rounded-full bg-[color:#efe8db]">
+-                    <motion.div
+-                      className="h-full rounded-full"
+-                      style={{ background: tier.color }}
+-                      initial={{ width: 0 }}
+-                      animate={{ width: `${tier.barPct}%` }}
+-                      transition={{ duration: 0.6, delay: i * 0.08 + 0.2, ease: [0.22, 1, 0.36, 1] }}
+-                    />
+-                  </div>
+-                </motion.div>
+-              ))}
+-            </div>
+-          </motion.div>
+-        )}
+-      </AnimatePresence>
+-    </div>
++      {/* ── Footer ───────────────────────────────────────────── */}
++      <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-4 border-t border-[color:var(--line)] pt-6 text-xs text-[color:var(--muted)]">
++        <Link
++          href="/kentucky/data"
++          className="inline-flex items-center gap-1 text-[color:var(--teal)] underline decoration-[color:var(--teal)]/30 underline-offset-2 hover:decoration-[color:var(--teal)]"
++        >
++          Data Sources &amp; Methodology
++          <ExternalLink className="h-3 w-3" />
++        </Link>
++        <span className="hidden sm:inline">·</span>
++        <a
++          href="mailto:data-issues@rht-nav.org?subject=Kentucky%20data%20issue"
++          className="text-[color:var(--teal)] underline decoration-[color:var(--teal)]/30 underline-offset-2 hover:decoration-[color:var(--teal)]"
++        >
++          Report a data issue
++        </a>
++        <span className="hidden sm:inline">·</span>
++        <span>FCC broadband data may underestimate rural coverage gaps.</span>
++      </motion.div>
++    </motion.div>
+   );
+ }
+diff --git a/src/app/kentucky/satellite-planner/page.tsx b/src/app/kentucky/satellite-planner/page.tsx
+index 1b36f85..dd2a91e 100644
+--- a/src/app/kentucky/satellite-planner/page.tsx
++++ b/src/app/kentucky/satellite-planner/page.tsx
+@@ -22,6 +22,7 @@ import {
+   WifiOff,
+ } from "lucide-react";
+ import dynamic from "next/dynamic";
++import Link from "next/link";
+ import { useCallback, useMemo, useRef, useState } from "react";
+ 
+ import {
+@@ -278,6 +279,14 @@ export default function SatellitePlannerPage() {
+ 
+   return (
+     <div className="flex flex-col gap-6">
++      {/* Breadcrumb */}
++      <Link
++        href="/kentucky"
++        className="inline-flex w-fit items-center gap-1 text-xs text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
++      >
++        &larr; Kentucky
++      </Link>
++
+       {/* Hero */}
+       <motion.div variants={fadeUp} initial="hidden" animate="show">
+         <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[color:var(--muted)]">
+diff --git a/src/components/pyramid-tabs.tsx b/src/components/pyramid-tabs.tsx
+new file mode 100644
+index 0000000..ab6279c
+--- /dev/null
++++ b/src/components/pyramid-tabs.tsx
+@@ -0,0 +1,412 @@
++"use client";
++
++import { AnimatePresence, motion } from "framer-motion";
++import { ChevronRight, ExternalLink, Info, ArrowRight } from "lucide-react";
++import Link from "next/link";
++import { useState } from "react";
++
++import { getKYBDCSummary } from "@/data/kentucky-broadband-availability";
++import { getKYFacilitySummary } from "@/data/kentucky-facilities";
++import { cn } from "@/lib/utils";
++import type {
++  EcosystemSection,
++  InfraSection,
++  SolutionSection,
++  StatePyramidConfig,
++} from "@/types/state-pyramid";
++
++/* ------------------------------------------------------------------ */
++/*  Constants                                                          */
++/* ------------------------------------------------------------------ */
++
++const TAB_COLORS = {
++  infrastructure: "#2b7ab8",
++  ecosystem: "#4a8c3f",
++  solutions: "var(--accent)",
++} as const;
++
++type TabKey = keyof typeof TAB_COLORS;
++
++const TABS: { key: TabKey; label: string }[] = [
++  { key: "infrastructure", label: "Infrastructure" },
++  { key: "ecosystem", label: "Ecosystem" },
++  { key: "solutions", label: "Solutions" },
++];
++
++/* ------------------------------------------------------------------ */
++/*  Helpers                                                            */
++/* ------------------------------------------------------------------ */
++
++function InfoTip({ text }: { text: string }) {
++  return (
++    <span className="group relative inline-flex cursor-help">
++      <Info className="h-3.5 w-3.5 text-[color:var(--muted)] transition-colors group-hover:text-[color:var(--foreground)]" />
++      <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-64 -translate-x-1/2 rounded-xl bg-[color:var(--foreground)] px-3 py-2 text-[11px] leading-4 text-white opacity-0 shadow-lg transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
++        {text}
++        <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[color:var(--foreground)]" />
++      </span>
++    </span>
++  );
++}
++
++function StatusPill({ text, variant = "default" }: { text: string; variant?: "default" | "active" | "pending" }) {
++  const colors = {
++    default: "bg-[color:var(--surface-soft)] text-[color:var(--muted)]",
++    active: "bg-[color:rgba(15,124,134,0.1)] text-[color:var(--teal)]",
++    pending: "bg-[color:rgba(196,161,42,0.1)] text-[color:#c49a2e]",
++  };
++  return (
++    <span className={cn("inline-block rounded-full px-2.5 py-0.5 text-[10px] font-medium", colors[variant])}>
++      {text}
++    </span>
++  );
++}
++
++/* ------------------------------------------------------------------ */
++/*  Collapsible Section                                                */
++/* ------------------------------------------------------------------ */
++
++function CollapsibleSection({
++  title,
++  statusSummary,
++  defaultOpen = false,
++  children,
++}: {
++  title: string;
++  statusSummary: string;
++  defaultOpen?: boolean;
++  children: React.ReactNode;
++}) {
++  const [open, setOpen] = useState(defaultOpen);
++
++  return (
++    <div className="border-b border-[color:var(--line)] last:border-b-0">
++      <button
++        type="button"
++        onClick={() => setOpen((p) => !p)}
++        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-white/50 md:px-5"
++      >
++        <motion.div
++          animate={{ rotate: open ? 90 : 0 }}
++          transition={{ duration: 0.2 }}
++          className="flex h-5 w-5 shrink-0 items-center justify-center"
++        >
++          <ChevronRight className="h-4 w-4 text-[color:var(--muted)]" />
++        </motion.div>
++        <span className="flex-1 text-sm font-medium text-[color:var(--foreground)]">
++          {title}
++        </span>
++        <span className="hidden text-[11px] text-[color:var(--muted)] sm:block">
++          {statusSummary}
++        </span>
++      </button>
++
++      <AnimatePresence initial={false}>
++        {open && (
++          <motion.div
++            key="content"
++            initial={{ height: 0, opacity: 0 }}
++            animate={{ height: "auto", opacity: 1 }}
++            exit={{ height: 0, opacity: 0 }}
++            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
++            className="overflow-hidden"
++          >
++            <div className="px-4 pb-5 pt-1 md:px-5 md:pl-12">
++              {children}
++            </div>
++          </motion.div>
++        )}
++      </AnimatePresence>
++    </div>
++  );
++}
++
++/* ------------------------------------------------------------------ */
++/*  Infrastructure Content Renderers                                   */
++/* ------------------------------------------------------------------ */
++
++function BroadbandContent({ section }: { section: InfraSection }) {
++  const bdcSummary = getKYBDCSummary();
++  const fSummary = getKYFacilitySummary();
++
++  const pctUnderserved = Math.round((bdcSummary.underserved / bdcSummary.totalBSLs) * 1000) / 10;
++  const pctUnserved = Math.round((bdcSummary.unserved / bdcSummary.totalBSLs) * 1000) / 10;
++
++  return (
++    <div className="space-y-4">
++      {/* BDC stat cards */}
++      <div className="grid grid-cols-3 gap-3">
++        <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-3 text-center">
++          <p className="font-display text-2xl font-semibold text-[color:var(--teal)] md:text-3xl">
++            {bdcSummary.pctServed}%
++          </p>
++          <p className="mt-0.5 text-[10px] font-medium text-[color:var(--foreground)]">Served</p>
++          <p className="text-[10px] text-[color:var(--muted)]">{bdcSummary.served.toLocaleString()} BSLs</p>
++        </div>
++        <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-3 text-center">
++          <p className="font-display text-2xl font-semibold text-[color:#c49a2e] md:text-3xl">
++            {pctUnderserved}%
++          </p>
++          <p className="mt-0.5 text-[10px] font-medium text-[color:var(--foreground)]">Underserved</p>
++          <p className="text-[10px] text-[color:var(--muted)]">{bdcSummary.underserved.toLocaleString()} BSLs</p>
++        </div>
++        <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-3 text-center">
++          <p className="font-display text-2xl font-semibold text-[color:var(--accent)] md:text-3xl">
++            {pctUnserved}%
++          </p>
++          <p className="mt-0.5 text-[10px] font-medium text-[color:var(--foreground)]">Unserved</p>
++          <p className="text-[10px] text-[color:var(--muted)]">{bdcSummary.unserved.toLocaleString()} BSLs</p>
++        </div>
++      </div>
++
++      {/* Facility summary */}
++      <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-3">
++        <div className="flex items-center gap-1.5">
++          <p className="text-xs font-medium text-[color:var(--foreground)]">
++            Healthcare Facilities
++          </p>
++          <InfoTip text="Broadband status is estimated from county-level FCC BDC data. Facility-level verification is planned." />
++        </div>
++        <p className="mt-1 text-[11px] text-[color:var(--muted)]">
++          {fSummary.served} served · {fSummary.underserved} underserved · {fSummary.unserved} unserved of {fSummary.total} total
++        </p>
++      </div>
++
++      {/* Source */}
++      <p className="text-[10px] text-[color:var(--muted)]">
++        Source: FCC Broadband Data Collection, Dec 2024 · {bdcSummary.totalCounties} counties · {bdcSummary.totalBSLs.toLocaleString()} BSLs
++      </p>
++
++      {/* Tool button */}
++      {section.hasInteractiveTool && section.toolRoute && (
++        <Link
++          href={section.toolRoute}
++          className="inline-flex items-center gap-2 rounded-full bg-[color:var(--foreground)] px-4 py-2.5 text-xs font-medium text-white transition-colors hover:bg-[color:#223a54]"
++        >
++          {section.toolLabel ?? "Open Tool"}
++          <ArrowRight className="h-3.5 w-3.5" />
++        </Link>
++      )}
++    </div>
++  );
++}
++
++function CybersecurityContent() {
++  const fSummary = getKYFacilitySummary();
++
++  return (
++    <div className="space-y-3">
++      {/* Stat cards */}
++      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
++        <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-3">
++          <p className="font-display text-2xl font-semibold text-[color:var(--foreground)]">0</p>
++          <p className="text-[10px] text-[color:var(--muted)]">KY facilities assessed</p>
++        </div>
++        <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-3">
++          <p className="font-display text-2xl font-semibold text-[color:var(--foreground)]">{fSummary.total}</p>
++          <p className="text-[10px] text-[color:var(--muted)]">Total facilities</p>
++        </div>
++        <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-3">
++          <p className="font-display text-2xl font-semibold text-[color:var(--teal)]">700+</p>
++          <p className="text-[10px] text-[color:var(--muted)]">Rural hospitals nationally on Azure cybersecurity</p>
++        </div>
++      </div>
++
++      {/* Program info */}
++      <div className="space-y-2 text-[11px] text-[color:var(--muted)]">
++        <div className="flex items-start gap-2">
++          <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--teal)]" />
++          <p>
++            <span className="font-medium text-[color:var(--foreground)]">Rural Health Resiliency Program</span> provides cybersecurity risk assessments, incident response planning, and compliance monitoring for rural healthcare facilities.
++          </p>
++        </div>
++        <div className="flex items-start gap-2">
++          <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:#2b7ab8]" />
++          <p>
++            <span className="font-medium text-[color:var(--foreground)]">Anthropic Project Glasswing</span> adds AI-powered vulnerability detection and threat analysis for enrolled facilities.
++          </p>
++        </div>
++      </div>
++
++      <StatusPill text="Enrollment in progress" variant="pending" />
++    </div>
++  );
++}
++
++function PlaceholderContent({ description }: { description: string }) {
++  return (
++    <div className="flex items-center gap-3 rounded-xl border border-dashed border-[color:var(--line)] bg-white/50 p-4">
++      <div className="h-2 w-2 rounded-full bg-[color:#c49a2e]" />
++      <p className="text-xs text-[color:var(--muted)]">{description}</p>
++    </div>
++  );
++}
++
++function InfraContent({ section }: { section: InfraSection }) {
++  switch (section.content) {
++    case "broadband":
++      return <BroadbandContent section={section} />;
++    case "cyber":
++      return <CybersecurityContent />;
++    case "ehr":
++      return <PlaceholderContent description="EHR landscape data collection is planned. Assessment will evaluate current EHR penetration, vendor distribution, and interoperability readiness across rural facilities." />;
++    case "interop":
++      return <PlaceholderContent description="FHIR and HIE readiness evaluation is planned. Assessment will map current health information exchange capabilities and identify interoperability gaps." />;
++    case "cloud":
++      return <PlaceholderContent description="Azure cloud readiness assessment is planned. Evaluation will cover current IT infrastructure, migration complexity, and AI-ready workloads across facilities." />;
++    default:
++      return <PlaceholderContent description="Assessment coming soon." />;
++  }
++}
++
++/* ------------------------------------------------------------------ */
++/*  Ecosystem Content Renderer                                         */
++/* ------------------------------------------------------------------ */
++
++function EcosystemContent({ section }: { section: EcosystemSection }) {
++  return (
++    <div className="grid gap-2 sm:grid-cols-2">
++      {section.partners.map((partner) => (
++        <div
++          key={partner.name}
++          className="flex items-start gap-2.5 rounded-lg border border-[color:var(--line)] bg-white/75 p-2.5"
++        >
++          <div className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-[color:#4a8c3f]" />
++          <div>
++            <p className="text-xs font-medium text-[color:var(--foreground)]">{partner.name}</p>
++            <p className="text-[10px] text-[color:var(--muted)]">{partner.role}</p>
++          </div>
++        </div>
++      ))}
++    </div>
++  );
++}
++
++/* ------------------------------------------------------------------ */
++/*  Solutions Content Renderer                                         */
++/* ------------------------------------------------------------------ */
++
++function SolutionContent({ section }: { section: SolutionSection }) {
++  const statusColors: Record<string, string> = {
++    available: "bg-[color:rgba(15,124,134,0.1)] text-[color:var(--teal)]",
++    planned: "bg-[color:rgba(196,161,42,0.1)] text-[color:#c49a2e]",
++    future: "bg-[color:var(--surface-soft)] text-[color:var(--muted)]",
++  };
++
++  return (
++    <div className="space-y-2">
++      {section.interventions?.map((intervention) => (
++        <div
++          key={intervention.name}
++          className="flex items-center justify-between rounded-lg border border-[color:var(--line)] bg-white/75 px-3 py-2"
++        >
++          <div className="flex items-center gap-2">
++            <span className="text-xs text-[color:var(--foreground)]">{intervention.name}</span>
++            {intervention.partner && (
++              <span className="text-[10px] text-[color:var(--muted)]">{intervention.partner}</span>
++            )}
++          </div>
++          <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-medium capitalize", statusColors[intervention.status])}>
++            {intervention.status}
++          </span>
++        </div>
++      ))}
++      {(!section.interventions || section.interventions.length === 0) && (
++        <PlaceholderContent description="Interventions to be defined." />
++      )}
++    </div>
++  );
++}
++
++/* ------------------------------------------------------------------ */
++/*  Main Component                                                     */
++/* ------------------------------------------------------------------ */
++
++export function PyramidTabs({
++  config,
++  defaultTab = "infrastructure",
++  defaultOpenSections = ["broadband_satellite"],
++}: {
++  config: StatePyramidConfig;
++  defaultTab?: TabKey;
++  defaultOpenSections?: string[];
++}) {
++  const [activeTab, setActiveTab] = useState<TabKey>(defaultTab);
++
++  return (
++    <div className="space-y-4">
++      {/* ── Tab bar ──────────────────────────────────────────── */}
++      <div className="flex gap-1 overflow-x-auto rounded-2xl bg-[color:var(--surface-soft)] p-1 scrollbar-none">
++        {TABS.map((tab) => {
++          const active = activeTab === tab.key;
++          return (
++            <button
++              key={tab.key}
++              type="button"
++              onClick={() => setActiveTab(tab.key)}
++              className={cn(
++                "relative flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-all",
++                active
++                  ? "bg-white text-[color:var(--foreground)] shadow-sm"
++                  : "text-[color:var(--muted)] hover:text-[color:var(--foreground)]",
++              )}
++            >
++              <span
++                className="h-2 w-2 rounded-full"
++                style={{ backgroundColor: TAB_COLORS[tab.key] }}
++              />
++              {tab.label}
++            </button>
++          );
++        })}
++      </div>
++
++      {/* ── Tab content ──────────────────────────────────────── */}
++      <AnimatePresence mode="wait">
++        <motion.div
++          key={activeTab}
++          initial={{ opacity: 0, y: 8 }}
++          animate={{ opacity: 1, y: 0 }}
++          exit={{ opacity: 0, y: -8 }}
++          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
++          className="surface-card overflow-hidden rounded-[1.6rem] border border-[color:var(--line)]"
++        >
++          {activeTab === "infrastructure" &&
++            config.infrastructure.map((section) => (
++              <CollapsibleSection
++                key={section.category}
++                title={section.label}
++                statusSummary={section.statusSummary}
++                defaultOpen={defaultOpenSections.includes(section.category)}
++              >
++                <InfraContent section={section} />
++              </CollapsibleSection>
++            ))}
++
++          {activeTab === "ecosystem" &&
++            config.ecosystem.map((section) => (
++              <CollapsibleSection
++                key={section.category}
++                title={section.label}
++                statusSummary={`${section.partners.length} partners`}
++                defaultOpen={section.category === "technology"}
++              >
++                <EcosystemContent section={section} />
++              </CollapsibleSection>
++            ))}
++
++          {activeTab === "solutions" &&
++            config.solutions.map((section) => (
++              <CollapsibleSection
++                key={section.goal}
++                title={`${section.goalNumber}. ${section.label}`}
++                statusSummary={section.statusSummary}
++              >
++                <SolutionContent section={section} />
++              </CollapsibleSection>
++            ))}
++        </motion.div>
++      </AnimatePresence>
++    </div>
++  );
++}
+diff --git a/src/components/site-header.tsx b/src/components/site-header.tsx
+index 7be9270..f2ad3b4 100644
+--- a/src/components/site-header.tsx
++++ b/src/components/site-header.tsx
+@@ -22,9 +22,7 @@ const ALASKA_NAV = [
+ ];
+ 
+ const KENTUCKY_NAV = [
+-  { href: "/kentucky", label: "Home" },
+-  { href: "/kentucky/satellite-planner", label: "Satellite Planner" },
+-  { href: "/kentucky/data", label: "Data" },
++  { href: "/kentucky", label: "Kentucky" },
+ ];
+ 
+ type NavContext = "landing" | "alaska" | "kentucky";
+diff --git a/src/data/kentucky-pyramid-config.ts b/src/data/kentucky-pyramid-config.ts
+new file mode 100644
+index 0000000..f2cbd0d
+--- /dev/null
++++ b/src/data/kentucky-pyramid-config.ts
+@@ -0,0 +1,176 @@
++/**
++ * Kentucky Pyramid Configuration
++ *
++ * Drives the three-tab pyramid framework for Kentucky's state page.
++ * Imports real data where available; uses "Assessment pending" placeholders
++ * for sections still in development.
++ */
++
++import { getKYBDCSummary } from "@/data/kentucky-broadband-availability";
++import { getKYFacilitySummary } from "@/data/kentucky-facilities";
++import { KY_RHTP } from "@/data/kentucky-config";
++import type { StatePyramidConfig } from "@/types/state-pyramid";
++
++/* ------------------------------------------------------------------ */
++/*  Compute real values from existing data                             */
++/* ------------------------------------------------------------------ */
++
++const bdcSummary = getKYBDCSummary();
++const facilitySummary = getKYFacilitySummary();
++
++const pctUnserved = Math.round((bdcSummary.unserved / bdcSummary.totalBSLs) * 1000) / 10;
++
++/* ------------------------------------------------------------------ */
++/*  Config                                                             */
++/* ------------------------------------------------------------------ */
++
++export const KENTUCKY_PYRAMID: StatePyramidConfig = {
++  stateCode: "KY",
++  stateName: "Kentucky",
++  rhtpAwardPerYear: KY_RHTP.annualAllocation,
++
++  /* ── Infrastructure (Layer 1) ──────────────────────────────────── */
++  infrastructure: [
++    {
++      category: "broadband_satellite",
++      label: "Broadband & Satellite",
++      statusSummary: `${pctUnserved}% unserved · ${facilitySummary.total} facilities tracked · Satellite planner available`,
++      hasInteractiveTool: true,
++      toolRoute: "/kentucky/satellite-planner",
++      toolLabel: "Open Satellite Planner",
++      content: "broadband",
++    },
++    {
++      category: "ehr",
++      label: "Electronic Health Records",
++      statusSummary: "Assessment pending",
++      content: "ehr",
++    },
++    {
++      category: "interoperability",
++      label: "Interoperability",
++      statusSummary: "Assessment pending",
++      content: "interop",
++    },
++    {
++      category: "cloud_ai",
++      label: "Cloud & AI",
++      statusSummary: "Assessment pending",
++      content: "cloud",
++    },
++    {
++      category: "cybersecurity",
++      label: "Cybersecurity",
++      statusSummary: `0 of ${facilitySummary.total} facilities assessed`,
++      content: "cyber",
++    },
++  ],
++
++  /* ── Ecosystem (Layer 2) ───────────────────────────────────────── */
++  ecosystem: [
++    {
++      category: "technology",
++      label: "Technology Partners",
++      partners: [
++        { name: "Microsoft", role: "Cloud, AI, and cybersecurity platform" },
++        { name: "BioIntelliSense", role: "Remote patient monitoring" },
++        { name: "Avel eCare", role: "Telehealth services" },
++        { name: "Teladoc", role: "Virtual care platform" },
++        { name: "Topcon", role: "Retinal screening robotics" },
++        { name: "Samsung", role: "Consumer health devices" },
++        { name: "Viz.ai", role: "AI stroke detection" },
++        { name: "eClinicalWorks", role: "Electronic health records" },
++      ],
++    },
++    {
++      category: "advisors",
++      label: "Advisors & System Integrators",
++      partners: [
++        { name: "Accenture", role: "System integration" },
++        { name: "AVIA Health", role: "Innovation network" },
++        { name: "KPMG", role: "Advisory services" },
++        { name: "PwC", role: "Advisory services" },
++        { name: "Manatt Health", role: "Policy and regulatory advisory" },
++      ],
++    },
++    {
++      category: "providers",
++      label: "Healthcare Providers",
++      partners: [
++        { name: "CVS Health", role: "Retail health services" },
++        { name: "Walgreens", role: "Pharmacy services" },
++        { name: "Walmart", role: "Retail health services" },
++        { name: "Kroger Health", role: "Pharmacy and wellness" },
++        { name: "Cibolo Health", role: "Rural health networks" },
++        { name: "NACHC", role: "Community health center advocacy" },
++      ],
++    },
++    {
++      category: "other",
++      label: "Other Partners",
++      partners: [
++        { name: "American Heart Association", role: "Cardiovascular health programs" },
++        { name: "Labcorp", role: "Diagnostic laboratory services" },
++        { name: "AUVSI", role: "Drone and autonomous delivery" },
++      ],
++    },
++  ],
++
++  /* ── Solutions (Layer 3) ───────────────────────────────────────── */
++  solutions: [
++    {
++      goal: "healthy_again",
++      goalNumber: 1,
++      label: "Make Rural America Healthy Again",
++      statusSummary: "Infrastructure assessment in progress",
++      interventions: [
++        { name: "Broadband gap analysis", status: "available", partner: "FCC/Microsoft" },
++        { name: "Facility connectivity assessment", status: "available" },
++        { name: "Chronic care hub planning", status: "planned" },
++      ],
++    },
++    {
++      goal: "sustainable_access",
++      goalNumber: 2,
++      label: "Sustainable Access",
++      statusSummary: "Broadband analysis active · Satellite planner available",
++      interventions: [
++        { name: "Satellite coverage planner", status: "available", partner: "SpaceX/Starlink" },
++        { name: "Telehealth-enabled maternal care", status: "planned" },
++        { name: "Rural dental access expansion", status: "planned" },
++      ],
++    },
++    {
++      goal: "workforce",
++      goalNumber: 3,
++      label: "Workforce Development",
++      statusSummary: "Planned",
++      interventions: [
++        { name: "Telehealth training programs", status: "planned" },
++        { name: "Remote monitoring workforce", status: "future" },
++      ],
++    },
++    {
++      goal: "innovative_care",
++      goalNumber: 4,
++      label: "Innovative Care",
++      statusSummary: "Planned",
++      interventions: [
++        { name: "Remote patient monitoring", status: "planned", partner: "BioIntelliSense" },
++        { name: "AI diagnostic screening", status: "future", partner: "Viz.ai/Topcon" },
++        { name: "EmPATH behavioral health", status: "planned" },
++      ],
++    },
++    {
++      goal: "tech_innovation",
++      goalNumber: 5,
++      label: "Tech Innovation",
++      statusSummary: "Satellite planner deployed · Cybersecurity assessment planned",
++      interventions: [
++        { name: "Satellite planning tool", status: "available" },
++        { name: "Cybersecurity assessment program", status: "planned", partner: "Microsoft" },
++        { name: "AI vulnerability detection", status: "future", partner: "Anthropic" },
++      ],
++    },
++  ],
++};
+diff --git a/src/types/state-pyramid.ts b/src/types/state-pyramid.ts
+new file mode 100644
+index 0000000..919ec1c
+--- /dev/null
++++ b/src/types/state-pyramid.ts
+@@ -0,0 +1,83 @@
++/**
++ * State Pyramid Configuration Types
++ *
++ * Typed config interfaces that drive the three-tab pyramid framework
++ * for any state page. The pyramid mirrors the RHT Collaborative's
++ * three-layer presentation model:
++ *   Layer 1 (base): Infrastructure
++ *   Layer 2 (middle): Partner Ecosystem
++ *   Layer 3 (top): Solutions (mapped to 5 CMS RHT Goals)
++ */
++
++/* ------------------------------------------------------------------ */
++/*  Category unions                                                    */
++/* ------------------------------------------------------------------ */
++
++export type InfraCategory =
++  | "broadband_satellite"
++  | "ehr"
++  | "interoperability"
++  | "cloud_ai"
++  | "cybersecurity";
++
++export type EcosystemCategory =
++  | "technology"
++  | "advisors"
++  | "providers"
++  | "other";
++
++export type SolutionGoal =
++  | "healthy_again"
++  | "sustainable_access"
++  | "workforce"
++  | "innovative_care"
++  | "tech_innovation";
++
++/* ------------------------------------------------------------------ */
++/*  Section interfaces                                                 */
++/* ------------------------------------------------------------------ */
++
++export interface InfraSection {
++  category: InfraCategory;
++  label: string;
++  statusSummary: string;
++  hasInteractiveTool?: boolean;
++  toolRoute?: string;
++  toolLabel?: string;
++  content: "broadband" | "ehr" | "interop" | "cloud" | "cyber" | "placeholder";
++}
++
++export interface EcosystemSection {
++  category: EcosystemCategory;
++  label: string;
++  partners: Array<{
++    name: string;
++    role: string;
++    contact?: string;
++  }>;
++}
++
++export interface SolutionSection {
++  goal: SolutionGoal;
++  goalNumber: number;
++  label: string;
++  statusSummary: string;
++  interventions?: Array<{
++    name: string;
++    status: "available" | "planned" | "future";
++    partner?: string;
++  }>;
++}
++
++/* ------------------------------------------------------------------ */
++/*  State config                                                       */
++/* ------------------------------------------------------------------ */
++
++export interface StatePyramidConfig {
++  stateCode: string;
++  stateName: string;
++  rhtpAwardPerYear?: number;
++  infrastructure: InfraSection[];
++  ecosystem: EcosystemSection[];
++  solutions: SolutionSection[];
++}
+-- 
+2.34.1
+

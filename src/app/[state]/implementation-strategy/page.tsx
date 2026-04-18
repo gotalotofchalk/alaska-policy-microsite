@@ -5,6 +5,7 @@ import { FlaskConical } from "lucide-react";
 import { useParams } from "next/navigation";
 
 import { STATE_CONFIGS, type ValidState } from "@/config/states";
+import { ModuleSources } from "@/components/module-sources";
 
 /* ------------------------------------------------------------------ */
 /*  Animation                                                          */
@@ -23,6 +24,10 @@ const stagger = {
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
+
+const IMPLEMENTATION_SOURCES = [
+  { name: "Cooley/Gazmuri Workstream", detail: "Coming soon — population health implementation strategy in development with the RHT/GIS Solutions team" },
+];
 
 export default function ImplementationStrategyPage() {
   const { state } = useParams<{ state: string }>();
@@ -56,6 +61,9 @@ export default function ImplementationStrategyPage() {
             </p>
           </div>
         </motion.div>
+
+        {/* ── Sources (collapsed at bottom) ───────────────────── */}
+        <ModuleSources sources={IMPLEMENTATION_SOURCES} module="Implementation Strategy" />
 
       </motion.div>
     </div>
