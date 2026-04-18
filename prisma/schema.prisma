@@ -48,3 +48,17 @@ model Assumption {
 
   @@unique([setId, key])
 }
+
+model Override {
+  id           String   @id @default(cuid())
+  state        String
+  module       String
+  dataKey      String
+  federalValue String
+  stateValue   String
+  note         String
+  adminSession String
+  createdAt    DateTime @default(now())
+
+  @@unique([state, module, dataKey])
+}
