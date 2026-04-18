@@ -22,7 +22,7 @@ import type { KYFacility, BroadbandStatus, CyberStatus } from "@/data/kentucky-c
 import { FACILITY_TYPE_COLORS, FACILITY_TYPE_LABELS, CYBER_STATUS_LABELS, CYBER_STATUS_COLORS } from "@/data/kentucky-config";
 import { KY_COUNTY_BROADBAND } from "@/data/kentucky-broadband-data";
 import { KY_COUNTY_BDC } from "@/data/kentucky-broadband-availability";
-import type { PlacedTerminal } from "@/app/kentucky/satellite-planner/page";
+import type { PlacedTerminal } from "@/app/[state]/connectivity/page";
 
 type ChoroplethMode = "availability" | "adoption";
 

@@ -1,7 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Wifi, Shield, Stethoscope, Network, BarChart3 } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  DollarSign,
+  Hospital,
+  MapPin,
+  Network,
+  Shield,
+  Stethoscope,
+  Users,
+  Wifi,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -9,7 +20,7 @@ import { STATE_CONFIGS, RHTP_PROGRAM, type ValidState } from "@/config/states";
 import { KY_CONTEXT } from "@/data/kentucky-config";
 import { getKYBDCSummary } from "@/data/kentucky-broadband-availability";
 import { getKYFacilitySummary } from "@/data/kentucky-facilities";
-import { usNum } from "@/lib/utils";
+import { ModuleSources } from "@/components/module-sources";
 
 /* ------------------------------------------------------------------ */
 /*  Animation                                                          */
@@ -19,65 +30,117 @@ const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
 };
-
-const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.07 } },
-};
+const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
 
 /* ------------------------------------------------------------------ */
-/*  Validated state-specific data                                      */
+/*  Stat card                                                          */
 /* ------------------------------------------------------------------ */
 
-const KY_STATS = {
-  beadAllocation: "$1.086B",
-  beadLocations: "86,400 unserved and underserved locations",
-  beadSource: "NTIA BEAD Final Proposal approval, late 2025",
-  maternityDesert: "1 in 6 Kentucky women of childbearing age lives in a maternity care desert, more than 4x the national average",
-  maternitySource: 'Kentucky RHTP application narrative, "PoWERing Maternal and Infant Health" initiative',
-  paramedicConcentration: "Nearly half of Kentucky paramedics are concentrated in just 5 counties",
-  paramedicSource: 'Kentucky RHTP application, "Crisis to Care" initiative',
-};
-
-const AK_STATS = {
-  rhtpPlanFocus: "Flexible, phased and voluntary initiatives focused on cybersecurity, data interoperability, and consumer-facing remote modalities",
-  rhtpSource: "Alaska DHSS RHTP application",
-  beadAllocation: "$1.017B total, with $629M in initial deployment awards across 29 projects and 15 providers",
-  beadTimeline: "First connections expected June 2026; approximately 70% of BEAD-funded Alaska locations connected by end of year 3",
-  beadSource: "NTIA BEAD Final Proposal approval, January 6, 2026",
-};
-
-const TX_STATS = {
-  hospitalClosures: "Texas led the nation in rural hospital closures 2010–2020",
-  closuresSource: "Cecil G. Sheps Center for Health Services Research",
-  rhtpPlan: '"Rural Texas Strong: Supporting Health and Wellness" allocates $968M across 6 initiatives',
-  rhtpInitiatives: "$150M Lone Star Advanced AI and Telehealth (maternal, behavioral, preventive); $150M remote patient monitoring; $200M workforce pipeline",
-  rhtpSource: "Texas HHSC RHTP application, finalized after 300+ public comments",
-  trinityCounty: "Mid Coast Medical Center in Trinity, TX closed April 25, 2025, 14 months after reopening. Trinity County residents now drive 30 miles to the nearest hospital.",
-  trinitySource: "Cecil G. Sheps Center closure tracking",
-};
-
-/* ------------------------------------------------------------------ */
-/*  Quick-link cards                                                   */
-/* ------------------------------------------------------------------ */
-
-interface QuickLink {
-  href: string;
-  label: string;
-  description: string;
+function StatCard({
+  icon: Icon,
+  value,
+  label,
+  accent,
+}: {
   icon: React.ElementType;
+  value: string;
+  label: string;
+  accent?: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-[color:var(--line)] bg-white/90 p-5 shadow-[var(--shadow-soft)]">
+      <Icon className="h-5 w-5" style={{ color: accent ?? "var(--muted)" }} />
+      <p className="mt-3 font-display text-2xl font-semibold text-[color:var(--foreground)]">{value}</p>
+      <p className="mt-1 text-xs text-[color:var(--muted)]">{label}</p>
+    </div>
+  );
 }
 
-function getQuickLinks(state: ValidState): QuickLink[] {
-  const base = `/${state}`;
-  return [
-    { href: `${base}/need`, label: "Need Assessment", description: "Health deserts, shortages, chronic disease burden", icon: Stethoscope },
-    { href: `${base}/connectivity`, label: "Connectivity & Infrastructure", description: "Broadband coverage map and satellite planner", icon: Wifi },
-    { href: `${base}/capacity`, label: "Capacity & Readiness", description: "Facilities, workforce, cybersecurity", icon: Shield },
-    { href: `${base}/portfolio`, label: "Intervention Portfolio", description: "Clinical solutions and technology deployment", icon: Network },
-    { href: `${base}/benchmarks`, label: "Benchmarks & Tracking", description: "Before/after metrics and outcomes", icon: BarChart3 },
-  ];
+/* ------------------------------------------------------------------ */
+/*  Progress ring (SVG donut)                                          */
+/* ------------------------------------------------------------------ */
+
+function ProgressRing({ pct, label, color }: { pct: number; label: string; color: string }) {
+  const r = 36;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - pct / 100);
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <svg width="88" height="88" viewBox="0 0 88 88">
+        <circle cx="44" cy="44" r={r} fill="none" stroke="var(--line)" strokeWidth="6" />
+        <circle
+          cx="44" cy="44" r={r} fill="none" stroke={color} strokeWidth="6"
+          strokeDasharray={circ} strokeDashoffset={offset}
+          strokeLinecap="round" transform="rotate(-90 44 44)"
+          className="transition-all duration-700"
+        />
+        <text x="44" y="44" textAnchor="middle" dominantBaseline="central"
+          className="font-display text-lg font-semibold" fill="var(--foreground)">
+          {pct}%
+        </text>
+      </svg>
+      <span className="text-xs text-[color:var(--muted)]">{label}</span>
+    </div>
+  );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Highlight chip (short fact, no inline source)                      */
+/* ------------------------------------------------------------------ */
+
+function Highlight({ icon: Icon, text, color }: { icon: React.ElementType; text: string; color: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-[color:var(--line)] bg-white/80 px-4 py-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${color}15` }}>
+        <Icon className="h-4 w-4" style={{ color }} />
+      </div>
+      <p className="text-sm text-[color:var(--foreground)]">{text}</p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Module link card                                                   */
+/* ------------------------------------------------------------------ */
+
+function ModuleLink({ href, label, icon: Icon }: { href: string; label: string; icon: React.ElementType }) {
+  return (
+    <Link
+      href={href}
+      className="group flex items-center gap-3 rounded-2xl border border-[color:var(--line)] bg-white/80 p-4 transition-all hover:border-[color:var(--foreground)]/20 hover:shadow-md"
+    >
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color:var(--surface-soft)]">
+        <Icon className="h-4 w-4 text-[color:var(--muted)]" />
+      </div>
+      <span className="flex-1 text-sm font-medium text-[color:var(--foreground)]">{label}</span>
+      <ArrowRight className="h-4 w-4 text-[color:var(--muted)] transition-transform group-hover:translate-x-0.5" />
+    </Link>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sources per state                                                  */
+/* ------------------------------------------------------------------ */
+
+const OVERVIEW_SOURCES = {
+  kentucky: [
+    { name: "CMS RHTP Awards", url: "https://www.cms.gov/rural-health-transformation", detail: "RHTP allocation $212.9M, Dec 29, 2025" },
+    { name: "NTIA BEAD Program", url: "https://broadbandusa.ntia.gov/", detail: "KY BEAD $1.086B, targeting 86,400 locations" },
+    { name: "KY RHTP Application", detail: "Maternity desert data, paramedic concentration" },
+    { name: "FCC Broadband Data Collection", url: "https://broadbandmap.fcc.gov/", detail: "County-level BSL served/underserved/unserved" },
+    { name: "Cecil G. Sheps Center", url: "https://www.shepscenter.unc.edu/programs-projects/rural-health/rural-hospital-closures/", detail: "109 rural hospital closures since 2005" },
+  ],
+  alaska: [
+    { name: "CMS RHTP Awards", url: "https://www.cms.gov/rural-health-transformation", detail: "RHTP allocation $272.17M, Dec 29, 2025" },
+    { name: "NTIA BEAD Program", url: "https://broadbandusa.ntia.gov/", detail: "AK BEAD $1.017B, 29 projects" },
+    { name: "Alaska DHSS RHTP Application", detail: "Cybersecurity, interoperability, remote modalities focus" },
+  ],
+  texas: [
+    { name: "CMS RHTP Awards", url: "https://www.cms.gov/rural-health-transformation", detail: "RHTP allocation $281.32M, Dec 29, 2025" },
+    { name: "Texas HHSC RHTP Application", detail: "Rural Texas Strong, $968M across 6 initiatives" },
+    { name: "Cecil G. Sheps Center", url: "https://www.shepscenter.unc.edu/programs-projects/rural-health/rural-hospital-closures/", detail: "TX led nation in rural closures 2010–2020; Trinity County closure 2025" },
+  ],
+};
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
@@ -85,148 +148,110 @@ function getQuickLinks(state: ValidState): QuickLink[] {
 
 export default function OverviewPage() {
   const { state } = useParams<{ state: string }>();
-  const validState = state as ValidState;
-  const config = STATE_CONFIGS[validState];
-  const allocation = `$${Math.round(config.rhtpAllocation / 1e6)}M`;
-  const quickLinks = getQuickLinks(validState);
+  const s = state as ValidState;
+  const config = STATE_CONFIGS[s];
+  const alloc = `$${Math.round(config.rhtpAllocation / 1e6)}M`;
+  const base = `/${s}`;
 
-  // Kentucky-specific data (only load when state is Kentucky)
-  const kyData = validState === "kentucky" ? (() => {
-    const bdcSummary = getKYBDCSummary();
-    const fSummary = getKYFacilitySummary();
-    const pctUnserved = Math.round((bdcSummary.unserved / bdcSummary.totalBSLs) * 1000) / 10;
+  // Kentucky data
+  const ky = s === "kentucky" ? (() => {
+    const bdc = getKYBDCSummary();
+    const f = getKYFacilitySummary();
     return {
-      pills: [
-        { label: "RHTP / year", value: allocation },
-        { label: "Counties", value: String(KY_CONTEXT.totalCounties) },
-        { label: "Population", value: KY_CONTEXT.totalPopulation.toLocaleString("en-US") },
-        { label: "sq mi", value: KY_CONTEXT.totalSquareMiles.toLocaleString("en-US") },
-      ],
-      pctUnserved,
-      facilitiesNeedCoverage: fSummary.unserved + fSummary.underserved,
+      pctServed: bdc.pctServed,
+      pctUnserved: Math.round((bdc.unserved / bdc.totalBSLs) * 1000) / 10,
+      facilities: f.total,
+      needCoverage: f.unserved + f.underserved,
+      counties: KY_CONTEXT.totalCounties,
+      pop: KY_CONTEXT.totalPopulation,
+      sqmi: KY_CONTEXT.totalSquareMiles,
     };
   })() : null;
 
   return (
-    <div className="p-6 lg:p-10">
-      <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-8 max-w-5xl">
+    <div className="py-6 lg:py-10">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-8 max-w-6xl">
 
-        {/* ── Header ─────────────────────────────────────────── */}
+        {/* ── Title ──────────────────────────────────────────── */}
         <motion.div variants={fadeUp}>
-          <p className="text-xs uppercase tracking-wider text-[color:var(--muted)]">State Overview</p>
-          <h1 className="mt-2 font-display text-4xl leading-[1.1] text-[color:var(--foreground)] md:text-5xl">
-            {config.name}
-          </h1>
-
-          {/* Stat pills */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--line)] bg-white/75 px-3 py-1.5 text-xs">
-              <span className="text-[color:var(--muted)]">RHTP / year</span>
-              <span className="font-semibold text-[color:var(--foreground)]">{allocation}</span>
-            </span>
-            {kyData?.pills.slice(1).map((pill) => (
-              <span key={pill.label} className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--line)] bg-white/75 px-3 py-1.5 text-xs">
-                <span className="text-[color:var(--muted)]">{pill.label}</span>
-                <span className="font-semibold text-[color:var(--foreground)]">{pill.value}</span>
-              </span>
-            ))}
-            {validState !== "kentucky" && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--line)] bg-white/75 px-3 py-1.5 text-xs">
-                <span className="text-[color:var(--muted)]">Source</span>
-                <span className="font-semibold text-[color:var(--foreground)]">{config.rhtpSource}</span>
-              </span>
-            )}
-          </div>
+          <h1 className="font-display text-4xl text-[color:var(--foreground)] md:text-5xl">{config.name}</h1>
         </motion.div>
 
-        {/* ── RHTP Program Context ───────────────────────────── */}
-        <motion.div variants={fadeUp} className="rounded-2xl border border-[color:var(--line)] bg-white/90 p-5 shadow-[var(--shadow-soft)]">
-          <p className="text-xs font-medium uppercase tracking-wider text-[color:var(--muted)]">RHTP Program</p>
-          <p className="mt-2 text-sm leading-relaxed text-[color:var(--foreground)]">
-            {config.name} received a first-year RHTP allocation of {allocation} (CMS, Dec 29, 2025).
-            The program provides {RHTP_PROGRAM.totalFunding} under {RHTP_PROGRAM.statutoryBasis}, administered by the {RHTP_PROGRAM.adminBody}.
-          </p>
-          <p className="mt-1 text-xs text-[color:var(--muted)]">
-            {RHTP_PROGRAM.nationalHospitalClosures} rural hospitals have completely closed since 2005
-            ({RHTP_PROGRAM.nationalClosuresSource}).
-          </p>
+        {/* ── Key metrics row ────────────────────────────────── */}
+        <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <StatCard icon={DollarSign} value={alloc} label="RHTP annual allocation" accent="var(--teal)" />
+          {s === "kentucky" && ky && (
+            <>
+              <StatCard icon={MapPin} value={String(ky.counties)} label="Counties" accent="var(--accent)" />
+              <StatCard icon={Users} value={ky.pop.toLocaleString("en-US")} label="Population" />
+              <StatCard icon={Hospital} value={String(ky.facilities)} label="Healthcare facilities" accent="#2b7ab8" />
+            </>
+          )}
+          {s !== "kentucky" && (
+            <>
+              <StatCard icon={Hospital} value="—" label="Facilities — data pending" />
+              <StatCard icon={Users} value="—" label="Population — data pending" />
+              <StatCard icon={MapPin} value="—" label="Counties — data pending" />
+            </>
+          )}
         </motion.div>
 
-        {/* ── State-specific validated stats ──────────────────── */}
-        {validState === "kentucky" && (
-          <motion.div variants={fadeUp} className="space-y-3">
-            <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-4">
-              <p className="text-sm text-[color:var(--foreground)]">{KY_STATS.maternityDesert}</p>
-              <p className="mt-1 text-xs text-[color:var(--muted)]">Source: {KY_STATS.maternitySource}</p>
-            </div>
-            <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-4">
-              <p className="text-sm text-[color:var(--foreground)]">{KY_STATS.paramedicConcentration}</p>
-              <p className="mt-1 text-xs text-[color:var(--muted)]">Source: {KY_STATS.paramedicSource}</p>
-            </div>
-            <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-4">
-              <p className="text-sm text-[color:var(--foreground)]">BEAD allocation: {KY_STATS.beadAllocation}, targeting {KY_STATS.beadLocations}</p>
-              <p className="mt-1 text-xs text-[color:var(--muted)]">Source: {KY_STATS.beadSource}</p>
+        {/* ── Visual indicators (Kentucky broadband rings) ──── */}
+        {s === "kentucky" && ky && (
+          <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-8 rounded-2xl border border-[color:var(--line)] bg-white/90 px-6 py-8 shadow-[var(--shadow-soft)]">
+            <ProgressRing pct={ky.pctServed} label="BSLs served" color="var(--teal)" />
+            <ProgressRing pct={100 - ky.pctServed - ky.pctUnserved} label="Underserved" color="#c49a2e" />
+            <ProgressRing pct={ky.pctUnserved} label="Unserved" color="var(--accent)" />
+            <div className="flex flex-col items-center gap-1">
+              <span className="font-display text-3xl font-semibold text-[color:var(--foreground)]">{ky.needCoverage}</span>
+              <span className="text-xs text-[color:var(--muted)]">Facilities need coverage</span>
             </div>
           </motion.div>
         )}
 
-        {validState === "alaska" && (
-          <motion.div variants={fadeUp} className="space-y-3">
-            <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-4">
-              <p className="text-sm text-[color:var(--foreground)]">{AK_STATS.rhtpPlanFocus}</p>
-              <p className="mt-1 text-xs text-[color:var(--muted)]">Source: {AK_STATS.rhtpSource}</p>
-            </div>
-            <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-4">
-              <p className="text-sm text-[color:var(--foreground)]">BEAD allocation: {AK_STATS.beadAllocation}</p>
-              <p className="text-sm text-[color:var(--foreground)]">{AK_STATS.beadTimeline}</p>
-              <p className="mt-1 text-xs text-[color:var(--muted)]">Source: {AK_STATS.beadSource}</p>
-            </div>
-          </motion.div>
-        )}
+        {/* ── National context ───────────────────────────────── */}
+        <motion.div variants={fadeUp} className="flex items-center gap-4 rounded-xl border border-[color:var(--line)] bg-white/80 px-5 py-4">
+          <span className="font-display text-3xl font-semibold text-[color:var(--accent)]">{RHTP_PROGRAM.nationalHospitalClosures}</span>
+          <span className="text-sm text-[color:var(--foreground)]">Rural hospitals closed since 2005</span>
+        </motion.div>
 
-        {validState === "texas" && (
-          <motion.div variants={fadeUp} className="space-y-3">
-            <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-4">
-              <p className="text-sm text-[color:var(--foreground)]">{TX_STATS.hospitalClosures}</p>
-              <p className="mt-1 text-xs text-[color:var(--muted)]">Source: {TX_STATS.closuresSource}</p>
-            </div>
-            <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-4">
-              <p className="text-sm text-[color:var(--foreground)]">{TX_STATS.rhtpPlan}</p>
-              <p className="text-sm text-[color:var(--foreground)]">{TX_STATS.rhtpInitiatives}</p>
-              <p className="mt-1 text-xs text-[color:var(--muted)]">Source: {TX_STATS.rhtpSource}</p>
-            </div>
-            <div className="rounded-xl border border-[color:var(--line)] bg-white/75 p-4">
-              <p className="text-sm text-[color:var(--foreground)]">{TX_STATS.trinityCounty}</p>
-              <p className="mt-1 text-xs text-[color:var(--muted)]">Source: {TX_STATS.trinitySource}</p>
-            </div>
-          </motion.div>
-        )}
+        {/* ── State highlights (short chips, no inline sources) ── */}
+        <motion.div variants={fadeUp} className="space-y-2">
+          {s === "kentucky" && (
+            <>
+              <Highlight icon={Stethoscope} text="1 in 6 women of childbearing age in a maternity desert — 4x national average" color="var(--accent)" />
+              <Highlight icon={Users} text="Nearly half of paramedics concentrated in just 5 counties" color="#2b7ab8" />
+              <Highlight icon={Wifi} text="BEAD allocation: $1.086B targeting 86,400 locations" color="var(--teal)" />
+            </>
+          )}
+          {s === "alaska" && (
+            <>
+              <Highlight icon={Wifi} text="BEAD: $1.017B — 29 projects, 70% connected by year 3" color="var(--teal)" />
+              <Highlight icon={Shield} text="RHTP focus: cybersecurity, interoperability, remote modalities" color="#2b7ab8" />
+            </>
+          )}
+          {s === "texas" && (
+            <>
+              <Highlight icon={Hospital} text="Led nation in rural hospital closures 2010–2020" color="var(--accent)" />
+              <Highlight icon={Hospital} text="Trinity County: nearest hospital now 30 miles away (2025 closure)" color="#c46128" />
+              <Highlight icon={DollarSign} text="Rural Texas Strong: $968M across 6 initiatives" color="var(--teal)" />
+            </>
+          )}
+        </motion.div>
 
-        {/* ── Quick Links ────────────────────────────────────── */}
+        {/* ── Module links ───────────────────────────────────── */}
         <motion.div variants={fadeUp}>
-          <p className="mb-3 text-xs uppercase tracking-wider text-[color:var(--muted)]">Modules</p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {quickLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="group flex items-start gap-3 rounded-2xl border border-[color:var(--line)] bg-white/80 p-4 transition-all hover:border-[color:var(--foreground)]/20 hover:shadow-md"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color:var(--surface-soft)]">
-                    <Icon className="h-4 w-4 text-[color:var(--muted)]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[color:var(--foreground)]">{link.label}</p>
-                    <p className="mt-0.5 text-xs text-[color:var(--muted)]">{link.description}</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-[color:var(--muted)] transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              );
-            })}
+            <ModuleLink href={`${base}/need`} label="Need Assessment" icon={Stethoscope} />
+            <ModuleLink href={`${base}/connectivity`} label="Connectivity" icon={Wifi} />
+            <ModuleLink href={`${base}/capacity`} label="Capacity & Readiness" icon={Shield} />
+            <ModuleLink href={`${base}/portfolio`} label="Interventions" icon={Network} />
+            <ModuleLink href={`${base}/benchmarks`} label="Benchmarks" icon={BarChart3} />
           </div>
         </motion.div>
+
+        {/* ── Sources (collapsed at bottom) ───────────────────── */}
+        <ModuleSources sources={OVERVIEW_SOURCES[s]} module="State Overview" />
 
       </motion.div>
     </div>

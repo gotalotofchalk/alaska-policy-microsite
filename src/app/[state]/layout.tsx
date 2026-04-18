@@ -16,7 +16,7 @@ export default async function StateLayout({
   return (
     <div className="flex min-h-screen">
       <StateSidebar state={state as ValidState} />
-      <div className="flex-1 overflow-x-hidden">
+      <div className="flex-1 overflow-x-hidden px-2 md:px-6 lg:px-10">
         {children}
       </div>
     </div>

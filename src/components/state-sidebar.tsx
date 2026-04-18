@@ -83,7 +83,6 @@ function getNavItems(state: ValidState): NavItem[] {
     { href: `${base}/benchmarks`, label: "Benchmarks & Tracking", icon: BarChart3 },
     { href: `${base}/stakeholder-reports`, label: "Stakeholder Reports", icon: FileText },
     { href: `${base}/implementation-strategy`, label: "Implementation Strategy", icon: Users },
-    { href: `${base}/data-methodology`, label: "Data & Methodology", icon: BookOpen },
     { href: `${base}/account`, label: "Account / Admin", icon: Settings },
   );
 
