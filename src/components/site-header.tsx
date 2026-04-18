@@ -1,108 +1,19 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Menu, X, Lock } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
-
-import { cn } from "@/lib/utils";
-import { useView, VIEW_ROLES } from "@/components/view-context";
-
-/* ------------------------------------------------------------------ */
-/*  Navigation config per context                                      */
-/* ------------------------------------------------------------------ */
-
-const ALASKA_NAV = [
-  { href: "/assess", label: "Assessment" },
-  { href: "/map", label: "Map" },
-  { href: "/portfolio-builder", label: "Portfolio Builder" },
-  { href: "/framework", label: "Framework" },
-  { href: "/methods", label: "Methods" },
-];
-
-const KENTUCKY_NAV = [
-  { href: "/kentucky", label: "Kentucky" },
-];
-
-type NavContext = "landing" | "alaska" | "kentucky";
-
-function getNavContext(pathname: string): NavContext {
-  if (pathname.startsWith("/kentucky")) return "kentucky";
-  if (
-    pathname === "/alaska" ||
-    pathname.startsWith("/assess") ||
-    pathname.startsWith("/map") ||
-    pathname.startsWith("/portfolio") ||
-    pathname.startsWith("/calculator") ||
-    pathname.startsWith("/framework") ||
-    pathname.startsWith("/methods") ||
-    pathname.startsWith("/assumptions")
-  ) {
-    return "alaska";
-  }
-  return "landing";
-}
-
-const CONTEXT_LABELS: Record<NavContext, string> = {
-  landing: "All States",
-  alaska: "Alaska Pilot",
-  kentucky: "Kentucky Demo",
-};
-
-const CONTEXT_COLORS: Record<NavContext, string> = {
-  landing: "bg-[color:rgba(16,34,53,0.08)] text-[color:var(--foreground)]",
-  alaska: "bg-[color:rgba(15,124,134,0.12)] text-[color:var(--teal)]",
-  kentucky: "bg-[color:rgba(196,97,42,0.12)] text-[color:var(--accent)]",
-};
-
-/* ------------------------------------------------------------------ */
-/*  Header Component                                                   */
-/* ------------------------------------------------------------------ */
+import { useAdmin } from "@/components/admin/admin-context";
+import { AdminLoginModal } from "@/components/admin/admin-login-modal";
+import { useState } from "react";
 
 export function SiteHeader() {
-  const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(false);
-  const [viewOpen, setViewOpen] = useState(false);
-  const viewRef = useRef<HTMLDivElement>(null);
-  const { role, setRole, roleConfig } = useView();
-
-  useEffect(() => {
-    if (!viewOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (viewRef.current && !viewRef.current.contains(e.target as Node)) setViewOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [viewOpen]);
-  const context = getNavContext(pathname);
-  const navItems = context === "alaska" ? ALASKA_NAV : context === "kentucky" ? KENTUCKY_NAV : [];
-
-  const isActive = (href: string) => {
-    if (context === "alaska" && href === "/alaska") return pathname === "/alaska";
-    if (href === "/kentucky") return pathname === "/kentucky";
-    return pathname.startsWith(href);
-  };
+  const { isAdmin } = useAdmin();
+  const [loginOpen, setLoginOpen] = useState(false);
 
   return (
     <>
-    <header className="sticky top-0 z-40 border-b border-[color:var(--line)] bg-[color:rgba(247,243,235,0.78)] backdrop-blur-2xl">
-      <div className="mx-auto flex max-w-[98rem] items-center justify-between gap-4 px-4 py-4 md:px-8 lg:px-12">
-
-        {/* ── Logo / Back ───────────────────────────────────── */}
-        <div className="flex items-center gap-2">
-          {context !== "landing" && (
-            <Link
-              href="/"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[color:var(--line)] text-[color:var(--muted)] transition-colors hover:bg-white hover:text-[color:var(--foreground)]"
-              title="Back to state selector"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Link>
-          )}
-          <Link href="/" className="min-w-0" onClick={() => setMenuOpen(false)}>
+      <header className="sticky top-0 z-40 border-b border-[color:var(--line)] bg-[color:rgba(247,243,235,0.78)] backdrop-blur-2xl">
+        <div className="mx-auto flex max-w-[98rem] items-center justify-between gap-4 px-4 py-4 md:px-8 lg:px-12">
+          <Link href="/" className="min-w-0">
             <div className="flex items-center gap-3">
               <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[color:#102235] to-[color:#1a3a52]">
                 <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,124,134,0.3)_0%,transparent_50%)]" />
@@ -118,202 +29,18 @@ export function SiteHeader() {
               </div>
             </div>
           </Link>
-        </div>
 
-        {/* ── Desktop Nav ───────────────────────────────────── */}
-        {navItems.length > 0 && (
-          <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex lg:flex-nowrap">
-            {navItems.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "relative rounded-full px-3 py-2 text-sm whitespace-nowrap transition-colors",
-                    active
-                      ? "text-white"
-                      : "text-[color:var(--muted)] hover:text-[color:var(--foreground)]",
-                  )}
-                >
-                  {active && (
-                    <motion.div
-                      layoutId="nav-pill"
-                      className="absolute inset-0 rounded-full bg-[color:var(--foreground)] shadow-[0_10px_24px_rgba(16,34,53,0.11)]"
-                      transition={{ type: "spring", stiffness: 400, damping: 35 }}
-                    />
-                  )}
-                  <span className="relative z-10">{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        )}
-
-        {/* ── Right side ────────────────────────────────────── */}
-        <div className="flex shrink-0 items-center gap-2">
-          {/* View-as toggle */}
-          <div ref={viewRef} className="relative hidden lg:block">
-            <button
-              onClick={() => setViewOpen((p) => !p)}
-              className="flex items-center gap-1.5 rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-3 py-2 text-xs text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-strong)]"
-            >
-              <span className="text-[color:var(--muted)]">View:</span>
-              <span className="font-medium">{roleConfig.shortLabel}</span>
-            </button>
-            <AnimatePresence>
-              {viewOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 4, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 4, scale: 0.97 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-2xl border border-[color:var(--line)] bg-white shadow-[var(--shadow-lift)]"
-                >
-                  {VIEW_ROLES.map((r) => (
-                    <button
-                      key={r.key}
-                      type="button"
-                      onClick={() => { setRole(r.key); setViewOpen(false); }}
-                      className={cn(
-                        "flex w-full flex-col gap-0.5 px-4 py-3 text-left transition-colors hover:bg-[color:var(--surface-soft)]",
-                        role === r.key && "bg-[color:var(--surface-soft)]",
-                      )}
-                    >
-                      <span className={cn("text-xs font-medium", role === r.key ? "text-[color:var(--teal)]" : "text-[color:var(--foreground)]")}>
-                        {r.label}
-                      </span>
-                      <span className="text-xs text-[color:var(--muted)]">{r.description}</span>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <button
-            onClick={() => setAdminOpen(true)}
-            className="hidden rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-strong)] lg:inline-flex"
-          >
-            Admin
-          </button>
-
-          <div
-            className={cn(
-              "hidden rounded-full px-3 py-1.5 text-xs font-medium uppercase tracking-wider lg:block",
-              CONTEXT_COLORS[context],
-            )}
-          >
-            {CONTEXT_LABELS[context]}
-          </div>
-
-          {/* Mobile toggle — always visible so Admin is reachable on all pages */}
           <button
             type="button"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((c) => !c)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] text-[color:var(--foreground)] lg:hidden"
+            onClick={() => setLoginOpen(true)}
+            className="rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--surface-strong)]"
           >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isAdmin ? "Admin" : "Log in"}
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* ── Mobile Menu ─────────────────────────────────────── */}
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }}
-            className="overflow-hidden border-t border-[color:var(--line)] lg:hidden"
-          >
-            <nav className="flex flex-col gap-1 p-4">
-              {navItems.map((item) => {
-                const active = isActive(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMenuOpen(false)}
-                    className={cn(
-                      "rounded-xl px-4 py-3 text-sm transition-colors",
-                      active
-                        ? "bg-[color:var(--foreground)] text-white"
-                        : "text-[color:var(--foreground)] hover:bg-white",
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  setAdminOpen(true);
-                }}
-                className="mt-2 w-full rounded-xl border border-[color:var(--line)] px-4 py-3 text-left text-sm text-[color:var(--foreground)] hover:bg-white"
-              >
-                Admin
-              </button>
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-    </header>
-
-    {/* ── Admin Modal (portaled to body so fixed positioning is viewport-relative) */}
-    <AdminModal open={adminOpen} onClose={() => setAdminOpen(false)} />
-  </>
-  );
-}
-
-function AdminModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
-  return createPortal(
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/40"
-            onClick={onClose}
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 8 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 rounded-2xl bg-white p-8 shadow-2xl max-w-md w-full"
-          >
-            <div className="flex items-center justify-center h-12 w-12 mx-auto bg-[color:rgba(196,97,42,0.1)] rounded-full">
-              <Lock className="h-6 w-6 text-[color:var(--accent)]" />
-            </div>
-            <h2 className="mt-4 text-center font-display text-2xl text-[color:var(--foreground)]">Admin Access</h2>
-            <p className="mt-2 text-center text-sm text-[color:var(--muted)]">
-              Full-stack admin login and access coming soon for all states.
-            </p>
-            <button
-              onClick={onClose}
-              className="mt-6 w-full rounded-full bg-[color:var(--foreground)] px-4 py-3 text-white transition-colors hover:bg-[color:#223a54]"
-            >
-              Close
-            </button>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>,
-    document.body
+      <AdminLoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
+    </>
   );
 }
