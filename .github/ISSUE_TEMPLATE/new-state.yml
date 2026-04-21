@@ -1,0 +1,46 @@
+name: New state scaffold
+description: Request a new state module (Alaska/Kentucky/East Texas pattern).
+title: "[state-scaffold] <STATE>"
+labels: ["state-scaffold"]
+body:
+  - type: input
+    id: state
+    attributes:
+      label: State
+      description: Full name and USPS code (e.g. "New Mexico (NM)").
+    validations:
+      required: true
+  - type: checkboxes
+    id: modules
+    attributes:
+      label: Modules to scaffold
+      options:
+        - label: overview
+          required: true
+        - label: need
+        - label: capacity
+        - label: connectivity
+        - label: benchmarks
+        - label: implementation-strategy
+        - label: stakeholder-reports
+        - label: tribal-health (requires sovereignty review)
+  - type: textarea
+    id: sources
+    attributes:
+      label: Confirmed primary sources for this state
+      description: |
+        List the primary sources you have access to for this state. Every numeric
+        field will remain `DataComingSoon` until a cited source is supplied.
+        Expected: state health department open-data portal, ArcGIS Hub items,
+        any tribal epidemiology center agreements, etc.
+    validations:
+      required: true
+  - type: checkboxes
+    id: integrity
+    attributes:
+      label: Data integrity acknowledgement
+      options:
+        - label: The initial scaffold PR will ship with placeholders only (no invented numbers).
+          required: true
+        - label: Tribal data will be suppressed at n < 11 and reviewed by the sovereignty Bugbot.
+          required: true
