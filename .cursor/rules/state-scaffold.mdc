@@ -1,0 +1,37 @@
+---
+description: Contract for scaffolding a new state module in RHT-NAV. Follow the Kentucky pattern; never ship a new state with fabricated numbers.
+globs:
+  - "src/app/[state]/**/*"
+  - "src/data/*-config.ts"
+  - "src/data/*-counties.json"
+  - "src/data/*-pyramid-config.ts"
+  - "src/data/*-broadband-*.ts"
+  - "src/data/*-facilities.ts"
+alwaysApply: false
+---
+
+# State Scaffold Contract
+
+When scaffolding a new state module (the State-Onboarding Agent or a human
+developer), you MUST:
+
+1. Mirror the Kentucky directory and naming pattern:
+   - `src/data/<state>-config.ts`
+   - `src/data/<state>-counties.json` (seeded from Census TIGER, not LLM)
+   - `src/data/<state>-pyramid-config.ts`
+   - `src/data/<state>-broadband-data.ts`, `<state>-broadband-availability.ts`
+   - `src/data/<state>-facilities.ts`
+   - `src/app/[state]/` routes as present for Kentucky: overview, need,
+     capacity, connectivity, benchmarks, implementation-strategy,
+     stakeholder-reports, optional tribal-health.
+2. Emit every numeric field as a `ProvenanceField<T>` with `value: null` and
+   proper `source` + `sourceUrl`, then render `<DataComingSoon />` client-side.
+   Never ship a number you did not fetch from a cited primary source.
+3. Wire the new state into `scripts/build_data_pack.py` and declare an ETL
+   entry in `scripts/agents/` for any state-specific refresher.
+4. Open the PR as **draft**, titled `Scaffold <State> — empty data pack,
+   placeholders only`.
+
+New states must also declare whether a `tribal-health/` module is needed; if
+yes, the Tribal Data Sovereignty reviewer (Bugbot rule #3) is required to sign
+off before any tribal data is populated.
