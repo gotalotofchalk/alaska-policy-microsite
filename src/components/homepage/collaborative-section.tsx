@@ -1,136 +1,68 @@
-const PARTNERS = [
-  { tag: "PLATFORM", name: "Microsoft" },
-  { tag: "GIS", name: "Esri" },
-  { tag: "RPM", name: "BioIntelliSense" },
-  { tag: "TELE-ICU", name: "Avel eCare" },
-  { tag: "VIRTUAL", name: "Teladoc" },
-  { tag: "RURAL", name: "Cibolo Health" },
-  { tag: "ADVISORY", name: "AVIA" },
-  { tag: "ACADEMIC", name: "Stanford HAI" },
+const LOGOS = [
+  "Microsoft",
+  "Esri",
+  "BioIntelliSense",
+  "Avel eCare",
+  "Teladoc",
+  "+ 14 more",
 ];
 
 export default function CollaborativeSection() {
   return (
-    <section className="py-24" id="collaborative">
-      <div className="mx-auto max-w-[1320px] px-12">
+    <section
+      className="mx-auto my-16 max-w-[1320px] px-12"
+      id="collaborative"
+    >
+      <div
+        className="overflow-hidden py-20 px-12"
+        style={{
+          background: "var(--foreground)",
+          borderRadius: "var(--r-xl)",
+          color: "white",
+        }}
+      >
         {/* Header */}
-        <div className="mb-12 grid grid-cols-1 items-end gap-16 md:grid-cols-[1fr_1.5fr]">
-          <div>
-            <div
-              className="font-mono mb-5 flex items-center gap-3 text-[11.5px] uppercase tracking-[0.14em]"
-              style={{ color: "var(--muted)" }}
-            >
-              <span style={{ color: "var(--accent)" }}>04</span>
-              <span>Built on the RHT Collaborative</span>
-              <span
-                className="flex-1"
-                style={{ height: 1, background: "var(--line)" }}
-              />
-            </div>
-            <h2
-              className="font-display text-5xl leading-[1.05] tracking-tight"
-              style={{ color: "var(--foreground)" }}
-            >
-              Platforms that hold. Not point{" "}
-              <em style={{ color: "var(--accent)", fontWeight: 400 }}>
-                solutions.
-              </em>
-            </h2>
-          </div>
-          <p
-            className="max-w-[580px] text-[17px] leading-relaxed"
-            style={{ color: "var(--ink-2)" }}
+        <div className="mb-10 flex flex-col justify-between gap-8 md:flex-row md:items-end">
+          <h2
+            className="font-display max-w-[600px] text-[38px] leading-[1.12] tracking-tight"
           >
-            RHT-NAV is co-developed with the Rural Health Transformation
-            Collaborative &mdash; a cross-sector group aligning technology,
-            clinical, and state government expertise around a
-            platform-over-point-solutions thesis.
-          </p>
+            Built by the{" "}
+            <em style={{ color: "var(--accent-soft)", fontWeight: 400 }}>
+              RHT Collaborative.
+            </em>
+            <br />
+            Bipartisan. Multi-sector. Field-tested.
+          </h2>
+          <div
+            className="font-mono text-[10.5px] uppercase tracking-[0.12em]"
+            style={{ color: "rgba(255,255,255,0.5)" }}
+          >
+            CONSORTIUM &middot; 2024
+          </div>
         </div>
 
-        {/* Quote + Logo wall */}
-        <div className="grid grid-cols-1 items-center gap-20 md:grid-cols-2">
-          {/* Quote */}
-          <div>
-            <blockquote
-              className="font-display text-[32px] leading-[1.35] tracking-tight"
-              style={{ color: "var(--foreground)" }}
-            >
-              <span
-                className="mr-0.5 text-[72px] leading-none"
-                style={{
-                  color: "var(--accent)",
-                  position: "relative",
-                  top: "20px",
-                }}
-              >
-                &ldquo;
-              </span>
-              We don&apos;t need more islands of innovation. We need a foundation
-              that holds, a sequence that scales, and an accountability loop that
-              survives the next administration. That is what rural health needs,
-              and that is what RHT-NAV builds for.
-            </blockquote>
+        {/* Logo grid */}
+        <div
+          className="grid grid-cols-3 md:grid-cols-6"
+          style={{
+            gap: 1,
+            background: "rgba(255,255,255,0.12)",
+            borderRadius: "var(--r-md)",
+            overflow: "hidden",
+          }}
+        >
+          {LOGOS.map((name) => (
             <div
-              className="mt-8 border-t pt-5 text-[13px] leading-relaxed"
+              key={name}
+              className="font-display flex min-h-[72px] items-center justify-center px-6 py-6 text-center text-sm font-medium"
               style={{
-                color: "var(--ink-2)",
-                borderColor: "var(--line)",
+                background: "var(--foreground)",
+                color: "rgba(255,255,255,0.85)",
               }}
             >
-              <strong
-                className="mb-0.5 block text-sm font-semibold"
-                style={{ color: "var(--foreground)" }}
-              >
-                David Rhew, MD
-              </strong>
-              Global Chief Medical Officer, Microsoft
-              <br />
-              Co-Chair, Rural Health Transformation Collaborative
+              {name}
             </div>
-          </div>
-
-          {/* Logo wall */}
-          <div>
-            <div
-              className="grid grid-cols-4"
-              style={{ border: "1px solid var(--line)" }}
-            >
-              {PARTNERS.map((partner, i) => (
-                <div
-                  key={partner.name}
-                  className="font-display relative flex h-[110px] items-center justify-center px-4 text-center text-base transition-colors hover:bg-[var(--bg-soft)]"
-                  style={{
-                    color: "var(--ink-2)",
-                    borderRight:
-                      (i + 1) % 4 !== 0
-                        ? "1px solid var(--line)"
-                        : undefined,
-                    borderBottom:
-                      i < 4 ? "1px solid var(--line)" : undefined,
-                  }}
-                >
-                  <span
-                    className="font-mono absolute top-2.5 left-3 text-[8.5px] tracking-[0.1em]"
-                    style={{ color: "var(--muted)" }}
-                  >
-                    {partner.tag}
-                  </span>
-                  {partner.name}
-                </div>
-              ))}
-            </div>
-            <a
-              href="#"
-              className="mt-5 inline-flex items-center gap-2 border-b pb-1 text-[13px]"
-              style={{
-                color: "var(--ink-2)",
-                borderColor: "var(--line-2)",
-              }}
-            >
-              View the full Collaborative roster &rarr;
-            </a>
-          </div>
+          ))}
         </div>
       </div>
     </section>

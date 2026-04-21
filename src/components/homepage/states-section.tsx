@@ -1,349 +1,323 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import Link from "next/link";
 
-const STATE_TILES = [
-  {
-    badge: "LIVE DEMO",
-    abbr: "KY",
-    name: "Kentucky",
-    desc: "41.6% rural. Quintessential Appalachia plus Delta overlap. Active starlink modeling, BEAD alignment, and CMS reporting scaffold.",
-    foot: "120 counties \u00B7 $212.9M FY26",
-    active: true,
-    href: "/kentucky/overview",
-  },
-  {
-    badge: "FRAMEWORK",
-    abbr: "AK",
-    name: "Alaska",
-    desc: "Extreme geography and tribal health system. Tests the framework\u2019s ability to sequence connectivity where distance itself is the primary burden.",
-    foot: "29 boroughs \u00B7 Tribal priority",
-    active: false,
-    href: "/alaska/overview",
-  },
-  {
-    badge: "FRAMEWORK",
-    abbr: "TX",
-    name: "Texas",
-    desc: "Scale and workforce shortage. East Texas maternal mortality is measured against El Salvador analogs; 25,000 sq mi for 1.6M people.",
-    foot: "254 counties \u00B7 $281M FY26",
-    active: false,
-    href: "/texas/overview",
-  },
+/* ------------------------------------------------------------------ */
+/*  State data                                                         */
+/* ------------------------------------------------------------------ */
+
+interface StateInfo {
+  abbr: string;
+  col: number;
+  row: number;
+  status: "active" | "pilot" | "wait";
+  fullName: string;
+  alloc: string;
+  counties: number;
+  rural: string;
+  ready: string;
+  slug?: string;
+}
+
+const STATES: StateInfo[] = [
+  { abbr: "WA", col: 0, row: 0, status: "wait", fullName: "Washington", alloc: "$84M", counties: 39, rural: "14%", ready: "9 fast" },
+  { abbr: "MT", col: 1, row: 0, status: "wait", fullName: "Montana", alloc: "$68M", counties: 56, rural: "44%", ready: "7 fast" },
+  { abbr: "ND", col: 2, row: 0, status: "wait", fullName: "North Dakota", alloc: "$62M", counties: 53, rural: "41%", ready: "6 fast" },
+  { abbr: "MN", col: 3, row: 0, status: "wait", fullName: "Minnesota", alloc: "$142M", counties: 87, rural: "26%", ready: "14 fast" },
+  { abbr: "WI", col: 4, row: 0, status: "wait", fullName: "Wisconsin", alloc: "$120M", counties: 72, rural: "30%", ready: "11 fast" },
+  { abbr: "MI", col: 5, row: 0, status: "wait", fullName: "Michigan", alloc: "$158M", counties: 83, rural: "25%", ready: "13 fast" },
+  { abbr: "NY", col: 6, row: 0, status: "pilot", fullName: "New York", alloc: "$240M", counties: 62, rural: "12%", ready: "18 fast" },
+  { abbr: "VT", col: 7, row: 0, status: "wait", fullName: "Vermont", alloc: "$28M", counties: 14, rural: "61%", ready: "3 fast" },
+  { abbr: "ME", col: 8, row: 0, status: "wait", fullName: "Maine", alloc: "$46M", counties: 16, rural: "61%", ready: "4 fast" },
+  { abbr: "OR", col: 0, row: 1, status: "wait", fullName: "Oregon", alloc: "$88M", counties: 36, rural: "19%", ready: "8 fast" },
+  { abbr: "ID", col: 1, row: 1, status: "wait", fullName: "Idaho", alloc: "$44M", counties: 44, rural: "30%", ready: "6 fast" },
+  { abbr: "SD", col: 2, row: 1, status: "wait", fullName: "South Dakota", alloc: "$38M", counties: 66, rural: "43%", ready: "5 fast" },
+  { abbr: "IA", col: 3, row: 1, status: "active", fullName: "Iowa", alloc: "$126M", counties: 99, rural: "36%", ready: "15 fast" },
+  { abbr: "IL", col: 4, row: 1, status: "wait", fullName: "Illinois", alloc: "$186M", counties: 102, rural: "12%", ready: "16 fast" },
+  { abbr: "IN", col: 5, row: 1, status: "wait", fullName: "Indiana", alloc: "$142M", counties: 92, rural: "27%", ready: "12 fast" },
+  { abbr: "OH", col: 6, row: 1, status: "pilot", fullName: "Ohio", alloc: "$214M", counties: 88, rural: "22%", ready: "17 fast" },
+  { abbr: "PA", col: 7, row: 1, status: "wait", fullName: "Pennsylvania", alloc: "$226M", counties: 67, rural: "21%", ready: "16 fast" },
+  { abbr: "NJ", col: 8, row: 1, status: "wait", fullName: "New Jersey", alloc: "$92M", counties: 21, rural: "5%", ready: "7 fast" },
+  { abbr: "CA", col: 0, row: 2, status: "wait", fullName: "California", alloc: "$312M", counties: 58, rural: "6%", ready: "22 fast" },
+  { abbr: "NV", col: 1, row: 2, status: "wait", fullName: "Nevada", alloc: "$46M", counties: 17, rural: "6%", ready: "4 fast" },
+  { abbr: "UT", col: 2, row: 2, status: "wait", fullName: "Utah", alloc: "$58M", counties: 29, rural: "10%", ready: "5 fast" },
+  { abbr: "CO", col: 3, row: 2, status: "wait", fullName: "Colorado", alloc: "$98M", counties: 64, rural: "14%", ready: "9 fast" },
+  { abbr: "KS", col: 4, row: 2, status: "wait", fullName: "Kansas", alloc: "$88M", counties: 105, rural: "26%", ready: "10 fast" },
+  { abbr: "MO", col: 5, row: 2, status: "wait", fullName: "Missouri", alloc: "$158M", counties: 114, rural: "30%", ready: "13 fast" },
+  { abbr: "KY", col: 6, row: 2, status: "pilot", fullName: "Kentucky", alloc: "$212.9M", counties: 120, rural: "41.6%", ready: "28 fast", slug: "kentucky" },
+  { abbr: "WV", col: 7, row: 2, status: "active", fullName: "West Virginia", alloc: "$86M", counties: 55, rural: "51%", ready: "11 fast" },
+  { abbr: "VA", col: 8, row: 2, status: "wait", fullName: "Virginia", alloc: "$188M", counties: 95, rural: "24%", ready: "16 fast" },
+  { abbr: "AZ", col: 1, row: 3, status: "wait", fullName: "Arizona", alloc: "$118M", counties: 15, rural: "10%", ready: "5 fast" },
+  { abbr: "NM", col: 2, row: 3, status: "wait", fullName: "New Mexico", alloc: "$62M", counties: 33, rural: "22%", ready: "6 fast" },
+  { abbr: "OK", col: 3, row: 3, status: "wait", fullName: "Oklahoma", alloc: "$124M", counties: 77, rural: "33%", ready: "10 fast" },
+  { abbr: "AR", col: 4, row: 3, status: "wait", fullName: "Arkansas", alloc: "$108M", counties: 75, rural: "43%", ready: "9 fast" },
+  { abbr: "TN", col: 5, row: 3, status: "pilot", fullName: "Tennessee", alloc: "$174M", counties: 95, rural: "34%", ready: "14 fast" },
+  { abbr: "NC", col: 6, row: 3, status: "wait", fullName: "North Carolina", alloc: "$212M", counties: 100, rural: "34%", ready: "18 fast" },
+  { abbr: "SC", col: 7, row: 3, status: "wait", fullName: "South Carolina", alloc: "$132M", counties: 46, rural: "34%", ready: "10 fast" },
+  { abbr: "TX", col: 3, row: 4, status: "active", fullName: "Texas", alloc: "$362M", counties: 254, rural: "15%", ready: "30 fast", slug: "texas" },
+  { abbr: "LA", col: 4, row: 4, status: "wait", fullName: "Louisiana", alloc: "$124M", counties: 64, rural: "27%", ready: "9 fast" },
+  { abbr: "MS", col: 5, row: 4, status: "wait", fullName: "Mississippi", alloc: "$92M", counties: 82, rural: "54%", ready: "8 fast" },
+  { abbr: "AL", col: 6, row: 4, status: "wait", fullName: "Alabama", alloc: "$126M", counties: 67, rural: "41%", ready: "10 fast" },
+  { abbr: "GA", col: 7, row: 4, status: "wait", fullName: "Georgia", alloc: "$202M", counties: 159, rural: "24%", ready: "17 fast" },
+  { abbr: "FL", col: 8, row: 4, status: "wait", fullName: "Florida", alloc: "$284M", counties: 67, rural: "10%", ready: "22 fast" },
 ];
 
-const COMING_SOON = [
-  { abbr: "WV", name: "West Virginia" },
-  { abbr: "NE", name: "Nebraska" },
-  { abbr: "CA", name: "California" },
-  { abbr: "NM", name: "New Mexico" },
-  { abbr: "MT", name: "Montana" },
-  { abbr: "MS", name: "Mississippi" },
-];
+const W = 54, H = 54, GAP = 6, X0 = 48, Y0 = 56;
 
-/* US grid-map state layout (simplified) */
-const US_STATES: [string, number, number, "demo" | "framework" | ""][] = [
-  ["AK", 0, 3, "framework"], ["WA", 2, 0, ""], ["ID", 3, 0.5, ""], ["MT", 4, 0, ""], ["ND", 5.2, 0, ""], ["MN", 6.4, 0, ""], ["WI", 7.6, 0, ""], ["MI", 8.8, 0.3, ""],
-  ["OR", 2, 1, ""], ["NV", 2.8, 1.2, ""], ["WY", 4, 1, ""], ["SD", 5.2, 1, ""], ["IA", 6.2, 1, ""], ["IL", 7.1, 1, ""], ["IN", 8, 1, ""], ["OH", 8.9, 1, ""], ["PA", 9.8, 1, ""], ["NY", 10.6, 0.7, ""], ["ME", 11, 0, ""],
-  ["CA", 2, 2, "framework"], ["UT", 3.2, 2, ""], ["CO", 4.2, 2, ""], ["NE", 5.2, 2, "framework"], ["MO", 6.4, 2, ""], ["KY", 7.6, 2, "demo"], ["WV", 8.7, 2, "demo"], ["VA", 9.7, 2, ""], ["NJ", 10.5, 1.5, ""],
-  ["AZ", 3.2, 3, ""], ["NM", 4.2, 3, ""], ["KS", 5.2, 3, ""], ["AR", 6.4, 3, ""], ["TN", 7.6, 3, ""], ["NC", 8.9, 3, ""], ["MD", 10, 2.5, ""],
-  ["TX", 5, 4, "framework"], ["OK", 5.3, 3.6, ""], ["LA", 6.4, 4, ""], ["MS", 7.4, 4, ""], ["AL", 8.4, 4, ""], ["GA", 9.3, 4, ""], ["SC", 9.8, 3.5, ""],
-  ["HI", 2, 4.5, ""], ["FL", 9.6, 4.6, ""],
-];
+const STATUS_FILL: Record<string, string> = {
+  active: "var(--teal)",
+  pilot: "var(--amber-flag)",
+  wait: "#e2e6eb",
+};
 
-const W = 58, H = 46;
+/* ------------------------------------------------------------------ */
+/*  Mini county grid (deterministic)                                   */
+/* ------------------------------------------------------------------ */
+
+function MiniCountyGrid({ count }: { count: number }) {
+  const cols = 20;
+  const cells = useMemo(() => {
+    const out: { x: number; y: number; fill: string; opacity: number }[] = [];
+    for (let i = 0; i < Math.min(count, 120); i++) {
+      const c = i % cols;
+      const r = Math.floor(i / cols);
+      const score = ((i * 37 + 11) % 100) / 100;
+      const fill = score > 0.78 ? "var(--teal)" : score > 0.44 ? "var(--amber-flag)" : "var(--red-flag)";
+      out.push({ x: 10 + c * 13, y: 10 + r * 13, fill, opacity: 0.55 + score * 0.45 });
+    }
+    return out;
+  }, [count]);
+
+  return (
+    <svg viewBox="0 0 300 140" className="h-full w-full">
+      {cells.map((cell, i) => (
+        <rect key={i} x={cell.x} y={cell.y} width={10} height={10} rx={1.5} fill={cell.fill} opacity={cell.opacity} />
+      ))}
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
 
 export default function StatesSection() {
+  const [selected, setSelected] = useState("KY");
+  const state = STATES.find((s) => s.abbr === selected) ?? STATES.find((s) => s.abbr === "KY")!;
+
+  const statusLabel = state.status === "active" ? "Active \u00B7 live" : state.status === "pilot" ? "Pilot \u00B7 live" : "Foundation ready";
+  const statusClass = state.status === "active" ? "active" : state.status === "pilot" ? "pilot" : "wait";
+
   return (
-    <section
-      id="states"
-      className="py-24"
-      style={{
-        backgroundColor: "var(--bg-soft)",
-        borderTop: "1px solid var(--line)",
-        borderBottom: "1px solid var(--line)",
-      }}
-    >
+    <section className="py-24" id="states">
       <div className="mx-auto max-w-[1320px] px-12">
         {/* Header */}
-        <div className="mb-16 grid grid-cols-1 items-end gap-16 md:grid-cols-[1fr_1.5fr]">
+        <div className="mb-14 grid grid-cols-1 items-end gap-12 md:grid-cols-[1fr_1.3fr]">
           <div>
             <div
-              className="font-mono mb-5 flex items-center gap-3 text-[11.5px] uppercase tracking-[0.14em]"
+              className="font-mono mb-4 inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.14em]"
               style={{ color: "var(--muted)" }}
             >
-              <span style={{ color: "var(--accent)" }}>05</span>
-              <span>State entry points</span>
-              <span
-                className="flex-1"
-                style={{ height: 1, background: "var(--line)" }}
-              />
+              <span style={{ color: "var(--accent)" }}>03</span>
+              <span>Pick your state</span>
             </div>
             <h2
-              className="font-display text-5xl leading-[1.05] tracking-tight"
+              className="font-display text-[46px] leading-[1.05] tracking-tight"
               style={{ color: "var(--foreground)" }}
             >
-              Every state, a different{" "}
-              <em style={{ color: "var(--accent)", fontWeight: 400 }}>
-                shape.
-              </em>
+              Every state is a{" "}
+              <em style={{ color: "var(--accent)", fontWeight: 400 }}>different</em>{" "}
+              month-one.
             </h2>
           </div>
           <p
-            className="max-w-[580px] text-[17px] leading-relaxed"
+            className="max-w-[520px] text-base leading-relaxed"
             style={{ color: "var(--ink-2)" }}
           >
-            Kentucky is the live demo. Alaska, Texas, Nebraska, and California
-            are active state framework views. Adding a new state is a
-            configuration change, not a rebuild &mdash; the architecture scales
-            horizontally across all 50.
+            Click a state to preview its readiness dashboard. Active states have
+            RHT-NAV signed; pilot states are running live engagements; waiting
+            states have pre-built foundation plans ready to activate.
           </p>
         </div>
 
-        {/* US grid map */}
-        <div
-          className="h-[340px] overflow-hidden rounded-sm"
-          style={{
-            background: "white",
-            border: "1px solid var(--line)",
-          }}
-        >
-          <svg
-            viewBox="0 0 960 400"
-            preserveAspectRatio="xMidYMid meet"
-            className="h-full w-full"
-          >
-            <defs>
-              <pattern
-                id="hatch"
-                width="6"
-                height="6"
-                patternUnits="userSpaceOnUse"
-                patternTransform="rotate(45)"
-              >
-                <line
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="6"
-                  stroke="var(--foreground)"
-                  strokeWidth="0.5"
-                  strokeOpacity="0.15"
-                />
-              </pattern>
-            </defs>
-            <text
-              x="40"
-              y="40"
-              fontFamily="var(--font-jetbrains), monospace"
-              fontSize="11"
-              fill="var(--muted)"
-              letterSpacing="0.1em"
-            >
-              RHT-NAV &middot; NATIONAL VIEW
-            </text>
-            {US_STATES.map(([abbr, col, row, status]) => {
-              const x = 120 + col * (W + 4);
-              const y = 70 + row * (H + 4);
-              let fill = "var(--background)";
-              let stroke = "rgba(12,27,42,0.18)";
-              let textFill = "var(--ink-2)";
-              if (status === "demo") {
-                fill = "var(--accent)";
-                stroke = "#a03020";
-                textFill = "#ffffff";
-              } else if (status === "framework") {
-                fill = "url(#hatch)";
-                stroke = "rgba(12,27,42,0.35)";
-              }
-              return (
-                <g key={abbr + col}>
-                  <rect
-                    x={x}
-                    y={y}
-                    width={W}
-                    height={H}
-                    rx={2}
-                    fill={fill}
-                    stroke={stroke}
-                    strokeWidth={0.7}
-                  />
-                  <text
-                    x={x + W / 2}
-                    y={y + H / 2 + 4}
-                    textAnchor="middle"
-                    fontFamily="var(--font-jetbrains), monospace"
-                    fontSize="11"
-                    letterSpacing="0.05em"
-                    fill={textFill}
-                  >
-                    {abbr}
-                  </text>
-                </g>
-              );
-            })}
-            {/* Legend */}
-            <g transform="translate(40, 340)">
-              <rect x="0" y="0" width="14" height="10" fill="var(--accent)" />
-              <text
-                x="20"
-                y="9"
-                fontFamily="var(--font-jetbrains), monospace"
-                fontSize="10"
-                fill="var(--ink-2)"
-              >
-                LIVE DEMO
-              </text>
-              <rect
-                x="140"
-                y="0"
-                width="14"
-                height="10"
-                fill="url(#hatch)"
-                stroke="rgba(12,27,42,0.35)"
-                strokeWidth="0.5"
-              />
-              <text
-                x="160"
-                y="9"
-                fontFamily="var(--font-jetbrains), monospace"
-                fontSize="10"
-                fill="var(--ink-2)"
-              >
-                FRAMEWORK VIEW
-              </text>
-              <rect
-                x="320"
-                y="0"
-                width="14"
-                height="10"
-                fill="var(--background)"
-                stroke="rgba(12,27,42,0.18)"
-                strokeWidth="0.6"
-              />
-              <text
-                x="340"
-                y="9"
-                fontFamily="var(--font-jetbrains), monospace"
-                fontSize="10"
-                fill="var(--ink-2)"
-              >
-                ON DECK
-              </text>
-            </g>
-          </svg>
-        </div>
-
-        {/* State tiles */}
-        <div className="mt-7 grid grid-cols-1 gap-5 md:grid-cols-4">
-          {STATE_TILES.map((tile) => (
-            <Link
-              key={tile.abbr}
-              href={tile.href}
-              className="group flex min-h-[260px] cursor-pointer flex-col justify-between rounded-sm bg-white p-7 transition-all hover:-translate-y-0.5"
-              style={{
-                border: tile.active
-                  ? "1px solid var(--accent)"
-                  : "1px solid var(--line)",
-                background: tile.active
-                  ? "linear-gradient(180deg, var(--bg-soft) 0%, white 100%)"
-                  : "white",
-                boxShadow: "var(--shadow-soft)",
-              }}
-            >
-              <div className="flex items-start justify-between">
-                <span
-                  className="font-mono rounded-sm px-2 py-1 text-[9.5px] tracking-[0.1em]"
-                  style={{
-                    background: tile.active
-                      ? "var(--accent)"
-                      : "var(--line)",
-                    color: tile.active ? "white" : "var(--ink-2)",
-                  }}
-                >
-                  {tile.badge}
-                </span>
-                <span
-                  className="font-mono text-[11px]"
-                  style={{ color: "var(--muted)" }}
-                >
-                  {tile.abbr}
-                </span>
-              </div>
-              <div>
-                <div
-                  className="font-display mt-5 text-[32px] tracking-tight"
-                  style={{ color: "var(--foreground)" }}
-                >
-                  {tile.name}
-                </div>
-                <p
-                  className="mt-2.5 text-[13px] leading-relaxed"
-                  style={{ color: "var(--ink-2)" }}
-                >
-                  {tile.desc}
-                </p>
-              </div>
-              <div
-                className="font-mono mt-6 flex items-center justify-between text-[11.5px]"
-                style={{ color: "var(--muted)" }}
-              >
-                <span>{tile.foot}</span>
-                <span
-                  className="text-sm transition-transform group-hover:translate-x-1"
-                  style={{ color: "var(--foreground)" }}
-                >
-                  &rarr;
-                </span>
-              </div>
-            </Link>
-          ))}
-
-          {/* Coming soon */}
+        {/* Map + preview */}
+        <div className="grid grid-cols-1 items-stretch gap-7 lg:grid-cols-[1.6fr_1fr]">
+          {/* Map card */}
           <div
-            className="flex min-h-[260px] flex-col justify-between rounded-sm p-7"
+            className="overflow-hidden"
             style={{
-              background: "var(--bg-soft)",
-              border: "1px dashed var(--line-2)",
+              background: "white",
+              border: "1px solid var(--line)",
+              borderRadius: "var(--r-xl)",
+              padding: 28,
+              boxShadow: "var(--shadow-sm)",
             }}
           >
-            <div className="flex items-start justify-between">
+            <svg viewBox="0 0 640 400" className="w-full" style={{ height: 420 }}>
+              <text
+                x="48"
+                y="34"
+                fontFamily="var(--font-jetbrains), monospace"
+                fontSize="10"
+                fill="var(--muted)"
+                letterSpacing="1.5"
+              >
+                RHT-NAV &middot; NATIONAL COVERAGE &middot; 2026
+              </text>
+              {STATES.map((s) => {
+                const x = X0 + s.col * (W + GAP);
+                const y = Y0 + s.row * (H + GAP);
+                const isSelected = s.abbr === selected;
+                return (
+                  <g
+                    key={s.abbr}
+                    className="cursor-pointer"
+                    onClick={() => setSelected(s.abbr)}
+                    style={{ transition: "opacity 0.2s" }}
+                    opacity={isSelected ? 1 : 0.85}
+                  >
+                    <rect
+                      x={x}
+                      y={y}
+                      width={W}
+                      height={H}
+                      rx={6}
+                      fill={STATUS_FILL[s.status]}
+                      stroke={isSelected ? "var(--foreground)" : "none"}
+                      strokeWidth={isSelected ? 2 : 0}
+                    />
+                    <text
+                      x={x + W / 2}
+                      y={y + H / 2 + 4}
+                      textAnchor="middle"
+                      fontFamily="var(--font-jetbrains), monospace"
+                      fontSize="10"
+                      fontWeight="500"
+                      fill={s.status === "wait" ? "var(--muted)" : "white"}
+                    >
+                      {s.abbr}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+            {/* Legend */}
+            <div className="mt-4 flex gap-5 text-xs" style={{ color: "var(--ink-2)" }}>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "var(--teal)" }} />
+                Active &middot; live with RHT-NAV
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "var(--amber-flag)" }} />
+                Pilot &middot; engagement underway
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "#e2e6eb" }} />
+                Foundation ready
+              </span>
+            </div>
+          </div>
+
+          {/* State preview */}
+          <div
+            className="flex flex-col"
+            style={{
+              background: "white",
+              border: "1px solid var(--line)",
+              borderRadius: "var(--r-xl)",
+              padding: 28,
+              boxShadow: "var(--shadow-sm)",
+            }}
+          >
+            {/* Head */}
+            <div className="mb-5 flex items-baseline justify-between">
               <span
-                className="font-mono rounded-sm border px-2 py-1 text-[9.5px] tracking-[0.1em]"
+                className="font-display text-[28px] font-medium leading-none"
+                style={{ color: "var(--foreground)" }}
+              >
+                {state.fullName}
+              </span>
+              <span
+                className="font-mono rounded-full px-2.5 py-1 text-[10px] tracking-[0.1em] uppercase"
                 style={{
-                  borderColor: "var(--line-2)",
-                  color: "var(--ink-2)",
+                  background:
+                    statusClass === "active"
+                      ? "var(--teal-soft)"
+                      : statusClass === "pilot"
+                        ? "var(--gold-soft)"
+                        : "var(--background)",
+                  color:
+                    statusClass === "active"
+                      ? "var(--teal-deep)"
+                      : statusClass === "pilot"
+                        ? "var(--amber-flag)"
+                        : "var(--muted)",
                 }}
               >
-                ON DECK
-              </span>
-              <span
-                className="font-mono text-[11px]"
-                style={{ color: "var(--muted)" }}
-              >
-                +{COMING_SOON.length}
+                {statusLabel}
               </span>
             </div>
-            <div>
-              <div
-                className="font-display mt-5 text-[28px] leading-tight tracking-tight"
-                style={{ color: "var(--muted)" }}
-              >
-                {COMING_SOON.map((s) => s.name).join(", ")}
-              </div>
-              <p
-                className="mt-2.5 text-[13px] leading-relaxed"
-                style={{ color: "var(--ink-2)" }}
-              >
-                Onboarding queue. Configuration ready; data join pending state
-                health department sign-off.
-              </p>
+
+            {/* KPIs */}
+            <div className="mb-5 grid grid-cols-2 gap-3">
+              {[
+                { label: "Allocation", value: state.alloc },
+                { label: "Counties", value: String(state.counties) },
+                { label: "Rural share", value: state.rural },
+                { label: "Readiness", value: state.ready },
+              ].map((kpi) => (
+                <div
+                  key={kpi.label}
+                  className="rounded-lg p-3.5"
+                  style={{ background: "var(--background)" }}
+                >
+                  <div
+                    className="font-mono mb-1.5 text-[9.5px] uppercase tracking-[0.1em]"
+                    style={{ color: "var(--muted)" }}
+                  >
+                    {kpi.label}
+                  </div>
+                  <div
+                    className="font-display text-[26px] leading-none"
+                    style={{ color: "var(--foreground)" }}
+                  >
+                    {kpi.value}
+                  </div>
+                </div>
+              ))}
             </div>
+
+            {/* Mini county map */}
             <div
-              className="font-mono mt-6 text-[11.5px]"
-              style={{ color: "var(--muted)" }}
+              className="mb-4 overflow-hidden"
+              style={{
+                height: 140,
+                background: "var(--background)",
+                borderRadius: "var(--r-md)",
+              }}
             >
-              Scoped
+              <MiniCountyGrid count={state.counties} />
+            </div>
+
+            {/* CTA */}
+            <div
+              className="mt-auto flex items-center justify-between border-t pt-4"
+              style={{ borderColor: "var(--line)" }}
+            >
+              <Link
+                href={state.slug ? `/${state.slug}/overview` : "/states"}
+                className="inline-flex items-center gap-2 text-[13.5px] font-medium"
+                style={{ color: "var(--foreground)" }}
+              >
+                Open {state.fullName} dashboard &rarr;
+              </Link>
+              <span
+                className="font-mono text-[10px] uppercase tracking-[0.08em]"
+                style={{ color: "var(--muted)" }}
+              >
+                UPDATED &middot; APR 2026
+              </span>
             </div>
           </div>
         </div>

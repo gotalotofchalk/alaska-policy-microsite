@@ -26,7 +26,7 @@ export function SiteHeader() {
         className="sticky top-0 z-40 backdrop-blur-xl"
         style={{
           borderBottom: "1px solid var(--line)",
-          background: "rgba(244, 247, 250, 0.88)",
+          background: "rgba(246, 247, 249, 0.85)",
         }}
       >
         <div className="mx-auto flex max-w-[1320px] items-center justify-between px-12 py-3.5">

@@ -2,73 +2,88 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { STATE_CONFIGS, COMING_SOON_STATES, RHTP_PROGRAM, type ValidState } from "@/config/states";
+import { COMING_SOON_STATES } from "@/config/states";
 
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 const fadeUp = {
-  hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
+  hidden: { opacity: 0, y: 12 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
+  },
 };
 
-const ACTIVE_STATES: ValidState[] = ["kentucky", "alaska", "texas"];
-
-const STATE_DETAIL: Record<ValidState, { badge: string; tagline: string; foot: string }> = {
-  kentucky: {
-    badge: "LIVE DEMO",
-    tagline: "41.6% rural. Appalachia plus Delta overlap. Active Starlink modeling, BEAD alignment, and CMS reporting scaffold.",
+const ACTIVE_STATES = [
+  {
+    slug: "kentucky",
+    name: "Kentucky",
+    abbr: "KY",
+    badge: "Live demo",
+    badgeStyle: "demo" as const,
     foot: "120 counties",
+    isDemo: true,
   },
-  alaska: {
-    badge: "FRAMEWORK",
-    tagline: "Extreme geography and tribal health system. Tests the framework\u2019s ability to sequence connectivity where distance itself is the primary burden.",
-    foot: "29 boroughs \u00B7 Tribal priority",
+  {
+    slug: "alaska",
+    name: "Alaska",
+    abbr: "AK",
+    badge: "Framework",
+    badgeStyle: "framework" as const,
+    foot: "29 boroughs",
+    isDemo: false,
   },
-  texas: {
-    badge: "FRAMEWORK",
-    tagline: "Scale and workforce shortage. East Texas maternal mortality measured against El Salvador analogs; 25,000 sq mi for 1.6M people.",
+  {
+    slug: "texas",
+    name: "Texas",
+    abbr: "TX",
+    badge: "Framework",
+    badgeStyle: "framework" as const,
     foot: "254 counties",
+    isDemo: false,
   },
-};
+];
 
 export default function StatesPage() {
   return (
-    <div className="mx-auto max-w-[1320px] px-12 py-20">
+    <div className="mx-auto max-w-[1320px] px-12">
       {/* Header */}
-      <motion.div
+      <motion.section
+        className="pt-16 pb-8"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="mb-16"
       >
         <div
-          className="font-mono mb-5 flex items-center gap-3 text-[11.5px] uppercase tracking-[0.14em]"
+          className="font-mono mb-5 inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.14em]"
           style={{ color: "var(--muted)" }}
         >
           <span style={{ color: "var(--accent)" }}>RHT-NAV</span>
           <span>State selection</span>
-          <span className="flex-1" style={{ height: 1, background: "var(--line)" }} />
+          <span
+            style={{
+              flex: 1,
+              height: 1,
+              background: "var(--line)",
+              width: 320,
+            }}
+          />
         </div>
         <h1
-          className="font-display text-5xl leading-[1.05] tracking-tight md:text-6xl"
+          className="font-display text-[72px] leading-none tracking-tight"
           style={{ color: "var(--foreground)" }}
         >
-          Select your{" "}
-          <em style={{ color: "var(--accent)", fontWeight: 400, fontStyle: "italic" }}>
-            state.
-          </em>
+          Select your state.
         </h1>
-        <p
-          className="mt-6 max-w-[640px] text-[17px] leading-relaxed"
-          style={{ color: "var(--ink-2)" }}
-        >
-          {RHTP_PROGRAM.totalFunding} under the Rural Health Transformation Program.
-          Each state gets a tailored framework &mdash; scored on need, capacity, and
-          readiness &mdash; with interventions sequenced in the order they can actually hold.
-        </p>
-      </motion.div>
+      </motion.section>
 
       {/* Active states */}
-      <motion.section variants={stagger} initial="hidden" animate="show">
+      <motion.section
+        className="pt-2 pb-6"
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+      >
         <p
           className="font-mono mb-4 text-[10.5px] uppercase tracking-[0.14em]"
           style={{ color: "var(--muted)" }}
@@ -76,101 +91,101 @@ export default function StatesPage() {
           Active states
         </p>
 
-        <div className="grid gap-5 md:grid-cols-3">
-          {ACTIVE_STATES.map((slug) => {
-            const config = STATE_CONFIGS[slug];
-            const detail = STATE_DETAIL[slug];
-            const allocation = `$${Math.round(config.rhtpAllocation / 1e6)}M`;
-            const isDemo = detail.badge === "LIVE DEMO";
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          {ACTIVE_STATES.map((state) => (
+            <motion.div key={state.slug} variants={fadeUp}>
+              <Link
+                href={`/${state.slug}/overview`}
+                className="group relative flex min-h-[200px] flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+                style={{
+                  background: state.isDemo
+                    ? "linear-gradient(180deg, #fbf6ee 0%, #fffdfa 55%, white 100%)"
+                    : "white",
+                  border: state.isDemo
+                    ? "1px solid var(--accent-soft)"
+                    : "1px solid var(--line)",
+                  borderRadius: "var(--r-xl)",
+                  padding: "24px 26px 22px",
+                  boxShadow: "var(--shadow-sm)",
+                }}
+              >
+                {/* Demo top-rail gradient */}
+                {state.isDemo && (
+                  <span
+                    className="absolute left-0 top-0 right-0"
+                    style={{
+                      height: 3,
+                      background:
+                        "linear-gradient(90deg, var(--accent) 0%, var(--amber-flag) 55%, transparent 100%)",
+                    }}
+                  />
+                )}
 
-            return (
-              <motion.div key={slug} variants={fadeUp}>
-                <Link
-                  href={`/${slug}/overview`}
-                  className="group flex min-h-[320px] flex-col justify-between rounded-sm p-8 transition-all hover:-translate-y-0.5"
+                {/* Top: badge + abbreviation */}
+                <div className="flex items-start justify-between">
+                  <span
+                    className="font-mono rounded-full px-2.5 py-1 text-[9.5px] tracking-[0.14em] uppercase"
+                    style={{
+                      background:
+                        state.badgeStyle === "demo"
+                          ? "var(--accent)"
+                          : "var(--teal-soft)",
+                      color:
+                        state.badgeStyle === "demo"
+                          ? "white"
+                          : "var(--teal-deep)",
+                      border:
+                        state.badgeStyle === "demo"
+                          ? "1px solid var(--accent)"
+                          : "1px solid transparent",
+                    }}
+                  >
+                    {state.badge}
+                  </span>
+                  <span
+                    className="font-mono pt-1 text-xs tracking-[0.12em]"
+                    style={{ color: "var(--muted)" }}
+                  >
+                    {state.abbr}
+                  </span>
+                </div>
+
+                {/* State name */}
+                <div
+                  className="font-display mt-5 text-4xl leading-none tracking-tight"
+                  style={{ color: "var(--foreground)" }}
+                >
+                  {state.name}
+                </div>
+
+                {/* Footer */}
+                <div
+                  className="font-mono mt-4 flex items-center justify-between border-t pt-3.5 text-[10.5px] uppercase tracking-[0.1em]"
                   style={{
-                    border: isDemo
-                      ? "1px solid var(--accent)"
-                      : "1px solid var(--line)",
-                    background: isDemo
-                      ? "linear-gradient(180deg, var(--bg-soft) 0%, white 100%)"
-                      : "white",
-                    boxShadow: "var(--shadow-soft)",
+                    borderColor: "var(--line)",
+                    color: "var(--muted)",
                   }}
                 >
-                  {/* Top */}
-                  <div>
-                    <div className="flex items-start justify-between">
-                      <span
-                        className="font-mono rounded-sm px-2.5 py-1 text-[9.5px] tracking-[0.1em]"
-                        style={{
-                          background: isDemo ? "var(--accent)" : "var(--line)",
-                          color: isDemo ? "white" : "var(--ink-2)",
-                        }}
-                      >
-                        {detail.badge}
-                      </span>
-                      <span
-                        className="font-mono text-[11px]"
-                        style={{ color: "var(--muted)" }}
-                      >
-                        {config.abbreviation}
-                      </span>
-                    </div>
-
-                    <h2
-                      className="font-display mt-6 text-4xl tracking-tight"
-                      style={{ color: "var(--foreground)" }}
-                    >
-                      {config.name}
-                    </h2>
-
-                    <p
-                      className="mt-3 text-sm leading-relaxed"
-                      style={{ color: "var(--ink-2)" }}
-                    >
-                      {detail.tagline}
-                    </p>
-                  </div>
-
-                  {/* Bottom */}
-                  <div
-                    className="font-mono mt-8 flex items-center justify-between border-t pt-5 text-[11.5px]"
-                    style={{ borderColor: "var(--line)", color: "var(--muted)" }}
+                  <span>{state.foot}</span>
+                  <span
+                    className="text-base transition-transform duration-200 group-hover:translate-x-1"
+                    style={{ color: "var(--foreground)" }}
                   >
-                    <div className="flex items-center gap-4">
-                      <span>{detail.foot}</span>
-                      <span
-                        className="rounded-sm px-2 py-0.5"
-                        style={{
-                          background: "rgba(12, 27, 42, 0.05)",
-                          color: "var(--foreground)",
-                          fontSize: "10px",
-                        }}
-                      >
-                        RHTP {allocation}/yr
-                      </span>
-                    </div>
-                    <span
-                      className="text-base transition-transform group-hover:translate-x-1"
-                      style={{ color: "var(--foreground)" }}
-                    >
-                      &rarr;
-                    </span>
-                  </div>
-                </Link>
-              </motion.div>
-            );
-          })}
+                    &rarr;
+                  </span>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
         </div>
       </motion.section>
 
       {/* Coming soon */}
       <motion.section
+        className="pt-12 pb-24"
         variants={stagger}
         initial="hidden"
         animate="show"
-        className="mt-16"
       >
         <p
           className="font-mono mb-4 text-[10.5px] uppercase tracking-[0.14em]"
@@ -179,42 +194,39 @@ export default function StatesPage() {
           In development
         </p>
 
-        <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
           {COMING_SOON_STATES.map((state) => (
             <motion.div
               key={state.abbreviation}
               variants={fadeUp}
-              className="flex flex-col items-center gap-2 rounded-sm p-4 opacity-50"
-              style={{ border: "1px solid var(--line)", background: "white" }}
+              className="relative flex min-h-[100px] cursor-not-allowed flex-col items-center justify-center gap-1.5 opacity-55 transition-all hover:opacity-80"
+              style={{
+                background: "white",
+                border: "1px solid var(--line)",
+                borderRadius: "var(--r-lg)",
+                padding: "20px 16px 16px",
+              }}
             >
               <span
-                className="font-mono text-sm font-medium"
+                className="absolute right-2.5 top-2.5 h-1.5 w-1.5 rounded-full"
+                style={{ background: "var(--muted-2)" }}
+              />
+              <span
+                className="font-mono text-[15px] font-medium tracking-[0.06em]"
                 style={{ color: "var(--foreground)" }}
               >
                 {state.abbreviation}
               </span>
-              <span className="text-xs" style={{ color: "var(--muted)" }}>
+              <span
+                className="text-center text-[11.5px]"
+                style={{ color: "var(--muted)" }}
+              >
                 {state.name}
               </span>
             </motion.div>
           ))}
         </div>
       </motion.section>
-
-      {/* Bottom context */}
-      <div
-        className="mt-16 border-t pt-8"
-        style={{ borderColor: "var(--line)" }}
-      >
-        <p className="text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
-          The framework is state-agnostic by design. Adding a new state is a
-          configuration change, not a rebuild. Architecture accommodates every
-          state, every administration, every multi-year CMS cycle.{" "}
-          <span className="font-mono text-[10px] tracking-wide">
-            {RHTP_PROGRAM.statutoryBasis}
-          </span>
-        </p>
-      </div>
     </div>
   );
 }
