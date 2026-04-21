@@ -10,25 +10,25 @@ const TILES = [
   {
     accent: "#c0392b",
     label: "Residents \u00B7 Broadband gap",
-    stat: "45%",
-    subtitle: "East Texas without reliable broadband",
-    body: "Nearly half of the region lacks the foundational connectivity rail required for telehealth, remote monitoring, and portable diagnostics. Without broadband, downstream health-tech investments cannot reach the patients they are designed to serve.",
-    cite: "Source \u00B7 RHT Collaborative field estimate \u00B7 April 2026 \u00B7 FCC BDC v2024.2",
+    stat: "17%",
+    subtitle: "of rural Americans lack reliable broadband",
+    body: "~22M rural residents nationwide without a connection capable of carrying telehealth, remote monitoring, or portable ultrasound. The foundational rail is missing before any clinical program lands.",
+    cite: "Source \u00B7 FCC Broadband Data Collection v2024.2 \u00B7 Pew Research 2024",
   },
   {
     accent: "#d4a017",
     label: "Clinicians \u00B7 Geography",
-    stat: "41.6%",
-    subtitle: "Kentucky residents classified as rural",
-    body: "1.87 million people spread across 25,000 square miles in the eastern-region analog. Clinicians carry the burden of distance, paper workflows, and fragmented records on skeleton crews \u2014 geography alone compounds every access barrier.",
-    cite: "Source \u00B7 U.S. Census ACS 2020\u20132024 \u00B7 HRSA AHRF 2024",
+    stat: "10%",
+    subtitle: "of U.S. physicians serve the 20% of Americans who live rural",
+    body: "~46M rural residents, ~1 physician per 1,500 \u2014 half the urban ratio. Clinicians carry distance, paper workflows, and fragmented records on skeleton crews across every rural state.",
+    cite: "Source \u00B7 HRSA AHRF 2024 \u00B7 AAMC Workforce Report 2024",
   },
   {
     accent: "#0e8a7d",
-    label: "Systems \u00B7 FY26 allocation",
-    stat: "$212.9M",
-    subtitle: "Kentucky RHTP allocation for FY2026",
-    body: "The formula rewards plan quality and measurable impact; it penalizes point solutions that don\u2019t compound. Discretionary allocations can be clawed back if states cannot demonstrate defensible cost-per-outcome ratios within the reporting window.",
+    label: "Program \u00B7 Total authorization",
+    stat: "$50B",
+    subtitle: "RHTP total authorization, FY2026\u20132030",
+    body: "$10B per year across all 50 states: 50% equal share with a $100M state floor, 50% weighted by rural population, uncompensated care, and plan quality. The formula rewards programs that compound; point solutions get penalized.",
     cite: "Source \u00B7 CMS \u00B7 Section 71401 \u00B7 Public Law 119-21",
   },
   {
@@ -270,7 +270,13 @@ export default function ProblemSection() {
               className="font-mono mb-6 text-[11px] uppercase tracking-[0.12em]"
               style={{ color: "var(--muted)" }}
             >
-              Broadband coverage &middot; East Texas counties
+              Broadband coverage &middot; U.S. rural BSLs
+              <span
+                className="ml-auto text-[9.5px] tracking-[0.08em]"
+                style={{ color: "var(--muted)" }}
+              >
+                FCC BDC &middot; Dec 2024
+              </span>
             </h3>
 
             {/* Segmented bar */}
@@ -279,25 +285,25 @@ export default function ProblemSection() {
               style={{ height: 32, borderRadius: 6 }}
             >
               <div
-                style={{ width: "31%", background: "#0e8a7d" }}
-                title="Served 31%"
+                style={{ width: "72%", background: "#0e8a7d" }}
+                title="Served 72%"
               />
               <div
-                style={{ width: "24%", background: "#d4a017" }}
-                title="Underserved 24%"
+                style={{ width: "11%", background: "#d4a017" }}
+                title="Underserved 11%"
               />
               <div
-                style={{ width: "45%", background: "#c0392b" }}
-                title="Unserved 45%"
+                style={{ width: "17%", background: "#c0392b" }}
+                title="Unserved 17%"
               />
             </div>
 
             {/* Legend */}
             <div className="mt-4 flex flex-wrap gap-5 text-[13px]">
               {[
-                { color: "#0e8a7d", label: "Served", pct: "31%" },
-                { color: "#d4a017", label: "Underserved", pct: "24%" },
-                { color: "#c0392b", label: "Unserved", pct: "45%" },
+                { color: "#0e8a7d", label: "Served", pct: "72%" },
+                { color: "#d4a017", label: "Underserved", pct: "11%" },
+                { color: "#c0392b", label: "Unserved", pct: "17%" },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-2">
                   <span
@@ -332,16 +338,22 @@ export default function ProblemSection() {
               className="font-mono mb-6 text-[11px] uppercase tracking-[0.12em]"
               style={{ color: "var(--muted)" }}
             >
-              Kentucky rural share
+              U.S. rural county share
+              <span
+                className="ml-auto text-[9.5px] tracking-[0.08em]"
+                style={{ color: "var(--muted)" }}
+              >
+                USDA ERS &middot; 2024
+              </span>
             </h3>
 
-            <DonutChart pct={41.6} />
+            <DonutChart pct={62} />
 
             <p
               className="mt-4 text-[14px] leading-relaxed"
               style={{ color: "var(--ink-2)" }}
             >
-              1.87M rural residents &middot; 25,000 sq&nbsp;mi
+              1,976 of 3,143 U.S. counties classified nonmetro &middot; 46M residents
             </p>
           </div>
         </div>
