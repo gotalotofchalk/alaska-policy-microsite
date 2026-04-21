@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Newsreader, Public_Sans } from "next/font/google";
+import { Newsreader, Public_Sans, JetBrains_Mono } from "next/font/google";
 
 import { AdminProvider } from "@/components/admin/admin-context";
 
@@ -16,6 +16,12 @@ const sans = Public_Sans({
   variable: "--font-public-sans",
 });
 
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  weight: ["400", "500"],
+});
+
 export const metadata: Metadata = {
   title: "RHT-NAV: Rural Health Transformation Navigator",
   description:
@@ -29,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${display.variable} ${sans.variable}`}>
+      <body className={`${display.variable} ${sans.variable} ${mono.variable}`}>
         <AdminProvider>
           {children}
         </AdminProvider>

@@ -2,17 +2,26 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f1e9;
-  --foreground: #102235;
-  --muted: #5d6a73;
-  --accent: #c4612a;
-  --teal: #0f7c86;
-  --line: rgba(16, 34, 53, 0.08);
+  --background: #f4f7fa;
+  --bg-soft: #ffffff;
+  --foreground: #0c1b2a;
+  --ink-2: #213447;
+  --muted: #58697a;
+  --accent: #c0432a;
+  --accent-soft: #d46348;
+  --teal: #0a6e9c;
+  --teal-deep: #055074;
+  --sage: #3f8a70;
+  --line: rgba(12, 27, 42, 0.10);
+  --line-2: rgba(12, 27, 42, 0.18);
   --surface: rgba(255, 255, 255, 0.92);
   --surface-strong: rgba(255, 255, 255, 0.97);
   --surface-soft: rgba(255, 255, 255, 0.72);
-  --shadow-soft: 0 18px 52px rgba(11, 33, 50, 0.05);
-  --shadow-lift: 0 18px 44px rgba(11, 33, 50, 0.1);
+  --shadow-soft: 0 18px 52px rgba(11, 33, 50, 0.06);
+  --shadow-lift: 0 28px 64px rgba(11, 33, 50, 0.12);
+  --red-flag: #a8392d;
+  --green-go: #3a7a4e;
+  --amber-flag: #b87920;
 }
 
 @theme inline {
@@ -20,6 +29,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-public-sans);
   --font-display: var(--font-newsreader);
+  --font-mono: var(--font-jetbrains);
 }
 
 * {
@@ -32,25 +42,18 @@ html {
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, rgba(15, 124, 134, 0.07), transparent 24%),
-    radial-gradient(circle at left 8% bottom 12%, rgba(196, 97, 42, 0.06), transparent 22%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0)),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-public-sans), sans-serif;
+  font-family: var(--font-public-sans), system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at top center, rgba(255, 255, 255, 0.55), transparent 46%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 28%);
-  opacity: 0.58;
+.font-mono {
+  font-family: var(--font-jetbrains), monospace;
+  font-feature-settings: "ss01";
 }
 
 a {
