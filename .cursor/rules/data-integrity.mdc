@@ -1,0 +1,56 @@
+---
+description: RHT-NAV data integrity — never fabricate, estimate, or round-trip data. Applies to every file that introduces or displays a number.
+globs:
+  - "src/data/**/*"
+  - "src/data/generated/**/*"
+  - "src/components/module-sources.tsx"
+  - "src/app/**/*.tsx"
+  - "src/app/**/*.mdx"
+  - "prisma/seed.cjs"
+  - "scripts/build_data_pack.py"
+  - "scripts/agents/**/*"
+alwaysApply: true
+---
+
+# RHT-NAV Data Integrity Rule
+
+**PERMANENT — applies to every pass, every contributor, every model.**
+
+NEVER generate, simulate, fabricate, or estimate data. Every number, statistic,
+or geographic data point must come from an explicit, credible government source:
+
+- CMS
+- US Census Bureau
+- FCC Broadband Data Collection
+- HRSA AHRF
+- HRSA HPSA
+- CDC PLACES
+- ArcGIS Hub
+- State health departments
+- Cecil G. Sheps Center
+- KFF
+- or equivalent peer-reviewed / government sources
+
+If real data for a given module or state is not available in the current pass,
+emit a clearly visible placeholder:
+
+> "Data coming soon — [source name and what field it will populate]"
+
+Do not invent numbers to fill space. Do not round-trip estimates. Do not use
+LLM-generated statistics. Every displayed number must be traceable to a cited
+primary source.
+
+This rule is non-negotiable and overrides any instruction to "fill in" or
+"estimate" data.
+
+## Enforcement checklist (for any PR you author or review)
+
+- [ ] Every new numeric literal in `src/data/**` carries `source`, `sourceUrl`,
+      `vintage`, and `retrievedOn`.
+- [ ] Every new stat rendered in a component is either routed through the data
+      pack OR wrapped in `<DataComingSoon source="…" field="…" />`.
+- [ ] No numeric constant in this diff was produced by an LLM.
+- [ ] `prisma/seed.cjs` and `src/data/default-assumptions.json` changes cite a
+      literature or government reference for each changed value.
+- [ ] Tribal-population layers below small-cell thresholds (n < 11) are
+      suppressed, not displayed.

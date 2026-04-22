@@ -1,0 +1,49 @@
+---
+description: Provenance schema contract — every data-pack field carries { value, source, sourceUrl, vintage, retrievedOn, methodology }.
+globs:
+  - "src/data/**/*"
+  - "src/types/**/*"
+  - "scripts/build_data_pack.py"
+  - "scripts/agents/**/*"
+alwaysApply: true
+---
+
+# Provenance Schema Contract
+
+Every data-pack field in RHT-NAV carries provenance. The canonical TypeScript
+shape is:
+
+```ts
+export type ProvenanceField<T> = {
+  value: T;
+  source: string;           // Human-readable: "CDC PLACES", "CMS POS", "HRSA AHRF"
+  sourceUrl: string;        // Primary-source URL
+  vintage: string;          // ISO date or year+quarter: "2025-Q4", "2023"
+  retrievedOn: string;      // ISO8601 of the fetch
+  methodology?: string;     // Optional short note, e.g. "5-year ACS estimate"
+};
+```
+
+The canonical Python shape in `scripts/build_data_pack.py` and
+`scripts/agents/` is a dataclass with identical field names.
+
+## Rules
+
+- A field without all five required properties is invalid and must not ship.
+- If a value is not yet available, emit it as:
+  ```ts
+  { value: null, source, sourceUrl, vintage: null, retrievedOn: null }
+  ```
+  and render `<DataComingSoon source={source} field={name} />` client-side.
+- `src/components/module-sources.tsx` renders the `source` + `sourceUrl` of
+  every ProvenanceField displayed on the page. Do not bypass it.
+- The `/data-methodology` page is generated from provenance metadata — do not
+  hand-edit it.
+
+## When adding a new data source
+
+1. Add a row to the allow-list in `src/config/allowed-sources.ts` (create if
+   missing) with `{ id, displayName, homepageUrl, citation }`.
+2. Reference it by `id` from every ProvenanceField that uses it.
+3. Add a scheduled refresher in `scripts/agents/` if the source updates on a
+   cadence.

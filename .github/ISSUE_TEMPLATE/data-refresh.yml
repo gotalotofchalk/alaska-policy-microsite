@@ -1,0 +1,53 @@
+name: Data refresh
+description: Track a scheduled refresh of a primary data source (CMS, HRSA, FCC BDC, CDC PLACES, Census ACS, ArcGIS, Sheps).
+title: "[data-refresh] <SOURCE> — <VINTAGE>"
+labels: ["data-refresh"]
+body:
+  - type: dropdown
+    id: source
+    attributes:
+      label: Primary source
+      options:
+        - CMS POS
+        - HRSA AHRF
+        - HRSA HPSA
+        - FCC Broadband Data Collection
+        - CDC PLACES
+        - US Census ACS
+        - ArcGIS Online feature service
+        - Cecil G. Sheps Center
+        - Other (specify below)
+    validations:
+      required: true
+  - type: input
+    id: vintage
+    attributes:
+      label: Target vintage
+      description: e.g. "2026-Q1", "2025 BDC June release", "ACS 2023 5-year"
+    validations:
+      required: true
+  - type: input
+    id: source_url
+    attributes:
+      label: Source URL
+      description: Primary-source URL (not a mirror, not an LLM summary).
+    validations:
+      required: true
+  - type: textarea
+    id: fields
+    attributes:
+      label: Fields this refresh populates
+      description: List the data-pack fields that will change, one per line.
+    validations:
+      required: true
+  - type: checkboxes
+    id: integrity
+    attributes:
+      label: Data integrity acknowledgement
+      options:
+        - label: I will not fabricate, estimate, or LLM-generate values.
+          required: true
+        - label: Every updated field will carry `source`, `sourceUrl`, `vintage`, `retrievedOn`.
+          required: true
+        - label: Missing values will be rendered as `<DataComingSoon />`, not estimated.
+          required: true

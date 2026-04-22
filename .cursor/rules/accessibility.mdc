@@ -1,0 +1,30 @@
+---
+description: WCAG 2.2 AA + Section 508 baseline for RHT-NAV public pages.
+globs:
+  - "src/app/**/*.tsx"
+  - "src/components/**/*.tsx"
+alwaysApply: true
+---
+
+# Accessibility Baseline
+
+RHT-NAV is a public-facing government-adjacent policy site. It must meet
+WCAG 2.2 AA and Section 508.
+
+## Hard requirements
+
+- Every interactive element is reachable by keyboard in logical order.
+- Every `<img>` has a non-empty `alt` or `alt=""` for decorative images.
+- Every `<button>` has an accessible name; icon-only buttons include
+  `aria-label`.
+- Color contrast meets WCAG AA (4.5:1 body, 3:1 large text).
+- Leaflet maps include a textual fallback (the same data, rendered as a table
+  or list elsewhere on the page).
+- Framer Motion animations respect `prefers-reduced-motion`.
+- Forms in the `/assumptions` workspace use `<label>` associations, not
+  placeholder-only labels.
+
+## Review hooks
+
+- Agent #14 runs axe-core + Lighthouse on PR builds; failures block merge.
+- The nightly Pre-Deploy Gatekeeper (#19) runs the a11y sweep against `main`.

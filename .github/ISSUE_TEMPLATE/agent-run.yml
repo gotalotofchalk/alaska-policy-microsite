@@ -1,0 +1,53 @@
+name: Agent run
+description: Launch one of the agents defined in docs/AGENT_PLAYBOOK.md.
+title: "[agent] <AGENT NAME>"
+labels: ["agent"]
+body:
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Agent
+      options:
+        - "01 Source-Citation Auditor (Bugbot)"
+        - "02 Data Provenance Schema Agent"
+        - "03 Tribal Data Sovereignty Reviewer (Bugbot)"
+        - "04 CMS POS Refresher"
+        - "05 HRSA AHRF/HPSA Refresher"
+        - "06 FCC BDC Refresher"
+        - "07 CDC PLACES + Census ACS Refresher"
+        - "08 ArcGIS Feature Service Sync"
+        - "09 Sheps Rural Hospital Closures Watcher"
+        - "10 State-Onboarding Agent"
+        - "11 Rural Health Region Classifier"
+        - "12 v0 Design-to-Page Importer"
+        - "13 Claude Design Systems Agent"
+        - "14 Accessibility Agent"
+        - "15 Map / Leaflet Performance Agent"
+        - "16 Simulation Invariant Property-Test Author"
+        - "17 Assumption-Set Diff Reviewer (Bugbot)"
+        - "18 Playwright E2E Author"
+        - "19 Pre-Deploy Gatekeeper"
+        - "20 Stakeholder Report Compiler"
+        - "21 Methodology Page Generator"
+        - "22 Implementation Playbook Drafter"
+        - "23 Glossary Translator"
+        - "24 Env Setup Agent"
+        - "25 Secrets Hygiene Bot (Bugbot)"
+        - "26 Dependency & Security Updater"
+        - "27 Changelog Agent"
+        - "28 Vercel Preview Smoke Agent"
+        - "29 Cursor Rules Keeper"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope for this run
+      description: Any state codes, vintages, or files this run should target.
+    validations:
+      required: true
+  - type: input
+    id: target_branch
+    attributes:
+      label: Target branch (optional)
+      description: "Defaults to a new cursor/ branch."
