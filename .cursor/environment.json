@@ -4,7 +4,7 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
-  "install": "npm ci\nnpx prisma generate\npython3.11 -m pip install -r requirements-agents.txt\nnpx playwright install --with-deps chromium firefox webkit\nDATABASE_URL=\"file:./dev.db\" npm run setup\nscripts/agents/env-doctor.sh",
+  "install": "npm ci\nnpx prisma generate\npython3 -m pip install -r requirements-agents.txt\nnpx playwright install --with-deps chromium firefox webkit\nDATABASE_URL=\"file:./dev.db\" npm run setup\nscripts/agents/env-doctor.sh",
   "ports": [
     {
       "name": "Next.js dev server",
