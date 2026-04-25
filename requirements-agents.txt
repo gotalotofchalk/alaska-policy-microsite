@@ -1,0 +1,9 @@
+pandas==3.0.2
+numpy==2.4.4
+pyproj==3.7.2
+shapely==2.1.2
+h3==4.4.2
+requests==2.33.1
+arcgis==2.4.3
+python-dotenv==1.2.2
+geopandas==1.1.3
